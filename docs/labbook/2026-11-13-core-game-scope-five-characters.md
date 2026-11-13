@@ -383,8 +383,35 @@ modes (`lamturbo()`), with float forces from new input fields.
    outcome, every projectile, every mechanic, every branch of the logic code,
    for each character pair. Use a coverage-guided search over
    `legal_inputs`, shared prefixes from copied states, one input per outcome
-   class, and a greedy set cover at the end. First measure the baseline
-   coverage of the logic code from the 50 generated and 93 human replays.
+   class, and a greedy set cover at the end.
+
+   Baseline, measured 2026-11-13 with `tools/coverage` (report:
+   `.scratch/coverage_baseline/REPORT.md`). The logic scope has 12,282
+   probed lines (`game.gd`, `characters/`, `obj/`, `mechanics/`,
+   `framework/`).
+
+   | Replays | Lines covered |
+   |---|---|
+   | A: 50 generated | 73.1% |
+   | B: 93 human, `1.10.0-steam`, official characters | 75.3% |
+   | C: the 21 of B with the tournament stage, length, ceiling and meter | 67.8% |
+   | A+B | 81.4% (9,997 lines) |
+
+   - A+B never enters 11 state scripts: Cowboy `Dash1k`, `ForesightExplosion`,
+     `TPStance`; Wizard `LockOrb`, `OrbPush`, `OrbTeleport`; Robot
+     `ClapLand`, `FlyFall`; shared `DashStartup`, `Forfeit`,
+     `ForfeitExplosion`.
+   - The largest uncovered functions in A+B are `game.ghost_tick` (74
+     lines), `BaseObj.copy_to` (58), and Cowboy's
+     `TemporalPathDefault` path computation (`_compute_path` 55,
+     `_raycast` 36, `_configure_hitboxes` 34). The copy and ghost code runs
+     only for the prediction preview and AI search.
+   - `framework/` is the least covered directory (35.7%). Set C covers
+     Cowboy at 48.7% and Mutant at 51.7%, so tournament-format replays
+     alone leave those two characters thin.
+   - Set C has 21 replays, not 13, because it matches only the four
+     simulation settings. It includes singleplayer files with sadness off
+     and no chess timer.
 8. **Network tests.** Online play is part of the shell and runs the live
    path. `tools/nettest/` plays one match between two game containers over
    the game's direct ENet multiplayer, through `udp-netsim`
