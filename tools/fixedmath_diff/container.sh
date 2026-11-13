@@ -4,12 +4,13 @@
 # Usage: tools/fixedmath_diff/container.sh [--work DIR]
 #
 # Three podman stages, each read-only on the repository:
-#   1. The Godot run (tools/replay_check's image): calls every FixedMath
-#      method on the probe set, writes godot_out.jsonl.
-#   2. The Rust build and run (a public rust image): recomputes with the
-#      fixed and fixed-sqrt crates, writes rust_out.jsonl.
-#   3. The comparison (tools/replay_check's image again, for its Python 3):
-#      lines the two files up and writes report.json.
+#   1. The Godot run (tools/replay_check's Nix image): calls every
+#      FixedMath method on the probe set, writes godot_out.jsonl.
+#   2. The Rust run (this tool's own Nix image, built by build.sh):
+#      recomputes with the fixed and fixed-sqrt crates, writes
+#      rust_out.jsonl.
+#   3. The comparison (this tool's own Nix image again, for its
+#      Python 3): lines the two files up and writes report.json.
 #
 # No stage runs Godot, cargo, or this task's Python directly on the host;
 # container.sh itself only invokes podman.
@@ -18,7 +19,7 @@ set -euo pipefail
 tool_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo="$(cd "$tool_dir/../.." && pwd)"
 godot_image="localhost/hustle-replay-check"
-rust_image="docker.io/library/rust:1-slim-bookworm"
+fixedmath_image="localhost/hustle-fixedmath-diff"
 work="${XDG_CACHE_HOME:-$HOME/.cache}/hustle-fixedmath-diff"
 
 while (($#)); do
@@ -34,8 +35,7 @@ while (($#)); do
   esac
 done
 
-mkdir -p "$work/out" "$work/xdg" "$work/cargo-registry" "$work/rust-build"
-rsync -a --delete "$tool_dir/rust/" "$work/rust-build/"
+mkdir -p "$work/out" "$work/xdg"
 
 echo "--- stage 1: Godot ---"
 "$repo/tools/replay_check/build.sh"
@@ -59,18 +59,17 @@ podman run --rm --init --cpus 8 \
   '
 
 echo "--- stage 2: Rust ---"
+"$tool_dir/build.sh"
 podman run --rm --cpus 8 \
-  -v "$work/rust-build:/work" \
-  -v "$work/cargo-registry:/usr/local/cargo/registry" \
+  --entrypoint fixedmath_diff \
   -v "$work/out:/out" \
-  -w /work \
-  "$rust_image" \
-  bash -c 'cargo build --release && ./target/release/fixedmath_diff /out/godot_out.jsonl /out/rust_out.jsonl'
+  "$fixedmath_image" \
+  /out/godot_out.jsonl /out/rust_out.jsonl
 
 echo "--- stage 3: compare ---"
 podman run --rm --cpus 8 \
   --entrypoint python3 \
   -v "$tool_dir/compare.py:/compare.py:ro" \
   -v "$work/out:/out" \
-  "$godot_image" \
+  "$fixedmath_image" \
   /compare.py /out/godot_out.jsonl /out/rust_out.jsonl /out/report.json

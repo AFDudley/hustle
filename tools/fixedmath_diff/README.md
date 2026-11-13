@@ -291,9 +291,9 @@ operations, not just the formula.
   whose `error` flags disagree, or whose `result`s differ when neither
   errored.
 - `container.sh`: the host-side entry point. Three podman stages, each
-  read-only on the repository: Godot (reusing `tools/replay_check`'s image
-  and `build.sh`), Rust (`docker.io/library/rust:1-slim-bookworm`, a public
-  image), and the comparison (the same image as the Godot stage, for its
+  read-only on the repository: Godot (reusing `tools/replay_check`'s Nix
+  image and `build.sh`), Rust (this tool's own Nix image, built by its
+  own `build.sh`), and the comparison (the same Nix image again, for its
   Python 3). No stage runs Godot, `cargo`, or this task's Python directly
   on the host.
 
@@ -301,6 +301,34 @@ operations, not just the formula.
 tools/fixedmath_diff/container.sh
 cat ~/.cache/hustle-fixedmath-diff/out/report.json
 ```
+
+## The container
+
+`flake.nix` (with `nix/rust.nix` and `nix/image.nix`) builds
+`localhost/hustle-fixedmath-diff` with Nix, the same way
+`tools/replay_check/flake.nix` builds its own image. `build.sh` builds it
+inside the same pinned `docker.io/nixos/nix` container
+`tools/replay_check/build.sh` uses, and loads it into podman.
+`container.sh` calls `build.sh` before stage 2. Nix never runs on the
+host: the Nix store is the named podman volume `hustle-nix-store`, shared
+with `tools/replay_check`, so nixpkgs itself is fetched once. `flake.lock`
+pins nixpkgs to the same revision as `tools/replay_check/flake.lock`.
+
+The image holds two things:
+
+- **The `fixedmath_diff` binary**, built by `nix/rust.nix` with
+  `rustPlatform.buildRustPackage` straight from `rust/Cargo.lock`. Every
+  dependency (`fixed`, `fixed-sqrt`, `fixed_trigonometry`, and their own
+  dependencies) comes from crates.io, so Nix fetches and checks each one
+  against the checksum already in the lockfile; no extra fixed-output
+  hash is needed.
+- **Python 3**, for `compare.py`.
+
+`container.sh`'s stage 2 runs the built binary directly
+(`fixedmath_diff /out/godot_out.jsonl /out/rust_out.jsonl`); unlike the
+earlier public-image version, this stage no longer runs `cargo build` at
+container-run time, because Nix already built the binary when the image
+was built.
 
 ## Limits
 
