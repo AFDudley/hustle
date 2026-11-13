@@ -62,8 +62,9 @@ opposite. All 83 GunThrow aims had no effect after 90 ticks.
 ### 2.3 Combos remove most of the defender's choices
 
 A census (`.scratch/census/Census.gd`) recorded every decision point in 6 human
-replays at `1.10.0-steam`: 1,017 turns. 2,034 of the 2,036 recorded inputs were
-in the computed legal-action list. Three Haiku agents audited the six files.
+replays at `1.10.0-steam`: 1,017 turns. The first census put 2,032 of the 2,034
+recorded inputs in the computed legal-action list (open item 4 raises this to
+2,033). Three Haiku agents audited the six files.
 Their counts matched the census script exactly (`.scratch/census/audit/`).
 
 | | Turns | Legal actions per player (median) |
@@ -153,9 +154,37 @@ modes (`lamturbo()`), with float forces from new input fields.
    Mutant (`mutant`). The commented-out `Alien` entry is not part of the game.
 2. **Version:** `1.10.0-steam`, the version of this checkout
    (`Global.gd:5`).
-3. **Rules:** the default match settings. Turbo Mode, Extremely Turbo Mode and
-   Infinite Resources are off. The model rejects a replay whose match data turns
-   any of them on. Section 6 lists the other settings as an open item.
+3. **Rules: the tournament format, which is the Ranked mod's locked
+   settings.** Evidence:
+   - Tournaments play "on the Ranked Arena Mod", with "the rules … locked in
+     ranked mode". Source: the start.gg page of HustleMania XVII
+     (2023-07-19, https://www.start.gg/tournament/hustlemania-xvii-the-new-and-cool-one/details).
+     That page lists Round Length 2000, Chess Timer on, Turn Clock 20 min,
+     Stage Width 1000, which were the Ranked settings of 2023.
+   - The Discord corpus has 33 replays whose version names the Ranked mod.
+     The 4 at `1.10.0-steam Ranked 1.0.0` agree on every setting. The 18 at
+     `1.9.20-steam Ranked v1.2.6` use the same values. 9 more `1.10.0-steam`
+     multiplayer replays use the same values without the tag. Players in them
+     include Quint, BeastBuy, Sanguinaryn, Avvi and Harry__Co.
+   - The values (`.scratch/settings/settings.jsonl`): `stage_width` 600,
+     `game_length` 3000, `has_ceiling` true, `ceiling_height` 500,
+     `char_distance` 125, `char_height` 0, `starting_meter` "1.5",
+     `p1_starting_meter` and `p2_starting_meter` "0", `p1_starting_health` and
+     `p2_starting_health` 100, `di_enabled` true, `prorated_di` true,
+     `min_di_scaling` "1", `max_di_scaling` "6", `di_combo_limit` 15,
+     `burst_enabled` true, `clashing_enabled` true, `asymmetrical_clashing`
+     false, `sadness_enabled` true, `brace_enabled` false,
+     `parry_combo_scaling` "0.85", `burst_parry_combo_scaling` "0.85", all four
+     `global_*_modifier` "1", `gravity_enabled` true, `one_hit_ko`,
+     `always_perfect_parry`, `turbo_mode`, `extremely_turbo_mode`,
+     `infinite_resources`, `frame_by_frame`, `p2_dummy` false. Shell only:
+     `timer_mode` "chess", `turn_time` 15, `turn_min_length` 15,
+     `prediction_enabled` true, `show_last_di_state` false.
+   - Against the default lobby (`stage_width` 800, `game_length` 3600,
+     `ceiling_height` 800, `starting_meter` "0"), four settings that reach the
+     simulation differ: stage width, game length, ceiling height and starting
+     meter. `turn_min_length` and `show_last_di_state` are read only by the UI.
+   The model fixes these values. It rejects a replay with other values.
 4. **Language:** Rust. The port uses `fixed 1.19.0` and `fixed-sqrt 0.2.5`, so
    that its fixed-point rounding matches `tbfg.so` by construction.
 5. **Rust style:** write the simulation in the subset that Aeneas (through
@@ -170,9 +199,11 @@ modes (`lamturbo()`), with float forces from new input fields.
 6. **Acceptance check:** the port writes the same `StateSnapshot` JSON as
    `tools/replay_check`. For every replay in the test set, its per-tick hashes
    must equal the hashes of the real game.
-7. **Test set:** Discord replays at `1.10.0-steam` with official characters only:
-   93 replays, 12 of them finished. Add the generated replays from
-   `tools/replay_check`.
+7. **Test set:** Discord replays at `1.10.0-steam`, official characters only,
+   in the tournament format: 13 replays (4 tagged Ranked, 9 untagged with the
+   same settings). The 93 official-character replays at `1.10.0-steam` in other
+   formats test the same rules with other stage, length and meter values. Use
+   them as a second set. Generated replays use the tournament format.
 8. **Search abstraction:** group continuous inputs (aims, DI, sliders) by
    outcome class, not by exact state (section 2.2). Treat a combo turn as a
    reduced matrix: attacker actions × (defender action × DI class) (section 2.3).
@@ -196,14 +227,23 @@ modes (`lamturbo()`), with float forces from new input fields.
      Tournaments banned the exploit. The developer then added **Drift**, a
      legal version that costs meter and destroys the Foresight. `MilkButton`
      in `CowboyExtra.gd` is the Drift toggle.
-   - **This checkout still does not check legality in the core.**
-     `BaseChar.on_action_selected` (`characters/BaseChar.gd:2935`) calls only
-     `state.is_usable()` (line 2954): resources, air options, combo-only and
-     neutral-only flags. It does not check the cancel categories
-     (`interrupt_into`, `hit_cancel_into`) or the grounded or aerial air type
-     (`is_usable_with_grounded_check`). Those checks exist only in
+   - **This checkout does not check legality in the core at all.**
+     `BaseChar.on_action_selected` (`characters/BaseChar.gd:2935`) sets
+     `queued_action = action` first (line 2940). Then it calls
+     `state.is_usable()` (line 2954), and on failure it changes only its
+     local `action` to `"Forfeit"` before it emits the `action_selected`
+     signal. `queued_action` keeps the original action, `tick_before()`
+     records the original action in the replay (line 2474), and the core runs
+     it. The only listeners of the signal are `game.on_player_acted`, which
+     calls `hooks.player_acted` for mods, and
+     `ActionButtons._on_fighter_action_selected`, which does nothing. So an
+     unusable action (no meter, no air option) still runs, and only mod hooks
+     see "Forfeit". The cancel categories (`interrupt_into`,
+     `hit_cancel_into`) and the grounded or aerial air type
+     (`is_usable_with_grounded_check`) are checked only in
      `ActionButtons.update_buttons()`. Replay playback applies recorded inputs
-     with no check at all. Drift has the same split. `SwordGuy.drift()`
+     with no check at all.
+     Drift has the same split. `SwordGuy.drift()`
      (`SwordGuy.gd:245`) checks only meter and the afterimage. The UI adds
      `MilkButton.visible = obj.is_grounded() != fighter.is_grounded()`
      (`CowboyExtra.gd:84`).
@@ -235,9 +275,9 @@ modes (`lamturbo()`), with float forces from new input fields.
    engine as it is, including every UI issue:
    - `step` applies any input, exactly as replay playback does now. It does
      not check legality.
-   - The `is_usable()` check that changes an action to `Forfeit` stays in the
-     shell. `on_action_selected` runs it at selection time in live play, not
-     during playback.
+   - Nothing changes an action to `Forfeit`. The `is_usable()` result in
+     `on_action_selected` reaches only mod hooks (see above), so `step` needs
+     no substitution, and a replay records the action the player chose.
    - `legal_inputs(state, player)` exists in version 1 as a separate pure
      function, ported from `update_buttons()` and the extra-options panels.
      Nothing enforces it. The replay generator and searches use it to choose
@@ -268,26 +308,39 @@ modes (`lamturbo()`), with float forces from new input fields.
 
 ## 6. Open items
 
-1. **Match settings.** The settings panel has about 46 settings:
-   `stage_width`, `di_enabled`, `prorated_di`, `one_hit_ko`, `game_length`,
-   `burst_enabled`, `clashing_enabled`, `global_damage_modifier`,
-   `global_hitstun_modifier`, `global_hitstop_modifier`,
-   `global_gravity_modifier`, `has_ceiling`, `sadness_enabled`,
-   `starting_meter`, `min_di_scaling`, `max_di_scaling`, `di_combo_limit`,
-   `brace_enabled`, `p1_starting_health`, `p2_starting_health` and others. List
-   their default values. Then decide which ones the model takes as parameters
-   and which ones it fixes.
-2. **Live play and replay play take different paths.** `interrupt_exceptions`
-   and `state_interruptable` differ between them (the NewParry `on_interrupt`
-   path). The census used the live-path busy rule from `game.gd` (about lines
-   1452–1475). Decide which path the model follows, and record why.
+1. **Resolved: match settings.** Decision 3 fixes the tournament format. The
+   default lobby values, for comparison: `stage_width` 800, `game_length`
+   3600, `ceiling_height` 800, `starting_meter` "0", `turn_time` 30,
+   `turn_min_length` 10, `timer_mode` "default", `show_last_di_state` true.
+   The rest equal the tournament values.
+2. **Resolved: the model follows the live path.** Real matches run it. The
+   network test (item 8) found that the two paths differ in the human replay
+   only in `NewParry`'s `interrupt_exceptions`, which `on_interrupt()` sets
+   only on the live path (`game.gd:1456, 1473`). The field changes legality,
+   not the simulation. The acceptance check therefore compares the port with
+   live-path traces from `tools/nettest`, or with replay-path traces after
+   the ignore list removes `interrupt_exceptions`. Record each case where the
+   two paths differ in more than this field.
 3. **The string interface.** `FixedMath` takes and returns strings. The port
    must match the parse and format rules of `tbfg.so`. Test this layer first:
    call `tbfg.so` through a GDScript harness, and compare with the port.
-4. **Turn the legality rule into code.** The census copies
-   `ActionButtons.update_buttons()`. It misses 2 of 2,036 recorded inputs:
-   Robot `Blast` from `Flamethrower`, and Mutant `DownwardCleave` from
-   `ForesightNeutral`. Find the missing rule before the model uses it.
+4. **The legality rule in code: 2,033 of 2,034 inputs explained.** The census
+   copies `ActionButtons.update_buttons()`. Its first version missed two rules,
+   now added:
+   - the extra-option toggles change the move set. `input_grounded` and
+     `input_aerial` in the input's `extra` swap the `Grounded` and `Aerial`
+     categories (`update_cancel_category_air_type`) and the air-type check.
+     So legality depends on the chosen extra as well as on the state. This
+     explained Cowboy `DownwardCleave` from `ForesightNeutral` with Shift to
+     an aerial Foresight (bruh21nooo, tick 127).
+   - a fighter that feinted last turn also gets the `Grounded` and `Aerial`
+     categories (`ActionButtons.gd:610`).
+   One input is still unexplained: Robot `Blast` from a hit-cancellable
+   `Flamethrower` (silent_ninja, tick 1092, `feinting` false). Flamethrower's
+   `hit_cancel_into` holds only the default categories, and `Blast` is in
+   none of them. Either the census misses one more UI rule, or the player
+   used a lock-in race like Fresh Milk. Check it on the live path (decision
+   2) before `legal_inputs` is final.
 5. **The effective branching factor.** For each combo turn, simulate each legal
    attacker move once. Count the moves that keep the combo going.
 6. **Known game defects** that the model must reproduce or document:
