@@ -1,0 +1,7 @@
+[toolchain]
+# Must match the nightly Charon nightly-2026.11.13 was built against
+# (see podman/Containerfile and the upstream charon release's own
+# rust-toolchain file). Charon runs as a custom rustc driver, so its
+# nightly and this crate's nightly must be the same build.
+channel = "nightly-2026-09-17"
+components = ["rustc-dev", "llvm-tools", "rust-src"]

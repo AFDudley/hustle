@@ -1,0 +1,13 @@
+[package]
+name = "hustle_core_proto"
+version = "0.1.0"
+edition = "2021"
+
+# No external crates. The real port uses `fixed 1.19.0` and `fixed-sqrt 0.2.5`
+# (decision 4 of docs/labbook/2026-11-13-core-game-scope-five-characters.md),
+# but this prototype rolls its own fixed-point newtype so that Charon sees
+# one self-contained crate with no third-party MIR to extract.
+
+[lib]
+name = "hustle_core_proto"
+path = "src/lib.rs"

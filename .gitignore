@@ -13,3 +13,6 @@ data_*/
 workspace/
 .scratch/
 __pycache__/
+target/
+.lake/
+*.llbc

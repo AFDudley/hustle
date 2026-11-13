@@ -186,7 +186,8 @@ modes (`lamturbo()`), with float forces from new input fields.
      meter. `turn_min_length` and `show_last_di_state` are read only by the UI.
    The model fixes these values. It rejects a replay with other values.
 4. **Language:** Rust. The port uses `fixed 1.19.0` and `fixed-sqrt 0.2.5`, so
-   that its fixed-point rounding matches `tbfg.so` by construction.
+   that its fixed-point rounding matches `tbfg.so` by construction. Open item 3
+   confirms this by measurement and adds a third crate, `fixed_trigonometry`.
 5. **Rust style:** write the simulation in the subset that Aeneas (through
    Charon) or hax can translate to Lean, from the first line:
    - plain `struct`s and `enum`s, with one enum variant per character state,
@@ -195,7 +196,22 @@ modes (`lamturbo()`), with float forces from new input fields.
    - a pure step function, `step(state, inputs) -> state`,
    - no `unsafe`,
    - no hash maps in the logic.
-   Check the current limits of Aeneas and hax before the port starts.
+   `tools/lean_check/` checked these rules with a 503-line prototype in the
+   game's style (enum states, a `Vec` of objects, checked I48F16 arithmetic
+   through `i128`, a seeded RNG, hitbox overlap, a projectile spawn).
+   Charon and Aeneas (nightly-2026.11.13) translated it to 2,875 lines of
+   Lean, `lake build` passed (3,602 jobs), and one theorem
+   (`fixed_checked_add_comm`) is proved with no `sorry`. A rerun of
+   `tools/lean_check/podman/translate.sh` reproduced the build in 3.5 min.
+   Two more rules come from it:
+   - no `while` or `for` loop whose body uses `?`, `return`, `break` or
+     `continue`, even unnested. Aeneas rejected 4 of the 10 functions for
+     this. Write such a loop as recursion over an explicit index, with an
+     accumulator when it builds a collection.
+   - read an indexed element once into a local before using its fields.
+     One function failed with "Could not match the contexts" until it did.
+   Aeneas emits each recursion as a `partial_fixpoint`. Proofs about such
+   functions need a termination argument of their own. hax was not tried.
 6. **Acceptance check:** the port writes the same `StateSnapshot` JSON as
    `tools/replay_check`. For every replay in the test set, its per-tick hashes
    must equal the hashes of the real game.
@@ -321,9 +337,24 @@ modes (`lamturbo()`), with float forces from new input fields.
    live-path traces from `tools/nettest`, or with replay-path traces after
    the ignore list removes `interrupt_exceptions`. Record each case where the
    two paths differ in more than this field.
-3. **The string interface.** `FixedMath` takes and returns strings. The port
-   must match the parse and format rules of `tbfg.so`. Test this layer first:
-   call `tbfg.so` through a GDScript harness, and compare with the port.
+3. **Resolved: the string interface.** `tools/fixedmath_diff/` called all 38
+   registered `FixedMath` methods 32,529 times from GDScript and recomputed
+   each call in Rust. A rerun reproduced the result in 37 s. Findings:
+   - the type is `I48F16` (1 ulp = 1/65536), found by probing. Parsing
+     rounds half to even. Arithmetic wraps on overflow, as a release build
+     does. `div` by zero panics inside the library.
+   - `lib/tbfg.so` uses a third crate, `fixed_trigonometry`. Its version is not
+     in the binary. Version 0.4.4 matched every live trigonometric method on
+     every probe, but that is not a proof of the version.
+   - `round`, `ceil`, `floor`, `vec_round`, `vec_scale` and `int_map` cut
+     their result to 32 bits. The port must do the same.
+   - Every method the game calls matched on every probe, except
+     `angle_dist` (6 of 1,098, a tie at exactly ±π; the game calls it once,
+     in Cowboy's `Shoot.gd:96` auto-aim) and `sign` (1 of 214, at the type's
+     minimum value). `get_x_intercept` (712 of 851 mismatched) and `int_map`
+     (1 of 64) appear only in commented-out code.
+   The port must match the ±π tie of `angle_dist` before Cowboy's auto-aim
+   is trusted.
 4. **The legality rule in code: 2,033 of 2,034 inputs explained.** The census
    copies `ActionButtons.update_buttons()`. Its first version missed two rules,
    now added:
