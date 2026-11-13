@@ -38,13 +38,17 @@ podman reuses layers when nothing changed) and runs `run.py` in it.
 ## The container
 
 `flake.nix` (with `nix/godotsteam.nix`, `nix/audio-sleep-shim.nix` and
-`nix/image.nix`) builds the image with Nix. `build.sh` builds it inside a
-pinned `docker.io/nixos/nix` container and loads it into podman as
+`nix/image.nix`) builds the image with Nix. `build.sh` calls the shared
+`tools/nix_image_build.sh`, which builds it inside a pinned
+`docker.io/nixos/nix` container and loads it into podman as
 `localhost/hustle-replay-check`; `container.sh` calls `build.sh` before
 every run. Nix never runs on the host: the Nix store is the named podman
 volume `hustle-nix-store`, so a rebuild after a small change is
 incremental. `flake.lock` pins nixpkgs; every package version in the
-image traces back to that one commit.
+image traces back to that one commit. The flake source is a copy of this
+directory's git-tracked files, so `git add` a new file before a build can
+see it. `tools/fixedmath_diff` and `tools/lean_check` build their images
+through the same shared script.
 
 The image contains:
 
