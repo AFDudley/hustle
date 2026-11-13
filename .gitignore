@@ -11,3 +11,5 @@ export_presets.cfg
 data_*/
 
 workspace/
+.scratch/
+__pycache__/

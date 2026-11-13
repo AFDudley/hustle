@@ -1,0 +1,12 @@
+[package]
+name = "udp-netsim"
+version = "0.1.0"
+edition = "2021"
+description = "A UDP relay that adds seeded latency, jitter and loss, for network tests of hustle."
+publish = false
+
+# No dependencies: the Nix build needs no vendored crates.
+[dependencies]
+
+[profile.release]
+opt-level = 3

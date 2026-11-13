@@ -1,0 +1,15 @@
+# Script variable names that StateSnapshot.gd leaves out of every snapshot.
+# Each entry needs a reason. Only list a variable when it does not feed the
+# simulation: presentation, wall-clock time, or the UI/playback mode.
+# Format: <name>  # <reason>
+real_tick             # Game: physics-frame counter. It also counts frames spent waiting for input (game.gd _physics_process).
+camera_snap_position  # Game: camera position (game.gd _process).
+max_replay_tick       # Game: playback bookkeeping, set only when a replay loads (game.gd get_max_replay_tick).
+is_in_replay          # Game: playback flag for the UI.
+match_data            # Game: the match input. A saved replay adds "version". The replay file itself fixes the input.
+property_list         # ObjectState: cache of copiable properties for the ghost game. The action menu refreshes it (ObjectState.gd update_property_list).
+rng                   # BaseObj: presentation RNG. It drives the hit rumble offset (BaseObj.gd:281) and the ricochet sound (NewBulletDefault.gd:170 calls randomize()).
+actions                   # BaseChar: counts actions in live play only (BaseChar.gd tick, the !playback branch). Read only for an achievement (Impale.gd _on_hit_something).
+waiting_for_player_prev   # Game: written in _physics_process, read nowhere.
+style_aura_in_manual_state       # BaseChar: style-aura particle trigger (BaseChar.gd aura update, "Movement" pick). Presentation.
+style_aura_manual_action_pending # BaseChar: feeds style_aura_in_manual_state only. Presentation.
