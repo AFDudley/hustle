@@ -367,7 +367,7 @@ func _finish():
 					continue
 				var got = ReplayManager.frames[id].get(t)
 				if got == null or JSON.print(got, "", true) != JSON.print(recorded[id][t], "", true):
-					_fail("live run recorded a different input for player %d at tick %d" % [id, int(t)])
+					_fail("live run recorded a different input for player %d at tick %d: replay %s, live %s" % [id, int(t), JSON.print(recorded[id][t], "", true), JSON.print(got, "", true)])
 					return
 	trace.close()
 	if dump.is_open():

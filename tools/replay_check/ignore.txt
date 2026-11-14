@@ -13,3 +13,4 @@ actions                   # BaseChar: counts actions in live play only (BaseChar
 waiting_for_player_prev   # Game: written in _physics_process, read nowhere.
 style_aura_in_manual_state       # BaseChar: style-aura particle trigger (BaseChar.gd aura update, "Movement" pick). Presentation.
 style_aura_manual_action_pending # BaseChar: feeds style_aura_in_manual_state only. Presentation.
+emote_tween                      # BaseChar: chat-emote label fade (BaseChar.gd emote). Chat (Chat.gd, Network.gd) calls emote(); playback repeats recorded emotes, the live path sends none. Presentation.

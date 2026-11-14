@@ -234,6 +234,21 @@ modes (`lamturbo()`), with float forces from new input fields.
    same settings). The 93 official-character replays at `1.10.0-steam` in other
    formats test the same rules with other stage, length and meter values. Use
    them as a second set. Generated replays use the tournament format.
+
+   Exclusion, 2026-11-14: the version label alone does not select the test
+   set. Three set-B replays posted on Discord from 2026-11-04 on break off on
+   the live path: `umpa_ender_v_Sidus` (2026-11-04), `SevenPlanes_v_Element50`
+   (2026-11-08) and `combustion_fall_prederror` (2026-11-12). In the first
+   two, both players have inputs at tick 11, so the original match paused at
+   tick 10. In this checkout neither fighter can act at tick 10. The third
+   uses the Wizard move `StrikeAPose_Freeze`, which no `.tscn` in this
+   checkout and no upstream branch holds. Its `mod_data` is empty. Every set-B
+   replay posted up to 2026-10-05 runs to the end on the live path. The one
+   replay recorded 2026-11-01 differs only in flags. [INFERENCE] the Steam
+   build changed between 2026-10-05 and 2026-11-04 and kept the label
+   `1.10.0-steam`. Until that build is identified, the test set excludes
+   replays posted after 2026-11-01. The Discord message ID gives the post
+   date: `(id >> 22) + 1420070400000` ms.
 8. **Search abstraction:** group continuous inputs (aims, DI, sliders) by
    outcome class, not by exact state (section 2.2). Treat a combo turn as a
    reduced matrix: attacker actions × (defender action × DI class) (section 2.3).
@@ -430,6 +445,31 @@ modes (`lamturbo()`), with float forces from new input fields.
    - Set C has 21 replays, not 13, because it matches only the four
      simulation settings. It includes singleplayer files with sadness off
      and no chess timer.
+
+   Rerun on the live path, 2026-11-14 (`.scratch/coverage_live/`). Each
+   `check` runs two playbacks and one live run per replay, so these figures
+   cover both paths.
+
+   | Replays | Playback only | Playback and live |
+   |---|---|---|
+   | B | 75.3% | 76.3% (9,375 lines) |
+   | C | 67.8% | 68.7% (8,441 lines) |
+
+   Results of the live-path comparison for set B (93 replays):
+   - 44 pass.
+   - 45 differ from playback only in the flags `state_interruptable`,
+     `state_hit_cancellable` and `interrupt_exceptions` for a few ticks,
+     and end in the same state. Two of these first showed a different
+     final state. The cause was `emote_tween`, a chat-emote fade that
+     playback repeats and the live path does not. `ignore.txt` now leaves it
+     out.
+   - 1 ends one tick apart: `Zihop_v_lilfred09` (1,547 against 1,548
+     ticks). Not yet traced.
+   - 3 break off on the live path: the November replays of decision 7.
+
+   One `check` run of set B stopped once: one Godot process hung in the
+   Steam API start, before game code, and reached the 900 s job limit. The
+   rerun did not repeat it.
 8. **Network tests.** Online play is part of the shell and runs the live
    path. `tools/nettest/` plays one match between two game containers over
    the game's direct ENet multiplayer, through `udp-netsim`
