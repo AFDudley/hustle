@@ -344,6 +344,17 @@ def playback_job(
     return job
 
 
+def live_job(
+    replay: Path, trace: Path, dump_tick: int | None = None, dump: Path | None = None
+) -> dict[str, Any]:
+    """Play a replay's recorded inputs through the live path (see
+    ReplayCheck.gd, mode `live`). The lab book's decision 2 makes the live
+    path the one the model follows."""
+    job = playback_job(replay, trace, dump_tick, dump)
+    job["mode"] = "live"
+    return job
+
+
 def generate_job(
     p1: str,
     p2: str,
@@ -604,6 +615,13 @@ def cmd_check(work: Work, replays: Path, golden: Path | None, jobs: int) -> int:
         ] = []
         comparisons.append(
             ("determinism (playback run 2)", traces[1], ("playback2", pb_job))
+        )
+        # Every replay, generated or human: its own inputs on the live path.
+        live_trace = work.jobs / f"live_{name}.trace"
+        lv_job = live_job(replay, live_trace)
+        run_job(work, f"live_{name}", lv_job)
+        comparisons.append(
+            ("live path (recorded inputs)", read_trace(live_trace), ("live_inputs", lv_job))
         )
         sidecar = replays / f"{name}.match.json"
         if sidecar.exists():

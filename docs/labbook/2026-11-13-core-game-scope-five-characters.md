@@ -214,7 +214,17 @@ modes (`lamturbo()`), with float forces from new input fields.
    functions need a termination argument of their own. hax was not tried.
 6. **Acceptance check:** the port writes the same `StateSnapshot` JSON as
    `tools/replay_check`. For every replay in the test set, its per-tick hashes
-   must equal the hashes of the real game.
+   must equal the hashes of the real game **on the live path** (decision 2,
+   open item 2). `tools/replay_check` mode `live` produces those traces in one
+   process: it plays a replay's recorded inputs through
+   `Fighter.on_action_selected`, with `ReplayManager.playback` false, and
+   fails if the game records any other input. `check` compares it with
+   playback for every replay. `tools/nettest` adds the network turn protocol.
+
+   Correction, 2026-11-14: the census (section 2.3, open item 4) and the
+   coverage of the human replays (open item 7, sets B and C) ran on the
+   playback path, before this mode existed. Only set A's coverage included
+   live runs (the regenerated matches). Rerun both on the live path.
 7. **Test set:** Discord replays at `1.10.0-steam`, official characters only,
    in the tournament format: 13 replays (4 tagged Ranked, 9 untagged with the
    same settings). The 93 official-character replays at `1.10.0-steam` in other

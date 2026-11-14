@@ -2,12 +2,13 @@
 
 This tool runs the game's simulation on Linux inside a podman container. It
 needs no physical display, no Steam client and no Windows machine. It does
-three checks:
+four checks:
 
 | Check | Compares | Finds |
 |---|---|---|
 | Determinism | Two playbacks of one replay | Simulation state that depends on something other than the inputs |
-| Replay fidelity | The live match against its own playback | Differences between the live code path and the replay code path |
+| Live path | The replay's inputs played through the live path, against its playback | Differences between the live code path and the replay code path, for any replay |
+| Replay fidelity | The live match against its own playback | The same, for a generated replay replayed with its own random clicks |
 | Regression | A playback against a stored golden trace | Behaviour changes after a code change |
 
 ## Usage
@@ -205,14 +206,27 @@ node, and the fighter state differs from a first launch.
 - **playback** loads a replay with `ReplayManager.load_replay` and sets
   `ReplayManager.playback`. This is the path that the in-game replay viewer
   uses.
+- **live** loads a replay and keeps its inputs, then starts a live
+  singleplayer match with `ReplayManager.playback` false. On each turn it
+  waits until `game.gd`'s turn-start block has set both turn flags (the
+  block runs over two frames, and an input applied between them is lost).
+  Then it applies each player's recorded input for that decision through
+  `Fighter.on_action_selected`, the call the action panel makes. The run
+  fails if a player's interruptable state and the replay disagree about
+  who acts, or if the game records any input other than the replay's. This
+  is the path a real match runs, so the lab book's acceptance check uses
+  it (`docs/labbook/2026-11-13-core-game-scope-five-characters.md`,
+  decision 6).
 
-For the fidelity check, `check` plays the live match again from
-`<name>.match.json` with the current code. The new replay must equal the
-stored replay byte for byte. Then `check` compares the live trace with the
-playback trace. A replay without a `.match.json` file, for example a replay
-from a real player, gets the determinism and regression checks only.
+`check` runs the live mode for every replay, real or generated, and
+compares it with playback. For the fidelity check, `check` also plays the
+live match again from `<name>.match.json` with the current code. The new
+replay must equal the stored replay byte for byte. Then `check` compares
+that live trace with the playback trace. A replay without a `.match.json`
+file, for example a replay from a real player, gets every check except
+this one.
 
-Both modes put `TraceHooks.gd` on the `Hooks` node of the `Game`.
+Every mode puts `TraceHooks.gd` on the `Hooks` node of the `Game`.
 `post_tick` runs at the end of each `game.tick()`. At that point,
 `StateSnapshot.gd` records the script variables of the `Game` and of each
 object in `objs_map`. It also records each object's current state and its

@@ -11,6 +11,13 @@ extends Node
 #             replay through ReplayManager.save_replay, and a trace.
 #   playback  Load a replay and run it through ReplayManager.playback, the
 #             path that the in-game replay viewer uses. Writes a trace.
+#   live      Load a replay, then play its recorded inputs through the live
+#             path a real match runs: ReplayManager.playback stays false,
+#             game.gd's turn-start block runs (including on_interrupt), and
+#             each input enters through Fighter.on_action_selected, the call
+#             the action panel makes. Singleplayer, so no network protocol;
+#             tools/nettest covers that. At the end, the inputs the game
+#             recorded must equal the replay's inputs. Writes a trace.
 #
 # A trace has one JSON line per simulation tick:
 #   {"t": tick, "h": hash of the tick, "g": hash of the Game vars,
@@ -39,6 +46,8 @@ var turns = 0
 var ticks_traced = 0
 var finished = false
 var stop_pending = false
+var recorded = {}
+var last_input_tick = -1
 
 func _ready():
 	# A job runs with --fixed-fps and must not wait for the display. On a GPU
@@ -63,6 +72,8 @@ func _ready():
 			_generate()
 		"playback":
 			_playback()
+		"live":
+			_live()
 		_:
 			_fail("unknown mode " + str(job.mode))
 
@@ -126,6 +137,47 @@ func _playback():
 	_new_game()
 	if _rejected(game.start_game(true, match_data)):
 		_fail("start_game rejected the replay characters")
+
+func _live():
+	var match_data = ReplayManager.load_replay(job.replay)
+	recorded = ReplayManager.frames.duplicate(true)
+	for id in [1, 2]:
+		for t in recorded[id].keys():
+			last_input_tick = int(max(last_input_tick, int(t)))
+	ReplayManager.init()
+	ReplayManager.playback = false
+	_new_game()
+	if _rejected(game.start_game(true, match_data)):
+		_fail("start_game rejected the replay characters")
+		return
+	game.connect("player_actionable", self, "_on_live_actionable")
+
+# The same waits as _on_player_actionable: the turn-start block in game.gd
+# sets p1_turn and p2_turn on two separate frames, and its second frame sets
+# p1.state_interruptable again, so an input applied in between is lost.
+# The replay keys an input by the tick that applies it: decision tick + 1.
+func _on_live_actionable():
+	if turn_active or finished:
+		return
+	turn_active = true
+	while !game.game_paused:
+		yield(get_tree(), "idle_frame")
+	while !(game.p1_turn or !game.p1.state_interruptable) or !(game.p2_turn or !game.p2.state_interruptable):
+		yield(get_tree(), "physics_frame")
+	var key = game.current_tick + 1
+	for id in [1, 2]:
+		var fighter = game.get_player(id)
+		var has_input = recorded[id].has(key)
+		if fighter.state_interruptable != has_input:
+			_fail("live path diverged at tick %d: player %d interruptable=%s, replay input=%s" % [game.current_tick, id, str(fighter.state_interruptable), str(has_input)])
+			return
+		if has_input:
+			var input = recorded[id][key]
+			fighter.on_action_selected(input["action"], input["data"], input["extra"])
+	while !finished and game.is_waiting_on_player():
+		yield(get_tree(), "physics_frame")
+	turns += 1
+	turn_active = false
 
 # start_game returns false for an unknown character. In playback it yields,
 # so the result can also be a GDScriptFunctionState.
@@ -234,6 +286,12 @@ func _physics_process(_delta):
 	# the players. That point is the end of the playback.
 	if job.mode == "playback" and !ReplayManager.playback and game.is_waiting_on_player():
 		_finish()
+	# A live run whose replay stops before the end of the match ends at the
+	# first decision after the replay's last input. A finished match ends the
+	# way playback does, through stop_pending in _on_post_tick, so both modes
+	# trace the same last tick.
+	if job.mode == "live" and !game.game_finished and !turn_active and game.is_waiting_on_player() and game.current_tick + 1 > last_input_tick:
+		_finish()
 
 func _on_post_tick():
 	if finished or stop_pending:
@@ -268,6 +326,19 @@ func _finish():
 		if dir.copy(replay_path, job.replay_out) != OK:
 			_fail("cannot copy " + replay_path + " to " + job.replay_out)
 			return
+	if job.mode == "live":
+		# The live path records each applied input in ReplayManager.frames.
+		# They must be the replay's inputs, or this run played another match.
+		# A dump run stops at its last dump tick, so only the inputs up to the
+		# tick this run reached are checked.
+		for id in [1, 2]:
+			for t in recorded[id].keys():
+				if int(t) > game.current_tick:
+					continue
+				var got = ReplayManager.frames[id].get(t)
+				if got == null or JSON.print(got, "", true) != JSON.print(recorded[id][t], "", true):
+					_fail("live run recorded a different input for player %d at tick %d" % [id, int(t)])
+					return
 	trace.close()
 	if dump.is_open():
 		dump.close()
