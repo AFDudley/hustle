@@ -66,6 +66,9 @@ replays at `1.10.0-steam`: 1,017 turns. The first census put 2,032 of the 2,034
 recorded inputs in the computed legal-action list (open item 4 raises this to
 2,033). Three Haiku agents audited the six files.
 Their counts matched the census script exactly (`.scratch/census/audit/`).
+These counts come from the playback path. The census on the live path
+(`tools/replay_check` command `census`, 2026-11-14) puts all 2,034 inputs in
+the legal list (open item 4).
 
 | | Turns | Legal actions per player (median) |
 |---|---|---|
@@ -224,7 +227,8 @@ modes (`lamturbo()`), with float forces from new input fields.
    Correction, 2026-11-14: the census (section 2.3, open item 4) and the
    coverage of the human replays (open item 7, sets B and C) ran on the
    playback path, before this mode existed. Only set A's coverage included
-   live runs (the regenerated matches). Rerun both on the live path.
+   live runs (the regenerated matches). The census now runs on the live path
+   (open item 4). The coverage of sets B and C still needs a live rerun.
 7. **Test set:** Discord replays at `1.10.0-steam`, official characters only,
    in the tournament format: 13 replays (4 tagged Ranked, 9 untagged with the
    same settings). The 93 official-character replays at `1.10.0-steam` in other
@@ -365,9 +369,9 @@ modes (`lamturbo()`), with float forces from new input fields.
      (1 of 64) appear only in commented-out code.
    The port must match the ±π tie of `angle_dist` before Cowboy's auto-aim
    is trusted.
-4. **The legality rule in code: 2,033 of 2,034 inputs explained.** The census
-   copies `ActionButtons.update_buttons()`. Its first version missed two rules,
-   now added:
+4. **Resolved: the legality rule in code, 2,034 of 2,034 inputs explained on
+   the live path.** The census copies `ActionButtons.update_buttons()`. Its
+   first version missed two rules, now added:
    - the extra-option toggles change the move set. `input_grounded` and
      `input_aerial` in the input's `extra` swap the `Grounded` and `Aerial`
      categories (`update_cancel_category_air_type`) and the air-type check.
@@ -376,12 +380,16 @@ modes (`lamturbo()`), with float forces from new input fields.
      an aerial Foresight (bruh21nooo, tick 127).
    - a fighter that feinted last turn also gets the `Grounded` and `Aerial`
      categories (`ActionButtons.gd:610`).
-   One input is still unexplained: Robot `Blast` from a hit-cancellable
-   `Flamethrower` (silent_ninja, tick 1092, `feinting` false). Flamethrower's
-   `hit_cancel_into` holds only the default categories, and `Blast` is in
-   none of them. Either the census misses one more UI rule, or the player
-   used a lock-in race like Fresh Milk. Check it on the live path (decision
-   2) before `legal_inputs` is final.
+
+   On the playback path one input stayed unexplained: Robot `Blast` from a
+   hit-cancellable `Flamethrower` (silent_ninja, tick 1092). The census on
+   the live path (`tools/replay_check/Legality.gd`, the same rule as
+   `Census.gd`) puts all 2,034 inputs in the legal list. At that decision the
+   live path computes 30 legal actions, `Blast` among them. The playback path
+   computes 8: the hit-cancel list plus `InstantCancel` and `OffensiveBurst`.
+   So the two paths disagree on `state_hit_cancellable` at that tick, and the
+   live path is the model's path (decision 2). Why the flag differs between
+   the paths is not yet traced. Output: `.scratch/census_live/out/`.
 5. **The effective branching factor.** For each combo turn, simulate each legal
    attacker move once. Count the moves that keep the combo going.
 6. **Known game defects** that the model must reproduce or document:

@@ -27,6 +27,7 @@ extends Node
 
 const StateSnapshot = preload("res://tools/replay_check/StateSnapshot.gd")
 const TraceHooks = preload("res://tools/replay_check/TraceHooks.gd")
+const Legality = preload("res://tools/replay_check/Legality.gd")
 const GAME_SCENE = preload("res://Game.tscn")
 const ACTION_BUTTONS_SCENE = preload("res://ui/ActionSelector/ActionButtons.tscn")
 const SETTINGS_SCENE = preload("res://ui/GameSettingsPanelContainer.tscn")
@@ -41,6 +42,7 @@ var panels = []
 var rng = RandomNumberGenerator.new()
 var trace = File.new()
 var dump = File.new()
+var census = File.new()
 var turn_active = false
 var turns = 0
 var ticks_traced = 0
@@ -150,6 +152,8 @@ func _live():
 	if _rejected(game.start_game(true, match_data)):
 		_fail("start_game rejected the replay characters")
 		return
+	if job.has("census") and !_open(census, job.census):
+		return
 	game.connect("player_actionable", self, "_on_live_actionable")
 
 # The same waits as _on_player_actionable: the turn-start block in game.gd
@@ -165,6 +169,8 @@ func _on_live_actionable():
 	while !(game.p1_turn or !game.p1.state_interruptable) or !(game.p2_turn or !game.p2.state_interruptable):
 		yield(get_tree(), "physics_frame")
 	var key = game.current_tick + 1
+	if census.is_open():
+		_write_census(key)
 	for id in [1, 2]:
 		var fighter = game.get_player(id)
 		var has_input = recorded[id].has(key)
@@ -178,6 +184,30 @@ func _on_live_actionable():
 		yield(get_tree(), "physics_frame")
 	turns += 1
 	turn_active = false
+
+# One JSON line per decision, written after game.gd's turn-start block and
+# before the inputs apply: each player's state, whether it acts busy, the
+# legal action list for its recorded extras (Legality.gd), and its input.
+func _write_census(key):
+	var line = {"t": game.current_tick}
+	for id in [1, 2]:
+		var p = game.get_player(id)
+		var input = recorded[id].get(key)
+		var extra = input["extra"] if input != null else null
+		line["p" + str(id)] = {
+			"state": str(p.current_state().name),
+			"combo": p.combo_count,
+			"hp": p.hp,
+			"meter": p.supers_available,
+			"burst": p.bursts_available,
+			"grounded": p.is_grounded(),
+			"feinting": p.feinting,
+			"acts": p.state_interruptable,
+			"busy": p.busy_interrupt,
+			"legal": Legality.legal_actions(p, extra) if p.state_interruptable else [],
+			"input": input,
+		}
+	census.store_line(JSON.print(line, "", true))
 
 # start_game returns false for an unknown character. In playback it yields,
 # so the result can also be a GDScriptFunctionState.
@@ -342,6 +372,8 @@ func _finish():
 	trace.close()
 	if dump.is_open():
 		dump.close()
+	if census.is_open():
+		census.close()
 	print("REPLAY_CHECK_DONE " + JSON.print({
 		"mode": job.mode,
 		"final_tick": game.current_tick,

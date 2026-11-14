@@ -18,6 +18,7 @@ tools/replay_check/container.sh generate --out replays/ --pairs all --seeds 1-2
 tools/replay_check/container.sh check --replays replays/
 tools/replay_check/container.sh record --replays replays/ --golden golden/
 tools/replay_check/container.sh check --replays replays/ --golden golden/
+tools/replay_check/container.sh census --replays replays/ --out census/
 ```
 
 `container.sh` builds the image with Nix (see "The container" below;
@@ -26,6 +27,11 @@ podman reuses layers when nothing changed) and runs `run.py` in it.
 
 - `--pairs` takes `all`, or a list such as `Cowboy:Ninja,Wizard:Robot`. The
   names come from `Global.name_paths`.
+- `census` plays each replay on the live path and writes one JSON line per
+  decision to `<out>/<name>.jsonl`: each fighter's state, its input, and the
+  legal actions from `Legality.gd` (a copy of
+  `ActionButtons.update_buttons()`). It prints how many recorded inputs are
+  in the legal list.
 - `--work DIR` sets the work directory. The default is
   `~/.cache/hustle-replay-check`.
 - `--jobs N` sets the number of parallel Godot processes.

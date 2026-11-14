@@ -730,6 +730,57 @@ def cmd_record(work: Work, replays: Path, golden: Path, jobs: int) -> int:
     return 1 if failures else 0
 
 
+def cmd_census(work: Work, replays: Path, out: Path, jobs: int) -> int:
+    """Play each replay on the live path and write one census line per decision
+    (ReplayCheck.gd `_write_census`): each player's state, busy flag, legal
+    actions (Legality.gd) and recorded input. Then count how many recorded
+    inputs the legality rule accepts."""
+    files = sorted(replays.glob("*.replay"))
+    if not files:
+        raise CheckError(f"no .replay files in {replays}")
+    out.mkdir(parents=True, exist_ok=True)
+
+    def one(replay: Path) -> Path:
+        census = out / f"{replay.stem}.jsonl"
+        job = live_job(replay, work.jobs / f"census_{replay.stem}.trace")
+        job["census"] = str(census)
+        run_job(work, f"census_{replay.stem}", job)
+        return census
+
+    total = legal = 0
+    misses: list[str] = []
+    failures = 0
+    with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as pool:
+        futures = {pool.submit(one, f): f for f in files}
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                census = future.result()
+            except CheckError as exc:
+                failures += 1
+                print(f"FAIL {futures[future].name}: {exc}", flush=True)
+                continue
+            for raw in census.read_text().splitlines():
+                row = json.loads(raw)
+                for pid in ("p1", "p2"):
+                    p = row[pid]
+                    if p["input"] is None:
+                        continue
+                    total += 1
+                    names = [a.rstrip("*") for a in p["legal"]]
+                    if p["input"]["action"] in names:
+                        legal += 1
+                    else:
+                        misses.append(
+                            f"{census.stem} tick {row['t']} {pid}: {p['state']} -> "
+                            f"{p['input']['action']} (busy={p['busy']}, feinting={p['feinting']})"
+                        )
+    print(f"census: {legal}/{total} recorded inputs are in the legal list")
+    for miss in misses:
+        print(f"  not legal: {miss}")
+    print(f"{len(files) - failures}/{len(files)} replays ran; census files in {out}")
+    return 1 if failures else 0
+
+
 def load_tool(directory: str, module: str) -> Any:
     """Import tools/<directory>/<module>.py. tools/ is not a Python package."""
     path = TOOL_DIR.parent / directory / f"{module}.py"
@@ -791,6 +842,9 @@ def main() -> int:
     rec = sub.add_parser("record")
     rec.add_argument("--replays", type=Path, required=True)
     rec.add_argument("--golden", type=Path, required=True)
+    cen = sub.add_parser("census")
+    cen.add_argument("--replays", type=Path, required=True)
+    cen.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
 
     if os.environ.get("REPLAY_CHECK_CONTAINER") != "1":
@@ -837,6 +891,8 @@ def run_command(args: argparse.Namespace, work: Work) -> int:
         return cmd_record(
             work, args.replays.resolve(), args.golden.resolve(), args.jobs
         )
+    if args.cmd == "census":
+        return cmd_census(work, args.replays.resolve(), args.out.resolve(), args.jobs)
     raise AssertionError(args.cmd)
 
 
