@@ -83,6 +83,11 @@ dockerTools.buildLayeredImage {
     chmod 0700 root
     mkdir -p lib64
     ln -s ${pkgs.glibc}/lib/ld-linux-x86-64.so.2 lib64/ld-linux-x86-64.so.2
+    # The Rust nightly links through `gcc-ld/ld.lld`, a script that starts
+    # with `#!/usr/bin/env bash`. Without /usr/bin/env, gcc's collect2
+    # fails with "posix_spawnp: No such file or directory" on every link.
+    mkdir -p usr/bin
+    ln -s ${pkgs.coreutils}/bin/env usr/bin/env
   '';
 
   config = {

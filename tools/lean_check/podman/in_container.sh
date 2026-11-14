@@ -43,20 +43,7 @@ echo "=== cargo test (port/hustle_core, independent of Charon/Aeneas) ==="
 rm -rf /work/hustle_core_build
 cp -r /work/hustle_core_src /work/hustle_core_build
 cd /work/hustle_core_build
-# This image's `cc` cannot finish linking ANY test binary -- confirmed
-# with a brand-new, unrelated crate, not just this one: "collect2:
-# fatal error: posix_spawnp: No such file or directory" (2026-11-14).
-# `rust_proto`'s own cargo test above only still reports success
-# because its target/ directory (under the same persistent /work
-# mount) already holds a linked test binary from an earlier, working
-# run; cargo's incremental build skips re-linking it. A genuinely
-# clean rebuild of either crate's test binary would hit the same
-# failure. Charon's own extraction does not need a working linker (it
-# stops at MIR, before the link step; rust_proto's own
-# `charon cargo --preset=aeneas` above already proves this), so this
-# does not block Aeneas or `lake build`. Not fatal here; reported, not
-# hidden.
-cargo test || echo "cargo test failed (see the comment above): continuing anyway."
+cargo test
 
 echo "=== charon cargo --preset=aeneas (port/hustle_core) ==="
 rm -f hustle_core.llbc

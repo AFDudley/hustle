@@ -266,22 +266,16 @@ calls and one standard-library trait impl removed to reach zero axioms.
 Three more findings, beyond "Constructs the tools rejected" below
 (found against `rust_proto`):
 
-1. **This image's `cc` cannot finish linking any test binary**, found
-   while running `cargo test` against `port/hustle_core` independently
-   of Charon/Aeneas (the same check "Commands" above runs for
-   `rust_proto`): `collect2: fatal error: posix_spawnp: No such file or
-   directory`. Confirmed against a brand-new, unrelated crate too, so
-   this is not a property of `hustle_core`'s code. `rust_proto`'s own
-   `cargo test` only still reports success because its `target/`
-   directory (under the same persistent `/work` mount) already holds a
-   linked test binary from an earlier, working run; cargo's incremental
-   build skips re-linking it, so a genuinely clean rebuild of either
-   crate's test binary would hit the same failure. This does not block
-   Charon or Aeneas: Charon's own extraction stops at MIR, before the
-   link step (`rust_proto`'s own `charon cargo --preset=aeneas` already
-   proves this, every run). `podman/in_container.sh` runs `cargo test`
-   for `port/hustle_core` and reports its result, but does not fail the
-   pipeline on it.
+1. **The image could not link any Rust binary until it got
+   `/usr/bin/env`.** `cargo test` failed with `collect2: fatal error:
+   posix_spawnp: No such file or directory`, for any crate. The Rust
+   nightly links through `lib/rustlib/x86_64-unknown-linux-gnu/bin/gcc-ld/ld.lld`,
+   a script that starts with `#!/usr/bin/env bash`, and the Nix image had
+   no `/usr/bin/env`. `nix/image.nix` now adds it. Before the fix,
+   `rust_proto`'s `cargo test` passed only because its persistent
+   `target/` held a binary linked in an earlier image. `cargo test` is
+   fatal for both crates. Charon's extraction stops at MIR and never
+   needed the linker.
 2. **A comparison that becomes a stored `Bool` value, not a direct `if`
    condition, can elaborate as a Lean `Prop`.** `let overflow = overflow
    || val > bound; if overflow { ... }` (an order comparison combined
