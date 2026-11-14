@@ -188,9 +188,17 @@ modes (`lamturbo()`), with float forces from new input fields.
      simulation differ: stage width, game length, ceiling height and starting
      meter. `turn_min_length` and `show_last_di_state` are read only by the UI.
    The model fixes these values. It rejects a replay with other values.
-4. **Language:** Rust. The port uses `fixed 1.19.0` and `fixed-sqrt 0.2.5`, so
-   that its fixed-point rounding matches `tbfg.so` by construction. Open item 3
-   confirms this by measurement and adds a third crate, `fixed_trigonometry`.
+4. **Language:** Rust. `fixed 1.19.0` and `fixed-sqrt 0.2.5` define the
+   fixed-point rounding that `tbfg.so` uses. Open item 3 confirms this by
+   measurement and adds a third crate, `fixed_trigonometry`.
+
+   Amendment, 2026-11-14: the port does not link these crates. Decision 5
+   needs one self-contained crate, because Charon must extract the MIR of
+   every function that the Lean proof reasons about. The port defines its
+   own `Fixed` type over `i64` (raw I48F16) and copies the three crates'
+   algorithms into the Aeneas subset. `tools/fixedmath_diff` checks that type
+   against the game's own `FixedMath` results, call by call. It must match
+   on every call where the `fixed`-based reference matches.
 5. **Rust style:** write the simulation in the subset that Aeneas (through
    Charon) or hax can translate to Lean, from the first line:
    - plain `struct`s and `enum`s, with one enum variant per character state,
@@ -379,7 +387,7 @@ modes (`lamturbo()`), with float forces from new input fields.
      the tick instead (`BaseChar.gd:2444`) and does not clear them, so after
      a `Continue` they stay true until the state changes.
 
-   In all 45 replays with these differences, the final state is equal. The
+   In all 46 replays with these differences, the final state is equal. The
    live values are the model's values.
 3. **Resolved: the string interface.** `tools/fixedmath_diff/` called all 38
    registered `FixedMath` methods 32,529 times from GDScript and recomputed
