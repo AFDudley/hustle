@@ -51,9 +51,12 @@ podman run --rm --init --cpu-quota 800000 --cpu-period 100000 \
   "$godot_image" \
   -c '
     set -e
+    # Xvfb writes its display number to fd 3 when it is ready. Read it from
+    # a FIFO, so Godot starts only after the X server accepts clients.
+    mkfifo /tmp/dispfd
     Xvfb -displayfd 3 -screen 0 1280x720x24 -nolisten tcp 3>/tmp/dispfd &
-    sleep 1
-    export DISPLAY=":$(cat /tmp/dispfd)"
+    read -r display_number </tmp/dispfd
+    export DISPLAY=":$display_number"
     exec timeout 300 /opt/godotsteam/linux-351-editor.64 --no-window --audio-driver Dummy \
       --fixed-fps 60 --path /repo res://tools/rng_diff/RngDiff.tscn \
       --rngd-out=/out/godot_out.jsonl
