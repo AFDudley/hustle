@@ -1,0 +1,12 @@
+[package]
+name = "hustle_core"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "A self-contained fixed-point number type for the HUSTLE core game port. No dependencies."
+
+[lib]
+name = "hustle_core"
+path = "src/lib.rs"
+
+[dependencies]

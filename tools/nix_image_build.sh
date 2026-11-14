@@ -3,11 +3,17 @@
 # and load it into podman. Each tool's build.sh calls this with its own
 # three values. See tools/replay_check/README.md, "The container".
 #
-# Usage: tools/nix_image_build.sh TOOL_DIR IMAGE NAME
+# Usage: tools/nix_image_build.sh TOOL_DIR IMAGE NAME [EXTRA_SRC:EXTRA_DEST ...]
 #   TOOL_DIR  the tool directory that holds flake.nix
 #   IMAGE     the podman image the flake builds, e.g. localhost/hustle-replay-check
 #   NAME      a short unique name: the GC root /nix/var/nix/gcroots/hustle/NAME
 #             and the output directory .scratch/NAME_nix (stamp file inside)
+#   EXTRA_SRC:EXTRA_DEST  optional. Stages another git-tracked directory's
+#             tracked files into the flake source too, at a path relative
+#             to the flake root named by EXTRA_DEST. Use this when a tool's
+#             Rust crate has a path dependency on a crate outside TOOL_DIR
+#             (tools/rng_diff depends on port/hustle_core this way; see its
+#             build.sh and rust/Cargo.toml).
 #
 # Nix never runs on the host. It runs inside a pinned docker.io/nixos/nix
 # container, pinned by digest below. The Nix store is the named podman
@@ -19,13 +25,15 @@
 # the Nix output did not change and podman already has the image.
 set -euo pipefail
 
-if [[ $# -ne 3 ]]; then
-  echo "usage: $0 TOOL_DIR IMAGE NAME" >&2
+if [[ $# -lt 3 ]]; then
+  echo "usage: $0 TOOL_DIR IMAGE NAME [EXTRA_SRC:EXTRA_DEST ...]" >&2
   exit 2
 fi
 tool_dir="$(cd "$1" && pwd)"
 image="$2"
 name="$3"
+shift 3
+extra_args=("$@")
 
 repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # docker.io/nixos/nix:latest, pinned on 2026-11-12.
@@ -51,6 +59,18 @@ if [[ ! -f "$stage/flake.nix" ]]; then
   echo "$tool_dir/flake.nix is not tracked by git; git add it first" >&2
   exit 1
 fi
+
+# Each extra dependency stages the same way, into its own named
+# subdirectory of the flake source, so a tool's Cargo.toml can reach it
+# with a plain relative path dependency.
+for extra in "${extra_args[@]:-}"; do
+  [[ -z "$extra" ]] && continue
+  extra_src="${extra%%:*}"
+  extra_dest="${extra#*:}"
+  extra_src="$(cd "$extra_src" && pwd)"
+  mkdir -p "$stage/$extra_dest"
+  (cd "$extra_src" && git ls-files -z --cached -- . | tar --null -T - -cf -) | tar -xf - -C "$stage/$extra_dest"
+done
 
 # The out-link is a GC root inside the volume, so a garbage collection of
 # hustle-nix-store (laconic-tech-ops' weekly nix-store-gc@hustle-nix-store
