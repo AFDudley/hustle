@@ -8,6 +8,12 @@ publish = false
 name = "fixedmath_diff"
 path = "src/main.rs"
 
+[[bin]]
+# Recomputes the same probe set with hustle_core::fixed instead of the
+# fixed/fixed-sqrt/fixed_trigonometry crates. See README.md.
+name = "hustle_core_diff"
+path = "src/hustle_core_main.rs"
+
 [dependencies]
 # Pinned to the exact versions named in lib/tbfg.so's strings (see
 # tools/fixedmath_diff/README.md, "Fixed facts"), so FromStr/Display rounding
@@ -21,3 +27,7 @@ fixed-sqrt = "=0.2.5"
 # the crate's latest release at the time of writing, not a confirmed pin.
 fixed_trigonometry = "0.4.4"
 serde_json = "1"
+# Staged next to this crate by tools/nix_image_build.sh's extra-source
+# argument (see ../build.sh); the path below is a sibling directory in
+# the staged flake source, not the real repo tree's port/hustle_core.
+hustle_core = { path = "../hustle_core" }

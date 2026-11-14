@@ -11,7 +11,7 @@
     in
     {
       packages.${system} = rec {
-        fixedmathDiff = pkgs.callPackage ./nix/rust.nix { src = ./rust; };
+        fixedmathDiff = pkgs.callPackage ./nix/rust.nix { src = ./.; };
         image = pkgs.callPackage ./nix/image.nix { inherit fixedmathDiff; };
         default = image;
       };

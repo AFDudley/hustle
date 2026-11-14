@@ -1,13 +1,18 @@
 # FixedMath diff
 
-This tool checks one risk for the Rust port of Your Only Move Is HUSTLE: does
-`fixed 1.19.0` plus `fixed-sqrt 0.2.5` reproduce `lib/tbfg.so`'s `FixedMath`
-exactly. See `docs/labbook/2026-11-13-core-game-scope-five-characters.md`,
-open item 3.
+This tool checks two risks for the Rust port of Your Only Move Is HUSTLE.
+First: does `fixed 1.19.0` plus `fixed-sqrt 0.2.5` (and, undisclosed,
+`fixed_trigonometry`) reproduce `lib/tbfg.so`'s `FixedMath` exactly. See
+`docs/labbook/2026-11-13-core-game-scope-five-characters.md`, open item 3.
+Second, added once the port's own self-contained type existed (decision 4's
+amendment): does `port/hustle_core`'s `Fixed` type reproduce that same
+reference exactly, so it inherits the first check's result without linking
+any of the three crates. See "hustle_core, checked against this reference"
+below.
 
 The method: call every `FixedMath` method from GDScript on a large probe
-set, and call the same methods in Rust on the same inputs. Compare the two
-outputs line by line.
+set, and call the same methods in two Rust reimplementations on the same
+inputs. Compare all three outputs line by line.
 
 ## The result
 
@@ -282,24 +287,31 @@ operations, not just the formula.
   handful of strings `FromStr` must reject — and calls `fixed.callv(method,
   args)` for each. It writes one JSON line per call to `--fmd-out=<path>`:
   `{"method", "args", "result", "error"}`.
-- `rust/`: a crate (`fixed = "=1.19.0"`, `fixed-sqrt = "=0.2.5"`,
-  `fixed_trigonometry = "0.4.4"`) that reads that file, ignores `"result"`
-  and `"error"` (the game's own answer), recomputes with the same method
-  and args, and writes a line with the same shape.
-- `compare.py`: lines the two files up by position (both iterate the same
+- `rust/`: a crate with two binaries, reading the same probe file and
+  writing the same `{"method", "args", "result", "error"}` shape.
+  `fixedmath_diff` (`src/main.rs`) depends on `fixed = "=1.19.0"`,
+  `fixed-sqrt = "=0.2.5"`, `fixed_trigonometry = "0.4.4"`.
+  `hustle_core_diff` (`src/hustle_core_main.rs`) depends on
+  `hustle_core` (`port/hustle_core`, a path dependency) instead, and
+  recomputes the same probe set with `hustle_core::fixed::Fixed`. See
+  `port/hustle_core/README.md`.
+- `compare.py`: lines two files up by position (both iterate the same
   input list, in the same order) and reports every `(method, args)` pair
   whose `error` flags disagree, or whose `result`s differ when neither
   errored.
 - `container.sh`: the host-side entry point. Three podman stages, each
   read-only on the repository: Godot (reusing `tools/replay_check`'s Nix
   image and `build.sh`), Rust (this tool's own Nix image, built by its
-  own `build.sh`), and the comparison (the same Nix image again, for its
-  Python 3). No stage runs Godot, `cargo`, or this task's Python directly
-  on the host.
+  own `build.sh`, running both binaries), and the comparison (the same
+  Nix image again, for its Python 3, running `compare.py` three times:
+  game vs. `fixedmath_diff`, game vs. `hustle_core_diff`, and
+  `fixedmath_diff` vs. `hustle_core_diff`). No stage runs Godot, `cargo`,
+  or this task's Python directly on the host.
 
 ```sh
 tools/fixedmath_diff/container.sh
 cat ~/.cache/hustle-fixedmath-diff/out/report.json
+cat ~/.cache/hustle-fixedmath-diff/out/report_hustle_core_vs_fixed.json
 ```
 
 ## The container
@@ -314,21 +326,47 @@ host: the Nix store is the named podman volume `hustle-nix-store`, shared
 with `tools/replay_check`, so nixpkgs itself is fetched once. `flake.lock`
 pins nixpkgs to the same revision as `tools/replay_check/flake.lock`.
 
-The image holds two things:
+`rust/Cargo.toml` path-depends on `hustle_core` (`port/hustle_core`,
+outside this directory). `build.sh` passes `tools/nix_image_build.sh` an
+extra `EXTRA_SRC:EXTRA_DEST` argument that stages `port/hustle_core`'s
+git-tracked files as a sibling directory, `hustle_core`, next to `rust/`
+inside the flake source; `rust/Cargo.toml`'s dependency path
+(`../hustle_core`) resolves against that staged layout, not the real
+repo tree. `tools/rng_diff` uses the same pattern for the same crate.
+`nix/rust.nix`'s `cargoRoot` and `buildAndTestSubdir` tell
+`buildRustPackage` that the crate itself, and its `Cargo.lock`, live in
+the `rust` subdirectory of that staged source.
+
+The image holds three things:
 
 - **The `fixedmath_diff` binary**, built by `nix/rust.nix` with
   `rustPlatform.buildRustPackage` straight from `rust/Cargo.lock`. Every
-  dependency (`fixed`, `fixed-sqrt`, `fixed_trigonometry`, and their own
-  dependencies) comes from crates.io, so Nix fetches and checks each one
-  against the checksum already in the lockfile; no extra fixed-output
-  hash is needed.
+  registry dependency (`fixed`, `fixed-sqrt`, `fixed_trigonometry`, and
+  their own dependencies) comes from crates.io, so Nix fetches and
+  checks each one against the checksum already in the lockfile; no
+  extra fixed-output hash is needed. `hustle_core` is a path dependency,
+  staged as described above, and needs no such checksum.
+- **The `hustle_core_diff` binary**, from the same crate build (`[[bin]]`
+  in `rust/Cargo.toml`).
 - **Python 3**, for `compare.py`.
 
-`container.sh`'s stage 2 runs the built binary directly
-(`fixedmath_diff /out/godot_out.jsonl /out/rust_out.jsonl`); unlike the
+`container.sh`'s stage 2 runs the built binaries directly; unlike the
 earlier public-image version, this stage no longer runs `cargo build` at
-container-run time, because Nix already built the binary when the image
-was built.
+container-run time, because Nix already built them when the image was
+built.
+
+## hustle_core, checked against this reference
+
+`port/hustle_core/src/fixed.rs` defines the same `Fixed` type with no
+dependencies, copying the three crates' algorithms (`port/hustle_core/README.md`).
+`hustle_core_diff` recomputes the whole probe set with it, and
+`compare.py` checks its output against `fixedmath_diff`'s, line by line,
+over all 32,529 calls (`report_hustle_core_vs_fixed.json`). Result: 0
+mismatches. Every call's `result` and `error` agree exactly, so
+`hustle_core_diff`'s score against the game
+(`report_hustle_core.json`) is the same 31,809/32,529 as
+`fixedmath_diff`'s, with the same documented mismatches (`angle_dist` at
+`±π`, `sign` at the type's minimum, and the two dead methods).
 
 ## Limits
 

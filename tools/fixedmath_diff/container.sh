@@ -6,12 +6,15 @@
 # Three podman stages, each read-only on the repository:
 #   1. The Godot run (tools/replay_check's Nix image): calls every
 #      FixedMath method on the probe set, writes godot_out.jsonl.
-#   2. The Rust run (this tool's own Nix image, built by build.sh):
-#      recomputes with the fixed and fixed-sqrt crates, writes
-#      rust_out.jsonl.
+#   2. The Rust run (this tool's own Nix image, built by build.sh): two
+#      binaries from the same image, recomputing the same probe set —
+#      "fixedmath_diff" with the fixed and fixed-sqrt crates
+#      (rust_out.jsonl), and "hustle_core_diff" with
+#      port/hustle_core::fixed (hustle_core_out.jsonl).
 #   3. The comparison (this tool's own Nix image again, for its
-#      Python 3): lines the two files up and writes report.json.
-#
+#      Python 3): three pairwise diffs — game vs. the crate reference,
+#      game vs. hustle_core, and the crate reference vs. hustle_core
+#      (these two Rust outputs must be identical line by line).
 # No stage runs Godot, cargo, or this task's Python directly on the host;
 # container.sh itself only invokes podman.
 set -euo pipefail
@@ -66,10 +69,47 @@ podman run --rm --cpus 8 \
   "$fixedmath_image" \
   /out/godot_out.jsonl /out/rust_out.jsonl
 
+podman run --rm --cpus 8 --cpu-quota 800000 --cpu-period 100000 \
+  --entrypoint hustle_core_diff \
+  -v "$work/out:/out" \
+  "$fixedmath_image" \
+  /out/godot_out.jsonl /out/hustle_core_out.jsonl
+
 echo "--- stage 3: compare ---"
+# game vs. the fixed/fixed-sqrt/fixed_trigonometry crates: known
+# mismatches exist (angle_dist, sign, and the two dead methods;
+# README.md). Exit code captured, not fatal here.
 podman run --rm --cpus 8 \
   --entrypoint python3 \
   -v "$tool_dir/compare.py:/compare.py:ro" \
   -v "$work/out:/out" \
   "$fixedmath_image" \
-  /compare.py /out/godot_out.jsonl /out/rust_out.jsonl /out/report.json
+  /compare.py /out/godot_out.jsonl /out/rust_out.jsonl /out/report.json \
+  && rust_vs_game=0 || rust_vs_game=$?
+
+# game vs. hustle_core: the same known mismatches, carried over, not
+# introduced by the port.
+podman run --rm --cpus 8 --cpu-quota 800000 --cpu-period 100000 \
+  --entrypoint python3 \
+  -v "$tool_dir/compare.py:/compare.py:ro" \
+  -v "$work/out:/out" \
+  "$fixedmath_image" \
+  /compare.py /out/godot_out.jsonl /out/hustle_core_out.jsonl /out/report_hustle_core.json \
+  && hustle_core_vs_game=0 || hustle_core_vs_game=$?
+
+# the fixed-crate reference vs. hustle_core: the acceptance check. Every
+# one of the 32,529 calls must match exactly; this is the one exit code
+# that fails the build.
+podman run --rm --cpus 8 --cpu-quota 800000 --cpu-period 100000 \
+  --entrypoint python3 \
+  -v "$tool_dir/compare.py:/compare.py:ro" \
+  -v "$work/out:/out" \
+  "$fixedmath_image" \
+  /compare.py /out/rust_out.jsonl /out/hustle_core_out.jsonl /out/report_hustle_core_vs_fixed.json \
+  && hustle_core_vs_rust=0 || hustle_core_vs_rust=$?
+
+echo "--- summary ---"
+echo "game vs. fixed-crate reference: exit $rust_vs_game (report.json; known mismatches expected)"
+echo "game vs. hustle_core: exit $hustle_core_vs_game (report_hustle_core.json; the same known mismatches expected)"
+echo "fixed-crate reference vs. hustle_core: exit $hustle_core_vs_rust (report_hustle_core_vs_fixed.json; must be 0)"
+exit "$hustle_core_vs_rust"
