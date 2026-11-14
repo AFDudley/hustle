@@ -579,28 +579,49 @@ pub fn apply_y_fric(o: ObjectData, fric: Fixed) -> ObjectData {
     out
 }
 
-/// Applies `apply_x_fric` with an effective friction computed from
-/// the stored configuration instead of a caller-supplied value:
-/// `ground_friction / max_ground_speed` when grounded,
-/// `air_friction / max_air_speed` otherwise. `vel_y` is left alone:
-/// a recorded real call with `vel_x = "5"`, `vel_y = "-3"` changed
-/// only `vel_x`, for every probed friction and speed-cap combination
-/// (`tools/fgobject_diff/README.md`, "apply_fric"). Vertical friction
-/// is `apply_y_fric`'s own job, called separately where the game
-/// wants it.
+/// Decrements `vel_x` by `(|vel_x| / max_speed) * friction`, signed to
+/// match `vel_x`, where `max_speed` is `max_ground_speed` when grounded,
+/// `max_air_speed` otherwise (and `friction` is `ground_friction` or
+/// `air_friction` the same way). `vel_y` is left alone: a recorded real
+/// call with `vel_x = "5"`, `vel_y = "-3"` changed only `vel_x`, for
+/// every probed friction and speed-cap combination
+/// (`tools/fgobject_diff/README.md`, "apply_fric"). Vertical friction is
+/// `apply_y_fric`'s own job, called separately where the game wants it.
+///
+/// This is **not** `apply_x_fric` with an effective `friction /
+/// max_speed` argument: disassembling `BaseObject::apply_fric`
+/// (`lib/tbfg.so`) shows the division happens first, against
+/// `max_speed`, and the multiply by `friction` second — the reverse
+/// order from computing a ratio and multiplying `vel_x` by it once.
+/// The two orders give the same real number but round differently at
+/// each step; only the disassembled order reproduces the engine
+/// exactly: `vel_x = "5"`, `ground_friction = "2.5"`,
+/// `max_ground_speed = "15"` gave raw `273068` from the division-first
+/// order (matching the engine) and raw `273070` from the
+/// ratio-first order (this function's own earlier, wrong version).
 /// A zero `max_ground_speed`/`max_air_speed` is a division by zero in
 /// the real library, caught as Nil; this returns the object
 /// unchanged for that case, the same policy as every other method
 /// the real library can panic on.
 pub fn apply_fric(o: ObjectData) -> ObjectData {
-    let (fric, limit) = if o.grounded {
+    let (friction, max_speed) = if o.grounded {
         (o.ground_friction, o.max_ground_speed)
     } else {
         (o.air_friction, o.max_air_speed)
     };
-    match fric.wrapping_div(limit) {
+    match o.vel_x.abs().wrapping_div(max_speed) {
         None => o,
-        Some(ratio) => apply_x_fric(o, ratio),
+        Some(scaled) => {
+            let magnitude = scaled.wrapping_mul(friction);
+            let decrement = if o.vel_x.0 < 0 {
+                Fixed(-magnitude.0)
+            } else {
+                magnitude
+            };
+            let mut out = o;
+            out.vel_x = o.vel_x.wrapping_sub(decrement);
+            out
+        }
     }
 }
 
