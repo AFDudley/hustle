@@ -235,8 +235,20 @@ modes (`lamturbo()`), with float forces from new input fields.
    Correction, 2026-11-14: the census (section 2.3, open item 4) and the
    coverage of the human replays (open item 7, sets B and C) ran on the
    playback path, before this mode existed. Only set A's coverage included
-   live runs (the regenerated matches). The census now runs on the live path
-   (open item 4). The coverage of sets B and C still needs a live rerun.
+   live runs (the regenerated matches). Both now run on the live path
+   (open items 4 and 7).
+
+   Amendment, 2026-11-14: the port compares a projection, not the whole
+   snapshot. One tick's snapshot holds 107 game fields and about 1,800
+   `vars` and 230 `state_vars` per fighter (umpa_ender, tick 9). 779 of
+   them are object references (`<node:...>`), and many repeat table data.
+   The check uses a named list of simulation fields (positions, velocities,
+   HP, meter, burst, state name and tick, hitlag, hitstun, the turn flags,
+   and the objects alive). `tools/replay_check` extracts the list from each
+   live snapshot, and the port writes the same list. Each slice adds the
+   fields it ports. Before the port is complete, the list must hold every
+   field that a later tick reads. A field that the ignore list does not
+   remove and the projection leaves out needs a written reason.
 7. **Test set:** Discord replays at `1.10.0-steam`, official characters only,
    in the tournament format: 13 replays (4 tagged Ranked, 9 untagged with the
    same settings). The 93 official-character replays at `1.10.0-steam` in other
