@@ -6,11 +6,20 @@
      for the probe comparison (`tools/tablegen/dump/rust/src/main.rs`).
   3. `tools/tablegen/manifest.json` -- which scenes and fields the probe
      (`tools/tablegen/TableGenProbe.gd`) must read from the real engine.
+  4. `tools/lean_check/generated/HustleCorePortFunsExternal.lean` -- one
+     Lean `def` per table item Charon marks opaque, holding the same
+     data as the Rust tables. Replaces Aeneas's own axiom template; see
+     `tools/lean_check/podman/in_container.sh`.
+  5. a Lean `TableDump` program
+     (`tools/lean_check/generated/src/HustleCorePortTableDump.lean`)
+     that prints the Lean tables in `table_dump`'s own JSON Lines
+     format, for the Rust/Lean equality check `in_container.sh` runs.
 
 See `tools/tablegen/README.md` for the schema and the kept/dropped field
 lists. See `schema.py` for the field manifests this module renders.
 
-Usage: gen.py REPO_ROOT OUT_TABLES_DIR OUT_DUMP_MAIN OUT_MANIFEST OUT_OPAQUE_PATTERNS
+Usage: gen.py REPO_ROOT OUT_TABLES_DIR OUT_DUMP_MAIN OUT_MANIFEST \
+  OUT_OPAQUE_PATTERNS OUT_LEAN_FUNS_EXTERNAL OUT_LEAN_TABLE_DUMP
 """
 from __future__ import annotations
 
@@ -570,6 +579,16 @@ def collect_tokens(scopes: dict[str, Scope]):
 # Rust value/type emission.
 # ---------------------------------------------------------------------
 
+# Fixed, non-dynamic enum variant lists (shared between the Rust emitter
+# below and the Lean emitters further down, so the two never diverge).
+ACTION_TYPE_VARIANTS = ["Movement", "Attack", "Special", "Super", "Defense", "Hurt"]
+AIR_TYPE_VARIANTS = ["Grounded", "Aerial", "Both"]
+BUSY_INTERRUPT_VARIANTS = ["Normal", "Hurt", "NoneKind"]
+HITBOX_TYPE_VARIANTS = ["Normal", "Flip", "ThrowHit", "OffensiveBurst", "Burst", "NoHitstun", "Detect"]
+HIT_HEIGHT_VARIANTS = ["High", "Mid", "Low"]
+HITBOX_KIND_VARIANTS = ["Hitbox", "ThrowBox", "SweptHitbox"]
+
+
 
 def rust_type(tag: str, is_base: bool = False) -> str:
     if tag.startswith("enum:"):
@@ -686,6 +705,105 @@ def emit_value(tag: str, raw, scope: Scope, state_names: set[str], name: str = "
         variant = PROJECTILE_VARIANT_BY_RESPATH[key]
         return f"Some(ProjectileKind::{variant})"
     raise ValueError(f"unhandled tag {tag!r}")
+
+def lean_mod(scope: "Scope") -> str:
+    """The Lean-qualified module prefix a scope's own items live under:
+    `tables.<key>` for a character, `tables.projectiles.<key>` for a
+    projectile (mirrors `emit_opaque_patterns`'s `modpath`, with `::`
+    written as `.`)."""
+    return f"tables.{scope.key}" if scope.kind == "character" else f"tables.projectiles.{scope.key}"
+
+
+def lean_int_lit(n: int, suffix: str) -> str:
+    return f"{n}#{suffix}" if n >= 0 else f"({n})#{suffix}"
+
+
+def emit_fallback_state_lean(raw: str, state_names: set[str], mod: str) -> str:
+    if not raw:
+        return "none"
+    if raw in state_names:
+        return f"(some ({mod}.FallbackState.Own {mod}.State.{rust_variant(raw)}))"
+    assert raw in BASE_STATE_NAMES, ("fallback_state", raw)
+    return f"(some ({mod}.FallbackState.Base tables.base.State.{rust_variant(raw)}))"
+
+
+def emit_value_lean(tag: str, raw, scope: Scope, state_names: set[str], name: str = "") -> str:
+    """Mirrors `emit_value` field for field, but emits a Lean term
+    instead of a Rust one: the same `raw` data drives both emitters, so
+    the Rust tables and the Lean `def`s below can never hold different
+    values by construction."""
+    mod = lean_mod(scope)
+    if tag == "bool":
+        return "true" if raw else "false"
+    if tag == "int":
+        return lean_int_lit(int(raw), "i32")
+    if tag == "fixed":
+        n = fixed_raw(raw)
+        # See `emit_value`'s own comment on this tag: `none` here is one
+        # of the two upstream data anomalies, not a guessed number.
+        return "none" if n is None else f"(some {lean_int_lit(n, 'i64')})"
+    if tag.startswith("enum:"):
+        enum_name = tag.split(":", 1)[1]
+        value = schema.resolve_enum_ref(raw) if isinstance(raw, EnumRef) else raw
+        try:
+            member = next(k for k, v in schema.GODOT_ENUMS[enum_name].items() if v == value)
+        except StopIteration:
+            raise ValueError(f"{scope.key}: no {enum_name} member for raw value {value!r}") from None
+        lean_enum = "BusyInterrupt" if enum_name == "BusyInterrupt" else enum_name
+        variant = "NoneKind" if lean_enum == "BusyInterrupt" and member == "None" else member
+        return f"tables.common.{lean_enum}.{variant}"
+    if tag == "state_self_req":
+        assert raw in state_names, (scope.key, "state_self_req", raw)
+        return f"{mod}.State.{rust_variant(raw)}"
+    if tag == "state_self_opt":
+        if not raw:
+            return "none"
+        if raw not in state_names:
+            assert name == "fallback_state", (scope.key, "state_self_opt", name, raw)
+            return "none"
+        return f"(some {mod}.State.{rust_variant(raw)})"
+    if tag == "state_base_req":
+        return f"tables.base.State.{rust_variant(raw)}"
+    if tag == "stance_self_opt":
+        if not raw:
+            return "none"
+        return f"(some tables.common.Stance.{rust_str_enum('Stance', raw)})"
+    if tag == "stances":
+        items = ", ".join(f"tables.common.Stance.{rust_str_enum('Stance', t)}" for t in split_lines(raw))
+        return f"(Slice.from [{items}] (by decide))"
+    if tag.startswith("categories:"):
+        items = ", ".join(f"tables.common.CancelCategory.{rust_str_enum('CancelCategory', t)}" for t in split_lines(raw))
+        return f"(Slice.from [{items}] (by decide))"
+    if tag == "frame_list":
+        items = ", ".join(lean_int_lit(int(v), "i32") for v in raw)
+        return f"(Slice.from [{items}] (by decide))"
+    if tag == "throw_positions":
+        parts = []
+        for anim_name, frame, x, y in raw:
+            variant = rust_str_enum("ThrowAnimation", anim_name)
+            parts.append(
+                f"{{ animation := tables.common.ThrowAnimation.{variant}, "
+                f"frame := {lean_int_lit(frame, 'i32')}, x := {lean_int_lit(x, 'i32')}, "
+                f"y := {lean_int_lit(y, 'i32')} }}"
+            )
+        return f"(Slice.from [{', '.join(parts)}] (by decide))"
+    if tag == "misc_tag":
+        if not raw:
+            return "none"
+        return f"(some tables.common.MiscDataTag.{rust_str_enum('MiscDataTag', raw)})"
+    if tag == "orb_trigger":
+        if not raw:
+            return "none"
+        return f"(some tables.common.OrbTriggerType.{rust_str_enum('OrbTriggerType', raw)})"
+    if tag == "projectile_kind":
+        if not raw:
+            return "none"
+        _typ, respath = raw
+        key = PROJECTILE_KEY_BY_RESPATH[respath]
+        variant = PROJECTILE_VARIANT_BY_RESPATH[key]
+        return f"(some tables.common.ProjectileKind.{variant})"
+    raise ValueError(f"unhandled tag {tag!r}")
+
 
 
 BASE_STATE_NAMES: set[str] = set()
@@ -808,6 +926,107 @@ def emit_scope_rs(scope: Scope) -> str:
     out.append("")
     return "\n".join(out)
 
+def emit_scope_lean(scope: Scope) -> str:
+    """Mirrors `emit_scope_rs`: one Lean `def` per item Charon marks
+    opaque for this scope (`ALL_STATES`, `state_data`, every
+    `HITBOXES_*` const, `ROOT`), with exactly the name and `Result`
+    wrapping Aeneas's own axiom template declares for each (see
+    `tools/lean_check/generated/src/HustleCorePort/FunsExternal.lean`
+    before this change, and `emit_opaque_patterns` above for which
+    items are opaque)."""
+    mod = lean_mod(scope)
+    state_names = {e.name for e in scope.states}
+    field_list = scope_field_list(scope)
+    out = []
+
+    n_states = len(scope.states)
+    state_items = ", ".join(f"{mod}.State.{rust_variant(e.name)}" for e in scope.states)
+    out.append(f"def {mod}.ALL_STATES : Result (Array {mod}.State {n_states}#usize) :=")
+    out.append(f"  ok (Array.make {n_states}#usize [{state_items}] (by decide))")
+    out.append("")
+
+    def hitbox_record_fields_lean(hfields: dict[str, object]) -> list[str]:
+        return [f"{rust_field(name)} := {emit_value_lean(tag, hfields[name][0], scope, state_names, name)}"
+                for name, tag in HITBOX_RECORD_FIELDS]
+
+    for e in scope.states:
+        if not e.hitboxes:
+            continue
+        const_name = f"{mod}.HITBOXES_{rust_variant(e.name).upper()}"
+        n = len(e.hitboxes)
+        items = []
+        for kind, hfields in e.hitboxes:
+            field_strs = [f"kind := tables.common.HitboxKind.{kind}"] + hitbox_record_fields_lean(hfields)
+            items.append("{ " + ", ".join(field_strs) + " }")
+        out.append(f"def {const_name} : Result (Array {mod}.HitboxRecord {n}#usize) :=")
+        out.append(f"  ok (Array.make {n}#usize [{', '.join(items)}] (by decide))")
+        out.append("")
+
+    out.append(f"def {mod}.state_data : {mod}.State → Result {mod}.StateData")
+    for e in scope.states:
+        field_strs = []
+        for name, tag in field_list:
+            raw, _ = e.fields[name]
+            if name == "fallback_state" and scope.kind == "projectile":
+                value_expr = emit_fallback_state_lean(raw, state_names, mod)
+            else:
+                value_expr = emit_value_lean(tag, raw, scope, state_names, name)
+            field_strs.append(f"{rust_field(name)} := {value_expr}")
+        fields_joined = ", ".join(field_strs)
+        if e.hitboxes:
+            const_name = f"{mod}.HITBOXES_{rust_variant(e.name).upper()}"
+            out.append(f"  | .{rust_variant(e.name)} => do")
+            out.append(f"      let hb ← {const_name}")
+            out.append(f"      ok {{ {fields_joined}, hitboxes := Slice.from hb.val (by decide) }}")
+        else:
+            out.append(f"  | .{rust_variant(e.name)} => ok {{ {fields_joined}, hitboxes := Slice.from [] (by decide) }}")
+    out.append("")
+
+    root_list = schema.FIGHTER_ROOT_FIELDS if scope.kind == "character" else schema.PROJECTILE_ROOT_FIELDS
+    root_type = "FighterRootConstants" if scope.kind == "character" else "ProjectileRootConstants"
+    root_strs = []
+    for name, tag in root_list:
+        raw, _ = scope.root_fields[name]
+        root_strs.append(f"{rust_field(name)} := {emit_value_lean(tag, raw, scope, state_names, name)}")
+    out.append(f"def {mod}.ROOT : Result tables.common.{root_type} :=")
+    out.append("  ok { " + ", ".join(root_strs) + " }")
+    out.append("")
+    return "\n".join(out)
+
+
+FUNS_EXTERNAL_LEAN_HEADER = (
+    "-- Generated by tools/tablegen/gen.py. Do not hand-edit.\n"
+    "-- Real Lean definitions for every `hustle_core::tables` item Charon\n"
+    "-- marks opaque (see tools/tablegen/README.md and\n"
+    "-- tools/lean_check/README.md, \"port/hustle_core, the tables slice\").\n"
+    "-- This file replaces Aeneas's own FunsExternal_Template.lean, which\n"
+    "-- would otherwise hold one `axiom` per item below with no body; see\n"
+    "-- tools/lean_check/podman/in_container.sh for where the swap happens.\n"
+    "module\n"
+    "public import Aeneas\n"
+    "public import HustleCorePort.Types\n"
+    "@[expose] public section\n"
+    "open Aeneas Aeneas.Std Result ControlFlow Error\n"
+    "set_option linter.dupNamespace false\n"
+    "set_option linter.hashCommand false\n"
+    "set_option linter.unusedVariables false\n"
+    "set_option linter.style.whitespace false\n"
+    "set_option linter.style.setOption false\n"
+    "set_option linter.style.longLine false\n"
+    "set_option linter.internalConstructors false\n"
+    "set_option maxHeartbeats 4000000\n"
+    "set_option maxRecDepth 8192\n"
+    "open hustle_core\n"
+)
+
+
+def emit_funs_external_lean(scopes: dict[str, Scope], character_keys: list[str], projectile_keys: list[str]) -> str:
+    out = [FUNS_EXTERNAL_LEAN_HEADER]
+    for key in character_keys + projectile_keys:
+        out.append(emit_scope_lean(scopes[key]))
+    return "\n".join(out)
+
+
 
 def emit_common_rs(cancel_order, stance_order, misc_order, orb_order, projectile_order, throw_anim_order) -> str:
     out = [HEADER, "", "#![allow(dead_code)]", "", "use crate::fixed::Fixed;", ""]
@@ -820,12 +1039,12 @@ def emit_common_rs(cancel_order, stance_order, misc_order, orb_order, projectile
         out.append("}")
         out.append("")
 
-    emit_enum("ActionType", ["Movement", "Attack", "Special", "Super", "Defense", "Hurt"])
-    emit_enum("AirType", ["Grounded", "Aerial", "Both"])
-    emit_enum("BusyInterrupt", ["Normal", "Hurt", "NoneKind"])
-    emit_enum("HitboxType", ["Normal", "Flip", "ThrowHit", "OffensiveBurst", "Burst", "NoHitstun", "Detect"])
-    emit_enum("HitHeight", ["High", "Mid", "Low"])
-    emit_enum("HitboxKind", ["Hitbox", "ThrowBox", "SweptHitbox"])
+    emit_enum("ActionType", ACTION_TYPE_VARIANTS)
+    emit_enum("AirType", AIR_TYPE_VARIANTS)
+    emit_enum("BusyInterrupt", BUSY_INTERRUPT_VARIANTS)
+    emit_enum("HitboxType", HITBOX_TYPE_VARIANTS)
+    emit_enum("HitHeight", HIT_HEIGHT_VARIANTS)
+    emit_enum("HitboxKind", HITBOX_KIND_VARIANTS)
 
     cancel_variants = [rust_str_enum("CancelCategory", t) for t in cancel_order]
     assert len(set(cancel_variants)) == len(cancel_variants), cancel_variants
@@ -1035,6 +1254,224 @@ def emit_dump_main(
     out.append("")
     return "\n".join(out)
 
+def dump_field_expr_lean(tag: str, accessor: str, name_fn: str) -> str:
+    """Mirrors `dump_field_expr`, but emits a Lean `String`-valued
+    expression instead of a Rust `serde_json::json!(...)` argument."""
+    if tag == "bool":
+        return f"(tdBool {accessor})"
+    if tag == "int":
+        return f"(tdI32 {accessor})"
+    if tag == "fixed":
+        return f"(tdFixed {accessor})"
+    if tag.startswith("enum:"):
+        enum_name = tag.split(":", 1)[1]
+        ord_fn = {
+            "ActionType": "ord_action_type",
+            "AirType": "ord_air_type",
+            "BusyInterrupt": "ord_busy_interrupt",
+            "HitboxType": "ord_hitbox_type",
+            "HitHeight": "ord_hit_height",
+        }[enum_name]
+        return f"(toString ({ord_fn} {accessor}))"
+    if tag == "state_self_req":
+        return f"(tdStr ({name_fn} {accessor}))"
+    if tag == "state_self_opt":
+        return f"(match {accessor} with | none => \"null\" | some v => tdStr ({name_fn} v))"
+    if tag == "state_base_req":
+        return f"(tdStr (name_of_base {accessor}))"
+    if tag == "stance_self_opt":
+        return f"(match {accessor} with | none => \"null\" | some v => tdStr (token_of_stance v))"
+    if tag == "stances":
+        return f"(tdTokArr {accessor}.val token_of_stance)"
+    if tag.startswith("categories:"):
+        return f"(tdTokArr {accessor}.val token_of_category)"
+    if tag == "frame_list":
+        return f"(tdI32Arr {accessor}.val)"
+    if tag == "throw_positions":
+        return f"(tdArr ({accessor}.val.map tdThrowPos))"
+    if tag == "misc_tag":
+        return f"(match {accessor} with | none => \"null\" | some v => tdStr (token_of_misc v))"
+    if tag == "orb_trigger":
+        return f"(match {accessor} with | none => \"null\" | some v => tdStr (token_of_orb v))"
+    if tag == "projectile_kind":
+        return f"(match {accessor} with | none => \"null\" | some v => tdStr (token_of_projectile v))"
+    raise ValueError(f"unhandled dump tag {tag!r}")
+
+
+def lean_str_lit(s: str) -> str:
+    """A Lean string literal whose content is exactly `s` (reuses
+    Python's own JSON string escaping, a strict subset of Lean's own:
+    both escape only `"` and `\\`, and this project's data is ASCII)."""
+    return json.dumps(s)
+
+
+def build_json_concat_lean(entries: list[tuple[str, str]]) -> str:
+    """`entries`: `(json_key, lean_expr_text)` pairs, `lean_expr_text`
+    already a Lean `String`-valued expression holding that key's exact
+    JSON value text. Sorts by key (serde_json's `Map` is a `BTreeMap`
+    here -- see tools/tablegen/README.md's `dump/` section and
+    `dump/rust/Cargo.toml`'s missing `preserve_order` feature -- so the
+    real `table_dump` binary's own keys come out sorted too) and
+    returns ONE Lean expression for the whole JSON object."""
+    entries = sorted(entries, key=lambda e: e[0])
+    parts = []
+    for i, (key, expr) in enumerate(entries):
+        prefix = ("{" if i == 0 else ",") + f'"{key}":'
+        parts.append(lean_str_lit(prefix))
+        parts.append(expr)
+    parts.append('"}"')
+    return " ++ ".join(parts)
+
+
+TABLE_DUMP_LEAN_PREAMBLE = """-- Generated by tools/tablegen/gen.py. Do not hand-edit.
+-- Prints every field tools/tablegen keeps, for every state, hitbox and
+-- root record of the five characters and their projectiles, read from
+-- the Lean tables in HustleCorePort.FunsExternal, as JSON Lines in the
+-- exact text format tools/tablegen/dump/rust/src/main.rs's `table_dump`
+-- binary prints. tools/lean_check/podman/in_container.sh `cmp`s the two
+-- outputs byte for byte: the equality check this file exists for.
+import HustleCorePort.Types
+import HustleCorePort.FunsExternal
+
+open Aeneas Aeneas.Std Result
+open hustle_core
+
+def unwrapTd {\u03b1 : Type} (r : Result \u03b1) (msg : String) : IO \u03b1 :=
+  match r.match with
+  | .ok a => pure a
+  | _ => throw (IO.userError msg)
+
+def tdBool (b : Bool) : String := if b then "true" else "false"
+def tdI32 (v : Std.I32) : String := toString v.val
+def tdFixed (v : Option fixed.Fixed) : String :=
+  match v with
+  | none => "null"
+  | some x => toString x.val
+def tdStr (s : String) : String := "\\"" ++ s ++ "\\""
+def tdArr (xs : List String) : String := "[" ++ String.intercalate "," xs ++ "]"
+def tdI32Arr (xs : List Std.I32) : String := tdArr (xs.map tdI32)
+def tdTokArr {\u03b1 : Type} (xs : List \u03b1) (f : \u03b1 \u2192 String) : String := tdArr (xs.map (fun v => tdStr (f v)))
+
+def tdForIndexed {\u03b1 : Type} (xs : List \u03b1) (f : Nat \u2192 \u03b1 \u2192 IO Unit) : IO Unit := do
+  let rec go (i : Nat) : List \u03b1 \u2192 IO Unit
+    | [] => pure ()
+    | x :: rest => do f i x; go (i + 1) rest
+  go 0 xs
+
+"""
+
+
+def emit_dump_main_lean(
+    scopes: dict[str, Scope],
+    character_keys: list[str],
+    projectile_keys: list[str],
+    cancel_order: list[str],
+    stance_order: list[str],
+    misc_order: list[str],
+    orb_order: list[str],
+    projectile_order: list[tuple[str, str]],
+    throw_anim_order: list[str],
+) -> str:
+    out = [TABLE_DUMP_LEAN_PREAMBLE]
+
+    def ord_fn(fn_name: str, domain: str, variants: list[str]) -> None:
+        arms = " ".join(f"| .{v} => {i}" for i, v in enumerate(variants))
+        out.append(f"def {fn_name} : {domain} \u2192 Nat\n  {arms}\n")
+
+    ord_fn("ord_action_type", "tables.common.ActionType", ACTION_TYPE_VARIANTS)
+    ord_fn("ord_air_type", "tables.common.AirType", AIR_TYPE_VARIANTS)
+    ord_fn("ord_busy_interrupt", "tables.common.BusyInterrupt", BUSY_INTERRUPT_VARIANTS)
+    ord_fn("ord_hitbox_type", "tables.common.HitboxType", HITBOX_TYPE_VARIANTS)
+    ord_fn("ord_hit_height", "tables.common.HitHeight", HIT_HEIGHT_VARIANTS)
+
+    def token_fn(fn_name: str, domain: str, pairs: list[tuple[str, str]]) -> None:
+        arms = " ".join(f"| .{variant} => {lean_str_lit(token)}" for variant, token in pairs)
+        out.append(f"def {fn_name} : {domain} \u2192 String\n  {arms}\n")
+
+    token_fn("token_of_category", "tables.common.CancelCategory",
+              [(rust_str_enum("CancelCategory", t), t) for t in cancel_order])
+    token_fn("token_of_stance", "tables.common.Stance",
+              [(rust_str_enum("Stance", t), t) for t in stance_order])
+    token_fn("token_of_misc", "tables.common.MiscDataTag",
+              [(rust_str_enum("MiscDataTag", t), t) for t in misc_order])
+    token_fn("token_of_orb", "tables.common.OrbTriggerType",
+              [(rust_str_enum("OrbTriggerType", t), t) for t in orb_order])
+    token_fn("token_of_projectile", "tables.common.ProjectileKind",
+              [(variant, respath) for respath, variant in projectile_order])
+    token_fn("token_of_throw_animation", "tables.common.ThrowAnimation",
+              [(rust_str_enum("ThrowAnimation", t), t) for t in throw_anim_order])
+
+    out.append(
+        "def tdThrowPos (e : tables.common.ThrowPositionEntry) : String :=\n"
+        '  "{\\"animation\\":" ++ tdStr (token_of_throw_animation e.animation) ++\n'
+        '  ",\\"frame\\":" ++ tdI32 e.frame ++ ",\\"x\\":" ++ tdI32 e.x ++ ",\\"y\\":" ++ tdI32 e.y ++ "}"\n'
+    )
+
+    all_keys = [("base", "base", "character")] + [
+        (k, k, "character") for k in character_keys if k != "base"
+    ] + [(k, f"projectiles.{k}", "projectile") for k in projectile_keys]
+
+    for key, mod, _kind in all_keys:
+        scope = scopes[key]
+        state_names = [e.name for e in scope.states]
+        arms = " ".join(f"| .{rust_variant(n)} => {lean_str_lit(n)}" for n in state_names)
+        out.append(f"def name_of_{key} : {mod}.State \u2192 String\n  {arms}\n")
+
+    for key, mod, kind in all_keys:
+        scope = scopes[key]
+        field_list = scope_field_list(scope)
+        name_fn = f"name_of_{key}"
+        lines = [f"def dump_{key} : IO Unit := do"]
+        lines.append(f'  let states \u2190 unwrapTd {mod}.ALL_STATES "{mod}.ALL_STATES"')
+        lines.append("  for s in states.val do")
+        lines.append(f'    let d \u2190 unwrapTd ({mod}.state_data s) "{mod}.state_data"')
+        entries = [
+            ("scope", lean_str_lit(f'"{key}"')),
+            ("record", lean_str_lit('"state"')),
+            ("state", f"(tdStr ({name_fn} s))"),
+        ]
+        for name, tag in field_list:
+            accessor = f"d.{rust_field(name)}"
+            if name == "fallback_state" and kind == "projectile":
+                expr = (
+                    f"(match {accessor} with | none => \"null\" "
+                    f"| some ({mod}.FallbackState.Own fs) => tdStr ({name_fn} fs) "
+                    f"| some ({mod}.FallbackState.Base fs) => tdStr (name_of_base fs))"
+                )
+            else:
+                expr = dump_field_expr_lean(tag, accessor, name_fn)
+            entries.append((name, expr))
+        lines.append(f"    IO.println ({build_json_concat_lean(entries)})")
+        lines.append("    tdForIndexed d.hitboxes.val (fun i h => do")
+        hentries = [
+            ("scope", lean_str_lit(f'"{key}"')),
+            ("record", lean_str_lit('"hitbox"')),
+            ("state", f"(tdStr ({name_fn} s))"),
+            ("hitbox_index", "(toString i)"),
+        ]
+        for name, tag in HITBOX_RECORD_FIELDS:
+            hentries.append((name, dump_field_expr_lean(tag, f"h.{rust_field(name)}", name_fn)))
+        lines.append(f"      IO.println ({build_json_concat_lean(hentries)}))")
+        root_list = schema.FIGHTER_ROOT_FIELDS if kind == "character" else schema.PROJECTILE_ROOT_FIELDS
+        lines.append(f'  let root \u2190 unwrapTd {mod}.ROOT "{mod}.ROOT"')
+        rentries = [
+            ("scope", lean_str_lit(f'"{key}"')),
+            ("record", lean_str_lit('"root"')),
+        ]
+        for name, tag in root_list:
+            rentries.append((name, dump_field_expr_lean(tag, f"root.{rust_field(name)}", name_fn)))
+        lines.append(f"  IO.println ({build_json_concat_lean(rentries)})")
+        lines.append("")
+        out.append("\n".join(lines))
+
+    main_lines = ["def main : IO Unit := do"]
+    for key, _mod, _kind in all_keys:
+        main_lines.append(f"  dump_{key}")
+    out.append("\n".join(main_lines) + "\n")
+
+    return "\n".join(out)
+
+
 
 def build_manifest(scopes: dict[str, Scope], character_keys, projectile_keys) -> dict:
     state_field_names = set()
@@ -1120,12 +1557,16 @@ def emit_opaque_patterns(scopes: dict[str, Scope], character_keys: list[str], pr
 
 def main() -> None:
     global REPO, BASE_STATE_NAMES, PROJECTILE_KEY_BY_RESPATH, PROJECTILE_VARIANT_BY_RESPATH
-    repo_root, out_tables_dir, out_dump_main, out_manifest, out_opaque = sys.argv[1:6]
+    repo_root, out_tables_dir, out_dump_main, out_manifest, out_opaque, out_lean_funs_external, out_lean_table_dump = (
+        sys.argv[1:8]
+    )
     REPO = Path(repo_root).resolve()
     out_tables_dir = Path(out_tables_dir)
     out_dump_main = Path(out_dump_main)
     out_manifest = Path(out_manifest)
     out_opaque = Path(out_opaque)
+    out_lean_funs_external = Path(out_lean_funs_external)
+    out_lean_table_dump = Path(out_lean_table_dump)
     setup_paths()
 
     _registry.update(schema.build_class_registry(REPO))
@@ -1207,6 +1648,18 @@ def main() -> None:
 
     out_opaque.parent.mkdir(parents=True, exist_ok=True)
     out_opaque.write_text(emit_opaque_patterns(scopes, character_keys, projectile_keys))
+
+    out_lean_funs_external.parent.mkdir(parents=True, exist_ok=True)
+    out_lean_funs_external.write_text(emit_funs_external_lean(scopes, character_keys, projectile_keys))
+
+    out_lean_table_dump.parent.mkdir(parents=True, exist_ok=True)
+    out_lean_table_dump.write_text(
+        emit_dump_main_lean(
+            scopes, character_keys, projectile_keys, cancel_order, stance_order, misc_order, orb_order,
+            projectile_order, throw_anim_order,
+        )
+    )
+
 
 
     print(

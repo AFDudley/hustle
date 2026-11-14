@@ -60,7 +60,7 @@ podman run --rm --cpu-quota 800000 --cpu-period 100000 \
   -v "$work/gen_out:/gen_out" \
   "$tablegen_image" \
   /repo/tools/tablegen/gen.py /repo /gen_out/tables /gen_out/dump_main.rs /gen_out/manifest.json \
-  /gen_out/opaque_patterns.txt
+  /gen_out/opaque_patterns.txt /gen_out/funs_external.lean /gen_out/table_dump.lean
 
 echo "--- stage 2: copy generated output into the repository ---"
 rm -rf "$repo/port/hustle_core/src/tables"
@@ -69,8 +69,16 @@ mkdir -p "$repo/tools/tablegen/dump/rust/src"
 cp "$work/gen_out/dump_main.rs" "$repo/tools/tablegen/dump/rust/src/main.rs"
 cp "$work/gen_out/manifest.json" "$repo/tools/tablegen/manifest.json"
 cp "$work/gen_out/opaque_patterns.txt" "$repo/tools/lean_check/generated/opaque_patterns.txt"
+# Lives outside generated/src/HustleCorePort/ on purpose: Aeneas's own
+# translation step (in_container.sh) `rm -rf`s that whole directory
+# and rewrites it every run, so the source of truth for the real
+# definitions that replace its axiom template has to sit next to it,
+# not inside it.
+cp "$work/gen_out/funs_external.lean" "$repo/tools/lean_check/generated/HustleCorePortFunsExternal.lean"
+cp "$work/gen_out/table_dump.lean" "$repo/tools/lean_check/generated/src/HustleCorePortTableDump.lean"
 git -C "$repo" add port/hustle_core/src/tables tools/tablegen/dump/rust/src/main.rs tools/tablegen/manifest.json \
-  tools/lean_check/generated/opaque_patterns.txt
+  tools/lean_check/generated/opaque_patterns.txt tools/lean_check/generated/HustleCorePortFunsExternal.lean \
+  tools/lean_check/generated/src/HustleCorePortTableDump.lean
 
 echo "--- stage 3: dump the generated tables ---"
 "$tool_dir/dump/build.sh"

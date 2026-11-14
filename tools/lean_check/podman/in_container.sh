@@ -65,13 +65,44 @@ if [ -f /work/generated/src/HustleCorePort/TypesExternal_Template.lean ]; then
      /work/generated/src/HustleCorePort/TypesExternal.lean
 fi
 if [ -f /work/generated/src/HustleCorePort/FunsExternal_Template.lean ]; then
-  mv /work/generated/src/HustleCorePort/FunsExternal_Template.lean \
+  # tools/tablegen/gen.py writes a real Lean `def` for every item this
+  # template would otherwise axiomatize (see ../README.md, "port/
+  # hustle_core, the tables slice"). Drop Aeneas's own template and
+  # copy in the committed replacement instead of renaming it: the
+  # replacement lives at /work/generated/HustleCorePortFunsExternal.lean,
+  # outside this directory, specifically so this `rm -rf` never deletes it.
+  rm /work/generated/src/HustleCorePort/FunsExternal_Template.lean
+  cp /work/generated/HustleCorePortFunsExternal.lean \
      /work/generated/src/HustleCorePort/FunsExternal.lean
 fi
 ls /work/generated/src/HustleCorePort
+
+echo "=== check no axiom or sorry remains in HustleCorePort ==="
+if grep -rEwn 'axiom|sorry' /work/generated/src/HustleCorePort; then
+  echo "found axiom or sorry in HustleCorePort (lines above); fix before building" >&2
+  exit 1
+fi
 
 echo "=== lake update / cache get / build (generated/) ==="
 cd /work/generated
 lake update
 lake exe cache get
 lake build
+
+echo "=== build + run table_dump (Rust side of the equality check) ==="
+# table_dump's Cargo.toml path dependency is "../hustle_core" (the same
+# layout tools/nix_image_build.sh stages for the hustle-table-dump
+# image; see tools/tablegen/README.md, "The container"). Mirror that
+# layout here with a symlink, so the same Cargo.toml works unmodified.
+rm -rf /work/table_dump_build
+cp -r /work/table_dump_src /work/table_dump_build
+ln -sfn /work/hustle_core_build /work/hustle_core
+cd /work/table_dump_build
+cargo build --release
+./target/release/table_dump > /work/rust_table_dump.jsonl
+
+echo "=== run the Lean TableDump executable and compare (equality check) ==="
+cd /work/generated
+lake exe TableDump > /work/lean_table_dump.jsonl
+cmp /work/rust_table_dump.jsonl /work/lean_table_dump.jsonl
+echo "table dumps match: $(wc -l < /work/rust_table_dump.jsonl) lines"
