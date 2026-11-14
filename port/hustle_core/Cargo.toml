@@ -9,4 +9,10 @@ description = "A self-contained fixed-point number type for the HUSTLE core game
 name = "hustle_core"
 path = "src/lib.rs"
 
+[features]
+# Off by default: see src/fixed_text.rs and README.md, "The core and the
+# shell". Callers outside the Lean-checked core (tools/fixedmath_diff,
+# tools/rng_diff) enable it in their own Cargo.toml dependency line.
+text = []
+
 [dependencies]

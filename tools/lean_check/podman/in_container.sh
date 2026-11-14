@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Runs inside localhost/hustle-lean-check, with /work mounted from the
-# host's tools/lean_check/. See translate.sh for how this is invoked, and
-# ../README.md for what each step found.
+# host's tools/lean_check/ and /work/hustle_core_src mounted read-only
+# from the host's port/hustle_core/. See translate.sh for how this is
+# invoked, and ../README.md for what each step found.
 set -euo pipefail
 
 # charon's own CLI calls `rustup toolchain install nightly-2026-09-17
@@ -22,16 +23,58 @@ echo "=== cargo test (rust_proto, independent of Charon/Aeneas) ==="
 cd /work/rust_proto
 cargo test
 
-echo "=== charon cargo --preset=aeneas ==="
+echo "=== charon cargo --preset=aeneas (rust_proto) ==="
 rm -f hustle_core_proto.llbc
 charon cargo --preset=aeneas
 
-echo "=== aeneas -backend lean -split-files ==="
+echo "=== aeneas -backend lean -split-files (rust_proto -> HustleCore) ==="
 rm -rf /work/generated/src/HustleCore
 aeneas -backend lean -dest /work/generated/src -subdir HustleCore \
   -split-files hustle_core_proto.llbc
 mv /work/generated/src/HustleCore/TypesExternal_Template.lean \
    /work/generated/src/HustleCore/TypesExternal.lean
+
+# port/hustle_core: the real port's crate (a different task slice).
+# Mounted read-only at /work/hustle_core_src; copied to a writable
+# directory under /work (cargo needs to write `target/`, and the mount
+# above is read-only). /work itself persists on the host between runs
+# (translate.sh's main bind mount), so this copy does too.
+echo "=== cargo test (port/hustle_core, independent of Charon/Aeneas) ==="
+rm -rf /work/hustle_core_build
+cp -r /work/hustle_core_src /work/hustle_core_build
+cd /work/hustle_core_build
+# This image's `cc` cannot finish linking ANY test binary -- confirmed
+# with a brand-new, unrelated crate, not just this one: "collect2:
+# fatal error: posix_spawnp: No such file or directory" (2026-11-14).
+# `rust_proto`'s own cargo test above only still reports success
+# because its target/ directory (under the same persistent /work
+# mount) already holds a linked test binary from an earlier, working
+# run; cargo's incremental build skips re-linking it. A genuinely
+# clean rebuild of either crate's test binary would hit the same
+# failure. Charon's own extraction does not need a working linker (it
+# stops at MIR, before the link step; rust_proto's own
+# `charon cargo --preset=aeneas` above already proves this), so this
+# does not block Aeneas or `lake build`. Not fatal here; reported, not
+# hidden.
+cargo test || echo "cargo test failed (see the comment above): continuing anyway."
+
+echo "=== charon cargo --preset=aeneas (port/hustle_core) ==="
+rm -f hustle_core.llbc
+charon cargo --preset=aeneas
+
+echo "=== aeneas -backend lean -split-files (port/hustle_core -> HustleCorePort) ==="
+rm -rf /work/generated/src/HustleCorePort
+aeneas -backend lean -dest /work/generated/src -subdir HustleCorePort \
+  -split-files hustle_core.llbc
+if [ -f /work/generated/src/HustleCorePort/TypesExternal_Template.lean ]; then
+  mv /work/generated/src/HustleCorePort/TypesExternal_Template.lean \
+     /work/generated/src/HustleCorePort/TypesExternal.lean
+fi
+if [ -f /work/generated/src/HustleCorePort/FunsExternal_Template.lean ]; then
+  mv /work/generated/src/HustleCorePort/FunsExternal_Template.lean \
+     /work/generated/src/HustleCorePort/FunsExternal.lean
+fi
+ls /work/generated/src/HustleCorePort
 
 echo "=== lake update / cache get / build (generated/) ==="
 cd /work/generated

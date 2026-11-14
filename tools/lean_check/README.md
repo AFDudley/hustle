@@ -1,12 +1,14 @@
-# Lean check: a Rust-to-Lean translation risk check
+# Lean check: a Rust-to-Lean translation risk check, and the real pipeline
 
-This tool measures one risk of the planned Rust-to-Lean port (decision 5 of
+This tool started as a risk check (decision 5 of
 `docs/labbook/2026-11-13-core-game-scope-five-characters.md`): will Aeneas
 (through Charon) accept the Rust subset the lab book names, and can `lake`
-build the Lean it produces? It does not port real character data. It is a
-small, loosely-modelled prototype, run through the real tools, so later
-work knows what the tools accept before the real port writes thousands of
-lines in a style the tools reject.
+build the Lean it produces? `rust_proto/` below is that check: a small,
+loosely-modelled prototype, not real character data, run through the real
+tools, so the real port's style was known before it wrote thousands of
+lines. This tool is now also the real pipeline: it translates
+`port/hustle_core` (a different task slice, the real port's own crate)
+the same way. See "port/hustle_core" below.
 
 ## Result in one line
 
@@ -17,7 +19,9 @@ in this prototype that used `?` (early return) in its body, even when the
 loop is not nested. The rewrite that works is recursion over an explicit
 index, with an accumulator parameter for anything that builds a new `Vec`.
 See "Constructs the tools rejected" below for the exact error text and the
-four functions it hit.
+four functions it hit against `rust_proto`, and "port/hustle_core" below
+for three more findings against the real crate, which now passes with 0
+Aeneas errors and 0 axioms.
 
 ## Layout
 
@@ -238,6 +242,66 @@ from a clean `hustle-nix-store` state, no Rust toolchain involved) 5m
 --preset=aeneas` a few seconds (the `miri` sysroot warning included),
 `aeneas` 24s, and `lake update && lake exe cache get && lake build`
 the remaining time, almost all of it `lake build`'s 3,602 jobs.
+
+## port/hustle_core
+
+This pipeline also translates `port/hustle_core` (the real port's crate,
+a different task slice from the `rust_proto` prototype above), as a
+second, independent Charon/Aeneas/`lake build` run inside the same
+container and the same `generated/` Lean project (so it shares the
+mathlib dependency `rust_proto`'s run already resolved). `build.sh` and
+`translate.sh` need no change for this; `podman/translate.sh` mounts
+`port/hustle_core` read-only at `/work/hustle_core_src`, and
+`podman/in_container.sh` copies it to a writable `/work/hustle_core_build`
+(cargo needs to write `target/`) before running charon there, then
+Aeneas into `generated/src/HustleCorePort`, a `lean_lib` target in
+`generated/lakefile.lean` alongside `HustleCore`.
+
+**Result, 2026-11-14: Aeneas produced no error or warning, no
+`FunsExternal`/`TypesExternal` file (no axiom was needed), and `lake
+build` passed: `Build completed successfully (3609 jobs)`.** See
+`port/hustle_core/README.md`, "Axioms", for the five primitive-method
+calls and one standard-library trait impl removed to reach zero axioms.
+
+Three more findings, beyond "Constructs the tools rejected" below
+(found against `rust_proto`):
+
+1. **This image's `cc` cannot finish linking any test binary**, found
+   while running `cargo test` against `port/hustle_core` independently
+   of Charon/Aeneas (the same check "Commands" above runs for
+   `rust_proto`): `collect2: fatal error: posix_spawnp: No such file or
+   directory`. Confirmed against a brand-new, unrelated crate too, so
+   this is not a property of `hustle_core`'s code. `rust_proto`'s own
+   `cargo test` only still reports success because its `target/`
+   directory (under the same persistent `/work` mount) already holds a
+   linked test binary from an earlier, working run; cargo's incremental
+   build skips re-linking it, so a genuinely clean rebuild of either
+   crate's test binary would hit the same failure. This does not block
+   Charon or Aeneas: Charon's own extraction stops at MIR, before the
+   link step (`rust_proto`'s own `charon cargo --preset=aeneas` already
+   proves this, every run). `podman/in_container.sh` runs `cargo test`
+   for `port/hustle_core` and reports its result, but does not fail the
+   pipeline on it.
+2. **A comparison that becomes a stored `Bool` value, not a direct `if`
+   condition, can elaborate as a Lean `Prop`.** `let overflow = overflow
+   || val > bound; if overflow { ... }` (an order comparison combined
+   with `||` and reused) produced "Application type mismatch: the
+   argument ... has type Prop" or "failed to synthesize Decidable" at
+   `lake build`, depending on whether the stored value was later passed
+   as a function argument or used as an `if` condition. The same
+   comparison used directly in an `if`, with no intervening `let`, never
+   had this problem anywhere in `port/hustle_core`. See
+   `port/hustle_core/README.md`, "The Rust subset", for the rule this
+   became.
+3. **A function parameter with the same name as its own module breaks
+   field access.** A parameter named `rng` inside `rng.rs` (the `rng`
+   module Aeneas's generated Lean puts it under) made `rng.state`,
+   `{ rng with ... }` and similar resolve as a namespace-qualified
+   lookup (`rng.Rng`, a nonexistent name) instead of a structure
+   projection on the local variable: "Invalid field `Rng`: the
+   environment does not contain `hustle_core.rng.Rng.Rng`". Renaming the
+   parameter to `r` (keeping the module and the type's own names) fixed
+   every occurrence.
 
 
 ## Constructs the tools rejected

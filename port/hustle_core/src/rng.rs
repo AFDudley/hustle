@@ -103,26 +103,32 @@ pub fn set_seed(_rng: Rng, new_seed: u64) -> Rng {
 
 /// `RandomPCG::set_state()`: touches `pcg.state` only. `seed` and `inc`
 /// are unchanged, matching `get_seed()` reading stale `current_seed`
-/// after a `.state = ...` assignment.
-pub fn set_state(rng: Rng, new_state: u64) -> Rng {
+/// after a `.state = ...` assignment. The parameter is named `r`, not
+/// `rng`: Aeneas's generated Lean opens the `rng` namespace (from this
+/// file's own module name), and a parameter named `rng` there collided
+/// with it, producing "Invalid field `Rng`: the environment does not
+/// contain `hustle_core.rng.Rng.Rng`" at every `{ rng with ... }` or
+/// `rng.field` use (`lake build`, 2026-11-14; see this crate's own
+/// README.md, "Axioms").
+pub fn set_state(r: Rng, new_state: u64) -> Rng {
     Rng {
-        seed: rng.seed,
+        seed: r.seed,
         state: new_state,
-        inc: rng.inc,
+        inc: r.inc,
     }
 }
 
 /// `RandomNumberGenerator::randi()`, which calls `RandomPCG::rand()`:
 /// captures the pre-advance state into `seed`, then advances `state` and
 /// returns the output.
-pub fn randi(rng: Rng) -> (Rng, u32) {
-    let old_state = rng.state;
-    let (new_state, output) = pcg32_random(old_state, rng.inc);
+pub fn randi(r: Rng) -> (Rng, u32) {
+    let old_state = r.state;
+    let (new_state, output) = pcg32_random(old_state, r.inc);
     (
         Rng {
             seed: old_state,
             state: new_state,
-            inc: rng.inc,
+            inc: r.inc,
         },
         output,
     )
@@ -135,18 +141,27 @@ pub fn randi(rng: Rng) -> (Rng, u32) {
 /// the two additions run in `u32`, matching the C++ unsigned-promotion
 /// rule for an operation between an `unsigned int` (`randi()`'s result)
 /// and an `int`.
-pub fn randi_range(rng: Rng, from: i64, to: i64) -> (Rng, i64) {
+pub fn randi_range(r: Rng, from: i64, to: i64) -> (Rng, i64) {
     let from32 = from as i32;
     let to32 = to as i32;
-    let (next_rng, ret) = randi(rng);
+    let (next_rng, ret) = randi(r);
     let result = if to32 < from32 {
         let denom = (from32 as u32).wrapping_sub(to32 as u32).wrapping_add(1);
-        ret.wrapping_rem(denom).wrapping_add(to32 as u32)
+        wrapping_rem_u32(ret, denom).wrapping_add(to32 as u32)
     } else {
         let denom = (to32 as u32).wrapping_sub(from32 as u32).wrapping_add(1);
-        ret.wrapping_rem(denom).wrapping_add(from32 as u32)
+        wrapping_rem_u32(ret, denom).wrapping_add(from32 as u32)
     };
     (next_rng, result as i32 as i64)
+}
+
+/// `u32` remainder, computed as `a - (a / b) * b`, not the
+/// `wrapping_rem` method: Aeneas axiomatizes `core::num::u32::wrapping_rem`
+/// (a primitive method with no Rust-source MIR), but not `/`, `-` or
+/// `*`. `b` is never zero at either call site above (`denom` is a
+/// difference of two `u32`s plus 1, so at least 1).
+fn wrapping_rem_u32(a: u32, b: u32) -> u32 {
+    a - (a / b) * b
 }
 
 /// `BetterRng.choose()`'s index expression, `i % len(array) - 1`
@@ -155,8 +170,8 @@ pub fn randi_range(rng: Rng, from: i64, to: i64) -> (Rng, i64) {
 /// result is `-1 ..= len - 2`. The caller reads `array[result]`; a
 /// negative index is GDScript's "from the end" indexing, so `-1` reads
 /// the array's last element.
-pub fn choose_index(rng: Rng, len: i64) -> (Rng, i64) {
-    let (next_rng, raw) = randi(rng);
+pub fn choose_index(r: Rng, len: i64) -> (Rng, i64) {
+    let (next_rng, raw) = randi(r);
     let i = raw as i64;
     (next_rng, i % len - 1)
 }
@@ -185,12 +200,12 @@ fn weighted_choice_scan(weights: &[i64], index: usize, remaining: i64) -> i64 {
 /// caller resolves `weight_array == []`'s default weighting
 /// (`len(array) - i` for each index) before calling this, because that
 /// default depends on the choice array's length, not on the RNG.
-pub fn weighted_choice_index(rng: Rng, weights: &[i64]) -> (Rng, i64) {
+pub fn weighted_choice_index(r: Rng, weights: &[i64]) -> (Rng, i64) {
     let mut weight_sum: i64 = 0;
     for weight in weights {
         weight_sum = weight_sum.wrapping_add(*weight);
     }
-    let (next_rng, rnd) = randi_range(rng, 0, weight_sum);
+    let (next_rng, rnd) = randi_range(r, 0, weight_sum);
     (next_rng, weighted_choice_scan(weights, 0, rnd))
 }
 

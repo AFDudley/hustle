@@ -16,3 +16,6 @@ __pycache__/
 target/
 .lake/
 *.llbc
+# tools/lean_check's writable copy of port/hustle_core inside its
+# container mount; see tools/lean_check/podman/in_container.sh.
+/tools/lean_check/hustle_core_build/

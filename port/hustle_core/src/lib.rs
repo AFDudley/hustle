@@ -7,10 +7,16 @@
 //!
 //! Modules: `fixed`, the fixed-point number type; `godot_hash`, Godot
 //! 3.5.1's `hash()` builtin; `rng`, the logic RNG (Godot's PCG32 plus
-//! `BetterRng`'s `choose` and `weighted_choice`). See
+//! `BetterRng`'s `choose` and `weighted_choice`); `fixed_text`, `&str`/
+//! `String` wrappers over `fixed`'s byte-based API, behind the `text`
+//! feature (off by default). See
 //! `docs/labbook/2026-11-13-core-game-scope-five-characters.md`,
-//! decisions 4 and 5.
+//! decisions 4 and 5, and this crate's own README.md, "The core and the
+//! shell".
 
 pub mod fixed;
 pub mod godot_hash;
 pub mod rng;
+
+#[cfg(feature = "text")]
+pub mod fixed_text;

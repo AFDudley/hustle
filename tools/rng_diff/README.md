@@ -12,12 +12,13 @@ line by line.
 
 ## The result
 
-**145/145 probe records matched exactly. 0 mismatches.**
+**160/160 probe records matched exactly. 0 mismatches.**
 
 | Record kind | Records | Matched |
 |---|---:|---:|
 | `hash_int` | 34 | 34 |
 | `hash_string` | 25 | 25 |
+| `hash_fixed_display` | 15 | 15 |
 | `hash_rng` | 35 | 35 |
 | `hash_static_rng` | 35 | 35 |
 | `seq` | 16 | 16 |
@@ -44,6 +45,13 @@ mismatch in full, grouped by record kind. There are none to show.
   integer-range boundary, 1 ulp, etc.; see `tools/fixedmath_diff` for
   where these strings come from), and plain ASCII strings (empty, a
   space, punctuation).
+- **`hash_fixed_display`**: `hash()` on a canonical `FixedMath` display
+  string (`"0.5"`, `"-140737488355328"`, etc.; see `RngDiff.gd`,
+  `CANONICAL_FIXED_STRINGS`). Checked against
+  `hustle_core::fixed::Fixed::hash_display`, a core function that hashes
+  the value's own display digits straight from a byte array, with no
+  `String` (the `fixed`/`display` pair in `fixed_text.rs` is shell
+  code, excluded from the Lean build; see `port/hustle_core/README.md`).
 - **`hash_rng`**: `obj/BaseObj.gd`'s `hash_rng()` reseed formula in full:
   `logic_rng.seed = hash(logic_rng.state + hash(fighter_hash) +
   hash(opponent_hash))`, for 7 states crossed with 5 `(fighter_hash,

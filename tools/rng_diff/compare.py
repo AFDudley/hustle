@@ -4,12 +4,13 @@
 Usage: compare.py <godot_out.jsonl> <rust_out.jsonl> <report.json>
 
 The two files have one JSON object per line, in the same order, one of
-five record kinds ("hash_int", "hash_string", "hash_rng",
-"hash_static_rng", "seq"; see RngDiff.gd). This script lines them up by
-position (both were produced from the same probe list), and for each
-pair checks that every field except "result" is equal (so the two sides
-agree on which probe they ran), then that "result" is equal: a plain
-value for the first four kinds, a list of per-op values for "seq".
+six record kinds ("hash_int", "hash_string", "hash_fixed_display",
+"hash_rng", "hash_static_rng", "seq"; see RngDiff.gd). This script lines
+them up by position (both were produced from the same probe list), and
+for each pair checks that every field except "result" is equal (so the
+two sides agree on which probe they ran), then that "result" is equal:
+a plain value for the first five kinds, a list of per-op values for
+"seq".
 
 It groups every disagreement by record kind, and prints one example per
 group. Exit code is 0 when every record matched, 1 when at least one did

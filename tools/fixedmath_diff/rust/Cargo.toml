@@ -30,4 +30,4 @@ serde_json = "1"
 # Staged next to this crate by tools/nix_image_build.sh's extra-source
 # argument (see ../build.sh); the path below is a sibling directory in
 # the staged flake source, not the real repo tree's port/hustle_core.
-hustle_core = { path = "../hustle_core" }
+hustle_core = { path = "../hustle_core", features = ["text"] }

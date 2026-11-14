@@ -22,3 +22,16 @@ lean_lib «HustleCore» where
 @[default_target]
 lean_lib «HustleCheck» where
   srcDir := "src"
+
+/-- Charon + Aeneas output for `port/hustle_core` (the real port's
+crate, a different task slice from the `rust_proto` prototype above):
+`HustleCorePort.lean` (the root module, hand-written) plus
+`HustleCorePort/Types.lean` and `HustleCorePort/Funs.lean` (Aeneas
+output; see ../README.md, "port/hustle_core" for the exact command).
+No `TypesExternal`/`FunsExternal` file: this crate needed no axiom
+Aeneas could not resolve (see ../README.md and
+port/hustle_core/README.md, "Axioms" for what that took). A separate
+target, so a re-run of either pipeline touches only its own files. -/
+@[default_target]
+lean_lib «HustleCorePort» where
+  srcDir := "src"

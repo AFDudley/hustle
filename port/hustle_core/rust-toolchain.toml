@@ -1,0 +1,8 @@
+[toolchain]
+# Must match the nightly Charon nightly-2026.11.13 was built against
+# (see tools/lean_check/README.md, "Tool versions", and
+# tools/lean_check/rust_proto/rust-toolchain.toml, the same pin for the
+# prototype crate). Charon runs as a custom rustc driver, so its nightly
+# and this crate's nightly must be the same build.
+channel = "nightly-2026-09-17"
+components = ["rustc-dev", "llvm-tools", "rust-src"]

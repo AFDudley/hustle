@@ -4,9 +4,13 @@ extends Node
 # See tools/rng_diff/README.md.
 #
 # Writes one JSON line per probe to the file named by --rngd-out=<path>.
-# Four record kinds:
+# Six record kinds:
 #   {"kind": "hash_int", "value": <int>, "result": <int>}
 #   {"kind": "hash_string", "value": <string>, "result": <int>}
+#   {"kind": "hash_fixed_display", "value": <string>, "result": <int>}
+#     ("value" is always a canonical FixedMath display string; "result"
+#     is godot_hash's hash of it, checked against
+#     `fixed::Fixed::hash_display`, a core function with no `String`.)
 #   {"kind": "hash_rng", "state": <int>, "fighter_hash": <int>,
 #     "opponent_hash": <int>, "result": <int>}
 #   {"kind": "hash_static_rng", "state": <int>, "game_tick": <int>,
@@ -54,6 +58,19 @@ const FIXED_POINT_STRINGS = ["-12.34567", "0", "0.0", "-0.0", "1",
 	"3.14159265358979", "140737488355327.99998", "-140737488355327.99998",
 	"0.0000152587890625", "-1000.5"]
 
+# Canonical FixedMath display strings: each round-trips through
+# fixed.add(v, "0") unchanged (hand-verified: integers, and fractions
+# that are exact sums of negative powers of two with five decimals or
+# fewer, never need rounding or trailing-zero trimming). So hash(v)
+# (what this probe records) equals hash of the FixedMath value's own
+# canonical display text, the same quantity
+# `hustle_core::fixed::Fixed::hash_display` computes with no `String`
+# (see port/hustle_core/src/fixed.rs). Covers the type's integer-range
+# boundary and both signs of a fractional value.
+const CANONICAL_FIXED_STRINGS = ["0", "1", "-1", "100", "-100",
+	"140737488355327", "-140737488355328", "0.5", "-0.5", "0.25",
+	"12.5", "-12.5", "0.0625", "1.5", "3.5"]
+
 const PLAIN_STRINGS = ["", "a", "ABC", "abc123", " ", "Hello, HUSTLE!",
 	"a string with spaces and punctuation: !?."]
 
@@ -85,6 +102,10 @@ func run_hash_string_probes():
 	values += PLAIN_STRINGS
 	for v in values:
 		write_record({"kind": "hash_string", "value": v, "result": hash(v)})
+
+func run_hash_fixed_display_probes():
+	for v in CANONICAL_FIXED_STRINGS:
+		write_record({"kind": "hash_fixed_display", "value": v, "result": hash(v)})
 
 func run_hash_rng_probes():
 	for s in STATES:
@@ -194,6 +215,7 @@ func _ready():
 		return
 	run_hash_int_probes()
 	run_hash_string_probes()
+	run_hash_fixed_display_probes()
 	run_hash_rng_probes()
 	run_hash_static_rng_probes()
 	run_sequence_probes()

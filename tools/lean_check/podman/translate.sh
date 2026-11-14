@@ -16,6 +16,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LEAN_CHECK_DIR="$(cd "${HERE}/.." && pwd)"
+REPO_DIR="$(cd "${LEAN_CHECK_DIR}/../.." && pwd)"
 CACHE_DIR="${LEAN_CHECK_DIR}/../../.scratch/lean_check/cache"
 mkdir -p "${CACHE_DIR}/mathlib-cache" "${CACHE_DIR}/rustup"
 
@@ -36,9 +37,15 @@ mkdir -p "${CACHE_DIR}/mathlib-cache" "${CACHE_DIR}/rustup"
 # `generated/.lake/` (package clones and build output) is not mounted
 # separately: it is already under the main /work mount below and
 # persists on the host the same way.
+# `port/hustle_core` (the real port's crate, a different task slice from
+# this tool's own `rust_proto` prototype) is mounted read-only at
+# /work/hustle_core_src; in_container.sh copies it to a writable
+# directory under /work before running charon there (cargo needs to
+# write `target/`, and the mount above is read-only).
 podman run --rm \
   --cpu-period 100000 --cpu-quota 800000 \
   -v "${LEAN_CHECK_DIR}:/work:Z" \
+  -v "${REPO_DIR}/port/hustle_core:/work/hustle_core_src:ro" \
   -v "${CACHE_DIR}/mathlib-cache:/root/.cache/mathlib:Z" \
   -v "${CACHE_DIR}/rustup:/root/.rustup:Z" \
   localhost/hustle-lean-check \

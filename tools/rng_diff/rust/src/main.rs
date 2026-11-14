@@ -78,6 +78,11 @@ fn recompute(record: &Value) -> Value {
     match record["kind"].as_str().expect("kind") {
         "hash_int" => json!(hash_int(as_i64(&record["value"])) as i64),
         "hash_string" => json!(hash_string(as_str(&record["value"])) as i64),
+        "hash_fixed_display" => {
+            let v = hustle_core::fixed::Fixed::from_bytes(as_str(&record["value"]).as_bytes())
+                .unwrap_or_else(|| panic!("not a canonical Fixed string: {record}"));
+            json!(v.hash_display() as i64)
+        }
         "hash_rng" => {
             let state = as_i64(&record["state"]) as u64;
             let fighter_hash = as_i64(&record["fighter_hash"]);

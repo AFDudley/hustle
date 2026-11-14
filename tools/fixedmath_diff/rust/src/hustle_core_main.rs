@@ -16,15 +16,15 @@ use serde_json::{json, Value};
 use std::io::{BufRead, Write};
 
 fn parse(s: &str) -> Option<Fixed> {
-    Fixed::from_str(s)
+    hustle_core::fixed_text::from_str(s)
 }
 
 fn to_s(v: Fixed) -> Value {
-    Value::String(v.display())
+    Value::String(hustle_core::fixed_text::display(v))
 }
 
 fn vec2(x: Fixed, y: Fixed) -> Value {
-    json!({"x": x.display(), "y": y.display()})
+    json!({"x": hustle_core::fixed_text::display(x), "y": hustle_core::fixed_text::display(y)})
 }
 
 fn vec2_int(x: i64, y: i64) -> Value {

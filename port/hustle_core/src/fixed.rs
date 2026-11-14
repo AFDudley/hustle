@@ -12,11 +12,23 @@
 //! `tools/fixedmath_diff` checks this module against `fixed`'s own output,
 //! call by call, and against the game. See its `README.md`.
 //!
+//! This module is the proved core (see the crate's own `README.md`,
+//! "The core and the shell"): no `String`, no `&str`. Parsing reads a
+//! byte slice (`from_bytes`); display writes into a fixed-size byte
+//! array (`display_bytes`). `fixed_text` (a separate module, excluded
+//! from the Lean build) wraps both with `&str`/`String` for callers that
+//! want them.
+//!
 //! This module follows the Rust subset of
 //! `docs/labbook/2026-11-13-core-game-scope-five-characters.md`, decision 5:
 //! plain structs, no trait objects, no `unsafe`, no hash maps, and no
 //! `while`/`for` loop whose body uses `?`, `return`, `break`, or `continue`.
-//! Each such loop is recursion over an explicit index instead.
+//! Each such loop is recursion over an explicit index instead. It also
+//! avoids the `?` operator itself, and every primitive integer method
+//! Aeneas cannot extract MIR for (`wrapping_div`, `abs`, `wrapping_neg`,
+//! `unsigned_abs`), writing each in terms of the operators Aeneas already
+//! models (`+`, `-`, `*`, `/`, comparisons, casts): see the crate's
+//! `README.md`, "Axioms" for the ones this did not remove.
 
 /// The game's fixed-point number. The raw value is `I48F16` bits: a
 /// two's-complement `i64` with 16 fractional bits (1 unit = 1/65536).
@@ -48,77 +60,44 @@ pub const PI: Fixed = Fixed(205_887);
 ///   truncation and floor agree for a non-negative quotient.
 const PI_HALF: Fixed = Fixed(102_943);
 
+/// The magnitude of `i64::MIN` (`2^63`), as a `u64` literal. Used in
+/// place of `(i64::MIN as i128).unsigned_abs() as u64`, which would make
+/// Aeneas axiomatize `core::num::i128::unsigned_abs` (a primitive method
+/// with no Rust-source MIR). The value is a compile-time constant either
+/// way; this spells it out instead of computing it.
+const I64_MIN_MAGNITUDE: u64 = 9_223_372_036_854_775_808;
+
+/// The number of bytes `display_bytes` can write: a sign, one carried
+/// leading digit, 15 integer digits (the type's largest magnitude,
+/// `2^47`, needs at most `ceil(47 * log10(2)) = 15` decimal digits), a
+/// point, and 5 fractional digits, with slack.
+pub const DISPLAY_MAX_LEN: usize = 24;
+
 impl Fixed {
     pub const ZERO: Fixed = Fixed(0);
     pub const ONE: Fixed = Fixed(1 << 16);
     pub const MAX: Fixed = Fixed(i64::MAX);
     pub const MIN: Fixed = Fixed(i64::MIN);
 
-    // ---- string parsing --------------------------------------------------
+    // ---- byte parsing -------------------------------------------------
 
-    /// Parses a decimal string. Copies `fixed::FixedI64::from_str`
+    /// Parses a decimal value from its bytes. Copies `fixed::FixedI64::from_str`
     /// (`fixed` 1.19.0, `src/from_str.rs`): one optional leading sign, an
     /// optional integer part, an optional `.`, an optional fractional
     /// part, at least one digit overall. Rounds the fractional part to
     /// the nearest 16th bit, ties to even. Returns `None` on a reject
     /// (`NoDigits`, `InvalidDigit`, `TooManyPoints`) or on overflow (the
     /// integer part, or a fractional carry, does not fit 48 integer
-    /// bits).
-    pub fn from_str(s: &str) -> Option<Fixed> {
-        let bytes = s.as_bytes();
-        let scan = scan_bytes(bytes, 0, ScanState::new())?;
-        if !scan.has_digit {
-            return None;
+    /// bits). Takes `&[u8]`, not `&str`: the core never calls
+    /// `str::as_bytes` (see the module doc comment).
+    pub fn from_bytes(bytes: &[u8]) -> Option<Fixed> {
+        match scan_bytes(bytes, 0, ScanState::new()) {
+            None => None,
+            Some(scan) => from_bytes_scanned(bytes, scan),
         }
-        let int_bytes: &[u8] = if scan.int_start_set {
-            if scan.point_seen {
-                &bytes[scan.int_start..scan.point_index]
-            } else {
-                &bytes[scan.int_start..]
-            }
-        } else {
-            &[]
-        };
-        let frac_bytes: &[u8] = if scan.point_seen {
-            &bytes[scan.point_index + 1..scan.frac_end]
-        } else {
-            &[]
-        };
-
-        let (int_val, int_overflow) = get_int(int_bytes);
-        let (frac_val, frac_overflow) = match get_frac(frac_bytes) {
-            Some(v) => (v, false),
-            None => (0, true),
-        };
-        let mut val: u64 = int_val | frac_val;
-        let mut overflow = int_overflow;
-        if frac_overflow {
-            let (carried, carry_overflow) = val.overflowing_add(1u64 << 16);
-            val = carried;
-            if carry_overflow {
-                overflow = true;
-            }
-        }
-        let bound: u64 = if scan.neg {
-            (i64::MIN as i128).unsigned_abs() as u64
-        } else {
-            i64::MAX as u64
-        };
-        if val > bound {
-            overflow = true;
-        }
-        if overflow {
-            return None;
-        }
-        let signed = if scan.neg {
-            val.wrapping_neg() as i64
-        } else {
-            val as i64
-        };
-        Some(Fixed(signed))
     }
 
-    // ---- string display ---------------------------------------------------
+    // ---- byte display ---------------------------------------------------
 
     /// Formats as decimal, matching `fixed::FixedI64::to_string` (the
     /// default `Display`, no width or precision). Copies
@@ -127,10 +106,14 @@ impl Fixed {
     /// (`fixed` 1.19.0, `src/display.rs`): enough decimal digits for a
     /// lossless round trip (at most 5 fractional digits for 16 bits),
     /// rounded to the nearest, ties to even, trailing zeros trimmed.
-    pub fn display(self) -> String {
+    /// Returns the bytes and how many of them are used; writes no
+    /// `String` (see the module doc comment).
+    pub fn display_bytes(self) -> ([u8; DISPLAY_MAX_LEN], usize) {
         let neg = self.0 < 0;
         let abs: u64 = if neg {
-            (self.0 as i128).unsigned_abs() as u64
+            // -(self.0 as i128) is always representable: self.0 is at
+            // most i64::MIN in magnitude, and i128 holds up to 2^127.
+            (-(self.0 as i128)) as u64
         } else {
             self.0 as u64
         };
@@ -152,16 +135,33 @@ impl Fixed {
         } else {
             0
         };
-        let round_up = frac_cmp == core::cmp::Ordering::Greater
-            || (frac_cmp == core::cmp::Ordering::Equal && last_digit % 2 == 1);
-
-        let (leading, frac_count) = if round_up {
+        // Two direct `if`s, not `frac_cmp == Greater || (frac_cmp == Equal
+        // && ...)` stored to a `let` first: Aeneas elaborated an
+        // order-comparison result stored this way as `Prop`, not `Bool`,
+        // and then failed to synthesize `Decidable` for it where this
+        // code reuses it (`lake build`, 2026-11-14; see the crate's own
+        // README.md, "Axioms"). A comparison used directly as an `if`
+        // condition, with no intervening `let`, did not have this
+        // problem anywhere else in this module.
+        let (leading, frac_count) = if frac_cmp == FracCmp::Greater {
+            apply_round_up(&mut int_buf, int_digits, &mut frac_buf, frac_count)
+        } else if frac_cmp == FracCmp::Equal && last_digit % 2 == 1 {
             apply_round_up(&mut int_buf, int_digits, &mut frac_buf, frac_count)
         } else {
             (0u8, trim_trailing_zeros(&frac_buf, frac_count))
         };
 
-        assemble_string(neg, leading, &int_buf, int_digits, &frac_buf, frac_count)
+        assemble_bytes(neg, leading, &int_buf, int_digits, &frac_buf, frac_count)
+    }
+
+    /// Godot's `hash()` of this value's own display text, with no
+    /// `String`: folds `godot_hash::hash_bytes` directly over
+    /// `display_bytes`'s output. `characters/BaseChar.gd`'s
+    /// `get_state_hash()` hashes six such values (position, velocity,
+    /// and DI, each a `FixedMath` string) this way.
+    pub fn hash_display(self) -> u32 {
+        let (bytes, len) = self.display_bytes();
+        crate::godot_hash::hash_bytes_prefix(&bytes, len)
     }
 
     // ---- arithmetic --------------------------------------------------------
@@ -201,7 +201,7 @@ impl Fixed {
         if n == 0 {
             None
         } else {
-            Some(Fixed(self.0.wrapping_div(n)))
+            Some(Fixed(wrapping_div_i64(self.0, n)))
         }
     }
 
@@ -214,7 +214,10 @@ impl Fixed {
     /// instead, matching the game's `div` method (README.md, "div wraps,
     /// it does not check").
     pub fn wrapping_div(self, other: Fixed) -> Option<Fixed> {
-        div_quotient(self, other).map(|(q, _overflow)| Fixed(q))
+        match div_quotient(self, other) {
+            None => None,
+            Some((q, _overflow)) => Some(Fixed(q)),
+        }
     }
 
     /// Divides by another `Fixed`. Returns `None` for a zero divisor or
@@ -229,12 +232,17 @@ impl Fixed {
 
     /// Copies `FixedI64::abs` at the type's minimum value: wraps to
     /// itself, the same convention as every other arithmetic method here
-    /// (a release build does not check the overflow).
+    /// (a release build does not check the overflow). Written with `<`
+    /// and unary `-` (both operators Aeneas already models), not the
+    /// `abs` method (a primitive with no Rust-source MIR, which Aeneas
+    /// would otherwise axiomatize).
     pub fn abs(self) -> Fixed {
         if self.0 == i64::MIN {
             self
+        } else if self.0 < 0 {
+            Fixed(-self.0)
         } else {
-            Fixed(self.0.abs())
+            self
         }
     }
 
@@ -310,13 +318,18 @@ impl Fixed {
     /// Otherwise the division wraps (not checked), matching the game's
     /// `div`.
     pub fn normalized_vec(x: Fixed, y: Fixed) -> Option<(Fixed, Fixed)> {
-        let len = Fixed::vec_len(x, y)?;
-        if len.0 == 0 {
-            Some((Fixed::ZERO, Fixed::ZERO))
-        } else {
-            let nx = x.wrapping_div(len)?;
-            let ny = y.wrapping_div(len)?;
-            Some((nx, ny))
+        match Fixed::vec_len(x, y) {
+            None => None,
+            Some(len) => {
+                if len.0 == 0 {
+                    Some((Fixed::ZERO, Fixed::ZERO))
+                } else {
+                    match (x.wrapping_div(len), y.wrapping_div(len)) {
+                        (Some(nx), Some(ny)) => Some((nx, ny)),
+                        _ => None,
+                    }
+                }
+            }
         }
     }
 
@@ -376,45 +389,80 @@ impl Fixed {
         let diff = y_abs.wrapping_sub(x_abs);
 
         if y.0 == 0 {
-            return Some(if x.0 < 0 { PI } else { Fixed::ZERO });
-        }
-        if y.0 > 0 {
+            Some(if x.0 < 0 { PI } else { Fixed::ZERO })
+        } else if y.0 > 0 {
             if x.0 == 0 {
-                return Some(PI_HALF);
-            }
-            if x.0 > 0 {
+                Some(PI_HALF)
+            } else if x.0 > 0 {
                 if diff.0 < 0 {
                     atan_poly_1(y, x)
                 } else {
-                    Some(PI_HALF.wrapping_sub(atan_poly_2(y, x)?))
+                    match atan_poly_2(y, x) {
+                        Some(p) => Some(PI_HALF.wrapping_sub(p)),
+                        None => None,
+                    }
                 }
             } else if diff.0 >= 0 {
-                Some(PI_HALF.wrapping_sub(atan_poly_2(y, x)?))
+                match atan_poly_2(y, x) {
+                    Some(p) => Some(PI_HALF.wrapping_sub(p)),
+                    None => None,
+                }
             } else {
-                Some(PI.wrapping_add(atan_poly_1(y, x)?))
+                match atan_poly_1(y, x) {
+                    Some(p) => Some(PI.wrapping_add(p)),
+                    None => None,
+                }
             }
         } else {
             let neg_pi_half = Fixed(-PI_HALF.0);
             if x.0 == 0 {
-                return Some(neg_pi_half);
-            }
-            if x.0 > 0 {
+                Some(neg_pi_half)
+            } else if x.0 > 0 {
                 if diff.0 < 0 {
                     atan_poly_1(y, x)
                 } else {
-                    Some(neg_pi_half.wrapping_sub(atan_poly_2(y, x)?))
+                    match atan_poly_2(y, x) {
+                        Some(p) => Some(neg_pi_half.wrapping_sub(p)),
+                        None => None,
+                    }
                 }
             } else if diff.0 >= 0 {
-                Some(neg_pi_half.wrapping_sub(atan_poly_2(y, x)?))
+                match atan_poly_2(y, x) {
+                    Some(p) => Some(neg_pi_half.wrapping_sub(p)),
+                    None => None,
+                }
             } else {
-                Some(Fixed(-PI.0).wrapping_add(atan_poly_1(y, x)?))
+                match atan_poly_1(y, x) {
+                    Some(p) => Some(Fixed(-PI.0).wrapping_add(p)),
+                    None => None,
+                }
             }
         }
     }
 }
 
 // ============================================================================
-// string parsing helpers
+// i64 helpers that avoid axiomatized primitive methods
+// ============================================================================
+
+/// `i64` division, wrapping only at the one input that overflows
+/// (`i64::MIN / -1`). Written with `==`, `/` and the `i64::MIN`
+/// constant, all of which Aeneas already models for `IScalar`, so this
+/// avoids axiomatizing `core::num::i64::wrapping_div` (a primitive
+/// method with no Rust-source MIR). Every caller already checked the
+/// divisor is nonzero, so the one remaining partiality of `/` (division
+/// by zero) is never reached; it reads as a `Result` in the generated
+/// Lean, following the same pattern as this crate's other arithmetic.
+fn wrapping_div_i64(a: i64, b: i64) -> i64 {
+    if a == i64::MIN && b == -1 {
+        i64::MIN
+    } else {
+        a / b
+    }
+}
+
+// ============================================================================
+// byte parsing helpers
 // ============================================================================
 
 /// The result of scanning a decimal string once. Copies the fields
@@ -496,6 +544,77 @@ fn scan_bytes(bytes: &[u8], i: usize, st: ScanState) -> Option<ScanState> {
     }
 }
 
+/// Finishes parsing once `scan_bytes` has split the sign and the
+/// integer/fractional digit runs. Split out of `Fixed::from_bytes` so
+/// that function's own body has no `?` (see the module doc comment).
+fn from_bytes_scanned(bytes: &[u8], scan: ScanState) -> Option<Fixed> {
+    if !scan.has_digit {
+        return None;
+    }
+    let int_bytes: &[u8] = if scan.int_start_set {
+        if scan.point_seen {
+            &bytes[scan.int_start..scan.point_index]
+        } else {
+            &bytes[scan.int_start..]
+        }
+    } else {
+        &[]
+    };
+    let frac_bytes: &[u8] = if scan.point_seen {
+        &bytes[scan.point_index + 1..scan.frac_end]
+    } else {
+        &[]
+    };
+
+    let (int_val, int_overflow) = get_int(int_bytes);
+    let (frac_val, frac_overflow) = match get_frac(frac_bytes) {
+        Some(v) => (v, false),
+        None => (0, true),
+    };
+    let val: u64 = int_val | frac_val;
+    // Each overflow check below is a direct `if`, not `a || (comparison)`
+    // stored to a `let` and reused: see the comment on `display_bytes`'s
+    // round-up check above for why.
+    if frac_overflow {
+        let carried = (val as u128) + (1u128 << 16);
+        let val64 = carried as u64;
+        if int_overflow {
+            return None;
+        }
+        if carried > u64::MAX as u128 {
+            return None;
+        }
+        from_bytes_finish(scan, val64)
+    } else {
+        if int_overflow {
+            return None;
+        }
+        from_bytes_finish(scan, val)
+    }
+}
+
+/// Checks `val` against the type's range and builds the signed result.
+/// Split out of `from_bytes_scanned` only to keep the overflow checks
+/// above as plain, unstored `if`s (see that function's comment).
+fn from_bytes_finish(scan: ScanState, val: u64) -> Option<Fixed> {
+    let bound: u64 = if scan.neg {
+        I64_MIN_MAGNITUDE
+    } else {
+        i64::MAX as u64
+    };
+    if val > bound {
+        return None;
+    }
+    let signed = if scan.neg {
+        // -(val as i128) is always representable: val is at most
+        // I64_MIN_MAGNITUDE (2^63), and i128 holds up to 2^127.
+        (-(val as i128)) as i64
+    } else {
+        val as i64
+    };
+    Some(Fixed(signed))
+}
+
 /// Reads the (already sign-trimmed, leading-zero-trimmed) integer digits
 /// into the raw bits of a 48-integer-bit, 16-fractional-bit value. Copies
 /// `from_str::u64::get_int` (`fixed` 1.19.0, `src/from_str.rs`): more
@@ -511,21 +630,34 @@ fn get_int(bytes: &[u8]) -> (u64, bool) {
         return (0, true);
     }
     let (acc, overflow) = dec_int_accum(bytes, 0, 0, false);
-    let overflow = overflow || (acc >> 48) != 0;
-    (acc << 16, overflow)
+    if overflow {
+        return (acc << 16, true);
+    }
+    if (acc >> 48) != 0 {
+        return (acc << 16, true);
+    }
+    (acc << 16, false)
 }
 
 /// Accumulates decimal digits into a `u64`, recursively, tracking
 /// overflow through a widening `u128` product at each step. Copies
-/// `from_str::u64::dec_str_int_to_bin`.
+/// `from_str::u64::dec_str_int_to_bin`. Each overflow check is a direct
+/// `if`, not `overflow || (comparison)` stored to a `let`: see
+/// `display_bytes`'s round-up check for why.
 fn dec_int_accum(bytes: &[u8], i: usize, acc: u64, overflow: bool) -> (u64, bool) {
     if i >= bytes.len() {
         return (acc, overflow);
     }
     let digit = bytes[i] - b'0';
     let acc128 = (acc as u128) * 10 + digit as u128;
-    let next_overflow = overflow || acc128 > u64::MAX as u128;
-    dec_int_accum(bytes, i + 1, acc128 as u64, next_overflow)
+    let acc64 = acc128 as u64;
+    if overflow {
+        return dec_int_accum(bytes, i + 1, acc64, true);
+    }
+    if acc128 > u64::MAX as u128 {
+        return dec_int_accum(bytes, i + 1, acc64, true);
+    }
+    dec_int_accum(bytes, i + 1, acc64, false)
 }
 
 /// Reads the fractional digits into 16 bits, rounded to the nearest,
@@ -540,26 +672,31 @@ fn get_frac(bytes: &[u8]) -> Option<u64> {
     }
     let (val6, is_short) = parse_is_short(bytes);
     let round_nearest = is_short;
-    let floor = dec_to_bin_u16(val6, round_nearest)?;
-    if is_short {
-        return Some(floor as u64);
-    }
-    match frac_tie_scan(bytes, 0, floor as u32, true) {
-        TieResult::Less => Some(floor as u64),
-        TieResult::Tie => {
-            if floor % 2 == 0 {
+    match dec_to_bin_u16(val6, round_nearest) {
+        None => None,
+        Some(floor) => {
+            if is_short {
                 Some(floor as u64)
-            } else if floor == 0xFFFF {
-                None
             } else {
-                Some((floor + 1) as u64)
-            }
-        }
-        TieResult::Greater => {
-            if floor == 0xFFFF {
-                None
-            } else {
-                Some((floor + 1) as u64)
+                match frac_tie_scan(bytes, 0, floor as u32, true) {
+                    TieResult::Less => Some(floor as u64),
+                    TieResult::Tie => {
+                        if floor % 2 == 0 {
+                            Some(floor as u64)
+                        } else if floor == 0xFFFF {
+                            None
+                        } else {
+                            Some((floor + 1) as u64)
+                        }
+                    }
+                    TieResult::Greater => {
+                        if floor == 0xFFFF {
+                            None
+                        } else {
+                            Some((floor + 1) as u64)
+                        }
+                    }
+                }
             }
         }
     }
@@ -613,7 +750,10 @@ fn dec_to_bin_u16(val: u32, round_nearest: bool) -> Option<u16> {
         }
     }
     let div = numer / DENOM;
-    let rem = numer % DENOM;
+    // `numer - div * DENOM`, not `numer % DENOM`: Aeneas axiomatizes
+    // `core::num::u32::wrapping_rem` (a primitive method with no
+    // Rust-source MIR) for the `%` operator on `u32`, but not `-`/`*`.
+    let rem = numer - div * DENOM;
     let div = div as u16;
     if rem == 0 && div % 2 == 1 {
         Some(div - 1)
@@ -665,7 +805,7 @@ fn frac_tie_scan(bytes: &[u8], i: usize, boundary: u32, add5: bool) -> TieResult
 }
 
 // ============================================================================
-// string display helpers
+// byte display helpers
 // ============================================================================
 
 /// `ceil(n * log10(2))`: the number of decimal digits that can hold any
@@ -693,6 +833,21 @@ fn fill_int_digits_rec(buf: &mut [u8; 16], i: usize, v: u64) {
     fill_int_digits_rec(buf, i - 1, v / 10);
 }
 
+/// `Less`/`Equal`/`Greater`: how a 16-bit fraction's remainder compares
+/// to `0x8000` (used to decide rounding). A local, 3-variant stand-in
+/// for `core::cmp::Ordering`: comparing two `core::cmp::Ordering`
+/// values with `==` made Aeneas axiomatize
+/// `core::cmp::Ordering::PartialEq::eq` (`core`'s own derived impl, with
+/// no Rust-source MIR Charon can reach); comparing two values of an
+/// enum this crate defines does not, because the derive macro expands
+/// inside this crate, where Charon already extracts everything.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum FracCmp {
+    Less,
+    Equal,
+    Greater,
+}
+
 /// Writes up to 5 decimal digits of a 16-bit fraction, stopping early
 /// once the remaining value is close enough to 0 or to a full carry that
 /// further digits add nothing. Copies `FmtHelper::write_frac_dec` (`fixed`
@@ -700,10 +855,24 @@ fn fill_int_digits_rec(buf: &mut [u8; 16], i: usize, v: u64) {
 /// starts at 0 with an immediate `+5`). Returns the digits written, how
 /// many of them are significant, and how the final remainder compares to
 /// `0x8000` (used to decide rounding).
-fn write_frac_dec_u16(frac: u16) -> ([u8; 5], usize, core::cmp::Ordering) {
+fn write_frac_dec_u16(frac: u16) -> ([u8; 5], usize, FracCmp) {
     let mut buf = [0u8; 5];
     let (count, rem) = frac_dec_rec(frac, 0, 0, true, &mut buf);
-    (buf, count, rem.cmp(&0x8000u16))
+    let cmp = if rem < 0x8000 {
+        FracCmp::Less
+    } else if rem == 0x8000 {
+        FracCmp::Equal
+    } else {
+        FracCmp::Greater
+    };
+    (buf, count, cmp)
+}
+
+/// `u16` wrapping negation, computed with subtraction in a wider `u32`
+/// and a mask, not the `wrapping_neg` method (a primitive with no
+/// Rust-source MIR, which Aeneas would otherwise axiomatize).
+fn wrapping_neg_u16(x: u16) -> u16 {
+    (((0x1_0000u32).wrapping_sub(x as u32)) & 0xFFFF) as u16
 }
 
 fn frac_dec_rec(frac: u16, i: usize, tie: u16, add5: bool, buf: &mut [u8; 5]) -> (usize, u16) {
@@ -714,7 +883,7 @@ fn frac_dec_rec(frac: u16, i: usize, tie: u16, add5: bool, buf: &mut [u8; 5]) ->
     let new_frac = prod as u16;
     buf[i] = (prod >> 16) as u8;
 
-    if new_frac < 10 || new_frac.wrapping_neg() < 10 {
+    if new_frac < 10 || wrapping_neg_u16(new_frac) < 10 {
         return (i + 1, new_frac);
     }
 
@@ -723,7 +892,7 @@ fn frac_dec_rec(frac: u16, i: usize, tie: u16, add5: bool, buf: &mut [u8; 5]) ->
     if add5 {
         new_tie = new_tie.wrapping_add(5);
     }
-    if new_frac < new_tie || new_frac.wrapping_neg() < new_tie {
+    if new_frac < new_tie || wrapping_neg_u16(new_frac) < new_tie {
         return (i + 1, new_frac);
     }
     frac_dec_rec(new_frac, i + 1, new_tie, false, buf)
@@ -742,11 +911,11 @@ fn apply_round_up(
     frac_buf: &mut [u8; 5],
     frac_count: usize,
 ) -> (u8, usize) {
-    let (done, new_frac_count) = carry_into(frac_buf, frac_count);
+    let (done, new_frac_count) = carry_into5(frac_buf, frac_count);
     if done {
         return (0, new_frac_count);
     }
-    let done = carry_into(int_buf, int_digits).0;
+    let done = carry_into16(int_buf, int_digits).0;
     if done {
         return (0, 0);
     }
@@ -757,8 +926,11 @@ fn apply_round_up(
 /// while a digit is 9. Returns whether the carry resolved inside this
 /// buffer, and the index one past the resolved digit (the caller reads
 /// this as "how many digits are still significant" for the fractional
-/// buffer).
-fn carry_into<const N: usize>(buf: &mut [u8; N], i: usize) -> (bool, usize) {
+/// buffer). Two concrete versions, for the two buffer sizes this module
+/// uses, not one generic over `const N: usize`: Charon's own
+/// `--preset=aeneas` extraction is checked against plain monomorphic
+/// functions only (see the crate's own `README.md`).
+fn carry_into16(buf: &mut [u8; 16], i: usize) -> (bool, usize) {
     if i == 0 {
         return (false, 0);
     }
@@ -768,7 +940,21 @@ fn carry_into<const N: usize>(buf: &mut [u8; N], i: usize) -> (bool, usize) {
         (true, i)
     } else {
         buf[i - 1] = 0;
-        carry_into(buf, i - 1)
+        carry_into16(buf, i - 1)
+    }
+}
+
+fn carry_into5(buf: &mut [u8; 5], i: usize) -> (bool, usize) {
+    if i == 0 {
+        return (false, 0);
+    }
+    let d = buf[i - 1];
+    if d < 9 {
+        buf[i - 1] = d + 1;
+        (true, i)
+    } else {
+        buf[i - 1] = 0;
+        carry_into5(buf, i - 1)
     }
 }
 
@@ -782,45 +968,78 @@ fn trim_trailing_zeros(buf: &[u8; 5], n: usize) -> usize {
     }
 }
 
-/// Assembles the final decimal string. Copies `Buffer::pad_and_print`
-/// (`fixed` 1.19.0, `src/display.rs`) with no width, fill, or precision
-/// (`main.rs` and this crate's callers only ever use the bare `{}`
-/// format): the leading reserve digit is shown exactly when it is
-/// nonzero (a round-up carried all the way out) or when there are no
-/// integer digits at all (so the value is `0.x...`); otherwise at most
-/// one spurious leading zero inside the integer digits is also dropped.
-fn assemble_string(
+/// Assembles the final decimal digits into a fixed-size byte buffer, no
+/// `String`. Copies `Buffer::pad_and_print` (`fixed` 1.19.0,
+/// `src/display.rs`) with no width, fill, or precision (every caller
+/// only ever uses the bare `{}` format): the leading reserve digit is
+/// shown exactly when it is nonzero (a round-up carried all the way out)
+/// or when there are no integer digits at all (so the value is
+/// `0.x...`); otherwise at most one spurious leading zero inside the
+/// integer digits is also dropped.
+fn assemble_bytes(
     neg: bool,
     leading: u8,
     int_buf: &[u8; 16],
     int_digits: usize,
     frac_buf: &[u8; 5],
     frac_count: usize,
-) -> String {
-    let mut s = String::new();
+) -> ([u8; DISPLAY_MAX_LEN], usize) {
+    let mut out = [0u8; DISPLAY_MAX_LEN];
+    let mut len = 0usize;
     if neg {
-        s.push('-');
+        out[len] = b'-';
+        len += 1;
     }
-    let show_leading = leading != 0 || int_digits == 0;
-    if show_leading {
-        s.push((b'0' + leading) as char);
-    }
-    let skip_one = !show_leading && int_digits > 0 && int_buf[0] == 0;
-    let start = if skip_one { 1 } else { 0 };
-    append_digits(&mut s, int_buf, start, int_digits);
+    // Direct `if`/`else if` branches, not `leading != 0 || int_digits
+    // == 0` and `!show_leading && ...` stored to `let`s first: see
+    // `display_bytes`'s round-up check for why.
+    let (len, start) = if leading != 0 {
+        out[len] = b'0' + leading;
+        (len + 1, 0)
+    } else if int_digits == 0 {
+        out[len] = b'0' + leading;
+        (len + 1, 0)
+    } else if int_buf[0] == 0 {
+        (len, 1)
+    } else {
+        (len, 0)
+    };
+    let len = append_digit_bytes16(&mut out, len, int_buf, start, int_digits);
     if frac_count > 0 {
-        s.push('.');
-        append_digits(&mut s, frac_buf, 0, frac_count);
+        out[len] = b'.';
+        let len = append_digit_bytes5(&mut out, len + 1, frac_buf, 0, frac_count);
+        (out, len)
+    } else {
+        (out, len)
     }
-    s
 }
 
-fn append_digits(s: &mut String, buf: &[u8], i: usize, end: usize) {
+fn append_digit_bytes16(
+    out: &mut [u8; DISPLAY_MAX_LEN],
+    pos: usize,
+    buf: &[u8; 16],
+    i: usize,
+    end: usize,
+) -> usize {
     if i >= end {
-        return;
+        return pos;
     }
-    s.push((b'0' + buf[i]) as char);
-    append_digits(s, buf, i + 1, end);
+    out[pos] = b'0' + buf[i];
+    append_digit_bytes16(out, pos + 1, buf, i + 1, end)
+}
+
+fn append_digit_bytes5(
+    out: &mut [u8; DISPLAY_MAX_LEN],
+    pos: usize,
+    buf: &[u8; 5],
+    i: usize,
+    end: usize,
+) -> usize {
+    if i >= end {
+        return pos;
+    }
+    out[pos] = b'0' + buf[i];
+    append_digit_bytes5(out, pos + 1, buf, i + 1, end)
 }
 
 // ============================================================================
@@ -838,8 +1057,16 @@ fn div_quotient(a: Fixed, b: Fixed) -> Option<(i64, bool)> {
     let numerator = (a.0 as i128) << 16;
     let denominator = b.0 as i128;
     let quotient = numerator / denominator;
-    let fits = quotient >= i64::MIN as i128 && quotient <= i64::MAX as i128;
-    Some((quotient as i64, !fits))
+    // Two direct `if`s, not `quotient >= MIN && quotient <= MAX` stored
+    // to a `let` (as `fits`) and negated: see `display_bytes`'s
+    // round-up check for why.
+    if quotient < i64::MIN as i128 {
+        return Some((quotient as i64, true));
+    }
+    if quotient > i64::MAX as i128 {
+        return Some((quotient as i64, true));
+    }
+    Some((quotient as i64, false))
 }
 
 /// Divides by a small, known-nonzero integer constant. The quotient
@@ -849,7 +1076,7 @@ fn div_quotient(a: Fixed, b: Fixed) -> Option<(i64, bool)> {
 /// for a positive scale). This underlies the constant divisions in
 /// `Fixed::sin`.
 fn div_int_exact(a: Fixed, n: i64) -> Fixed {
-    Fixed(a.0.wrapping_div(n))
+    Fixed(wrapping_div_i64(a.0, n))
 }
 
 fn powu_rec(base: Fixed, exp: i64, acc: Fixed) -> Fixed {
@@ -985,4 +1212,3 @@ fn atan_poly_2(y: Fixed, x: Fixed) -> Option<Fixed> {
     let denom = powi_fixed(y, 2).wrapping_add(ATAN_POLY_C.wrapping_mul(powi_fixed(x, 2)));
     num.wrapping_div(denom)
 }
-
