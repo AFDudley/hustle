@@ -96,4340 +96,4340 @@ fn name_of_shockwave(v: projectiles::shockwave::State) -> &'static str { NAMES_S
 fn dump_base(out: &mut Vec<serde_json::Value>) {
     for s in base::ALL_STATES.iter().copied() {
         let d = base::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "base",
-            "record": "state",
-            "state": name_of_base(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_base),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-            "uses_air_movement": d.uses_air_movement,
-            "ignore_air_option_use_in_combos": d.ignore_air_option_use_in_combos,
-            "land_cancel": d.land_cancel,
-            "landing_recovery": d.landing_recovery,
-            "min_land_cancel_frame": d.min_land_cancel_frame,
-            "land_cancel_state": name_of_base(d.land_cancel_state),
-            "iasa_at": d.iasa_at,
-            "iasa_on_hit": d.iasa_on_hit,
-            "iasa_on_hit_on_block": d.iasa_on_hit_on_block,
-            "interrupt_frames": d.interrupt_frames.to_vec(),
-            "throw_techable": d.throw_techable,
-            "interruptible_on_opponent_turn": d.interruptible_on_opponent_turn,
-            "update_facing_on_exit": d.update_facing_on_exit,
-            "dynamic_iasa": d.dynamic_iasa,
-            "backdash_iasa": d.backdash_iasa,
-            "allow_framecheat": d.allow_framecheat,
-            "next_state_on_hold": d.next_state_on_hold,
-            "next_state_on_hold_on_opponent_turn": d.next_state_on_hold_on_opponent_turn,
-            "combo_only": d.combo_only,
-            "neutral_only": d.neutral_only,
-            "end_feint": d.end_feint,
-            "usable_from_whiff_cancel_if_possible": d.usable_from_whiff_cancel_if_possible,
-            "count_projectile_hits": d.count_projectile_hits,
-            "hold_restart": d.hold_restart.map(name_of_base),
-            "busy_interrupt_type": (d.busy_interrupt_type as i32),
-            "burst_cancellable": d.burst_cancellable,
-            "burstable": d.burstable,
-            "self_hit_cancellable": d.self_hit_cancellable,
-            "self_interruptable": d.self_interruptable,
-            "reversible": d.reversible,
-            "instant_cancellable": d.instant_cancellable,
-            "force_feintable": d.force_feintable,
-            "can_feint_if_possible": d.can_feint_if_possible,
-            "selectable": d.selectable,
-            "interrupt_from_string": d.interrupt_from_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "interrupt_into_string": d.interrupt_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "hit_cancel_into_string": d.hit_cancel_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "interrupt_exceptions_string": d.interrupt_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "hit_cancel_exceptions_string": d.hit_cancel_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "always_usable": d.always_usable,
-            "allowed_stances_string": d.allowed_stances_string.iter().map(|v| token_of_stance(*v)).collect::<Vec<_>>(),
-            "change_stance_to": d.change_stance_to.map(token_of_stance),
-            "release_opponent_on_startup": d.release_opponent_on_startup,
-            "release_opponent_on_exit": d.release_opponent_on_exit,
-            "initiative_effect": d.initiative_effect,
-            "initiative_startup_reduction_amount": d.initiative_startup_reduction_amount,
-            "apply_pushback": d.apply_pushback,
-            "beats_backdash": d.beats_backdash,
-            "no_collision_start_frame": d.no_collision_start_frame,
-            "no_collision_end_frame": d.no_collision_end_frame,
-            "can_be_counterhit": d.can_be_counterhit,
-            "tick_priority": d.tick_priority,
-            "velocity_forward_meter_gain_multiplier": d.velocity_forward_meter_gain_multiplier.map(|v| v.0),
-            "whiff_meter_gain_multiplier": d.whiff_meter_gain_multiplier.map(|v| v.0),
-            "draw_cancel_on_block": d.draw_cancel_on_block,
-            "draw_cancel_on_block_min_tick": d.draw_cancel_on_block_min_tick,
-            "type": (d.action_type as i32),
-            "air_type": (d.air_type as i32),
-            "super_level_": d.super_level_,
-            "supers_used_": d.supers_used_,
-            "super_freeze_ticks_": d.super_freeze_ticks_,
-            "super_effect_": d.super_effect_,
-            "scale_combo_meter_": d.scale_combo_meter_,
-            "force_super_effect": d.force_super_effect,
-            "super_level": d.super_level,
-            "supers_used": d.supers_used,
-            "super_freeze_ticks": d.super_freeze_ticks,
-            "super_effect": d.super_effect,
-            "scale_combo_meter": d.scale_combo_meter,
-            "release": d.release,
-            "release_frame": d.release_frame,
-            "use_start_throw_pos": d.use_start_throw_pos,
-            "start_throw_pos_x": d.start_throw_pos_x,
-            "start_throw_pos_y": d.start_throw_pos_y,
-            "use_release_throw_pos": d.use_release_throw_pos,
-            "release_throw_pos_x": d.release_throw_pos_x,
-            "release_throw_pos_y": d.release_throw_pos_y,
-            "hitstun_ticks": d.hitstun_ticks,
-            "knockback": d.knockback.map(|v| v.0),
-            "dir_x": d.dir_x.map(|v| v.0),
-            "dir_y": d.dir_y.map(|v| v.0),
-            "knockdown": d.knockdown,
-            "knockdown_extends_hitstun": d.knockdown_extends_hitstun,
-            "aerial_hit_state": name_of_base(d.aerial_hit_state),
-            "grounded_hit_state": name_of_base(d.grounded_hit_state),
-            "damage": d.damage,
-            "damage_in_combo": d.damage_in_combo,
-            "reverse": d.reverse,
-            "disable_collision": d.disable_collision,
-            "ground_bounce": d.ground_bounce,
-            "hits_otg": d.hits_otg,
-            "increment_combo": d.increment_combo,
-            "hard_knockdown": d.hard_knockdown,
-            "force_grounded": d.force_grounded,
-            "air_ground_bounce": d.air_ground_bounce,
-            "wall_slam": d.wall_slam,
-            "di_modifier": d.di_modifier.map(|v| v.0),
-            "minimum_grounded_frames": d.minimum_grounded_frames,
-            "damage_proration": d.damage_proration,
-            "hit_height": (d.hit_height as i32),
-            "misc_data": d.misc_data.map(token_of_misc),
-            "forward_throw_state": name_of_base(d.forward_throw_state),
-            "back_throw_state": name_of_base(d.back_throw_state),
-            "down_throw_state": name_of_base(d.down_throw_state),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("base"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_base(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(name_of_base)));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        m.insert("uses_air_movement".to_string(), serde_json::json!(d.uses_air_movement));
+        m.insert("ignore_air_option_use_in_combos".to_string(), serde_json::json!(d.ignore_air_option_use_in_combos));
+        m.insert("land_cancel".to_string(), serde_json::json!(d.land_cancel));
+        m.insert("landing_recovery".to_string(), serde_json::json!(d.landing_recovery));
+        m.insert("min_land_cancel_frame".to_string(), serde_json::json!(d.min_land_cancel_frame));
+        m.insert("land_cancel_state".to_string(), serde_json::json!(name_of_base(d.land_cancel_state)));
+        m.insert("iasa_at".to_string(), serde_json::json!(d.iasa_at));
+        m.insert("iasa_on_hit".to_string(), serde_json::json!(d.iasa_on_hit));
+        m.insert("iasa_on_hit_on_block".to_string(), serde_json::json!(d.iasa_on_hit_on_block));
+        m.insert("interrupt_frames".to_string(), serde_json::json!(d.interrupt_frames.to_vec()));
+        m.insert("throw_techable".to_string(), serde_json::json!(d.throw_techable));
+        m.insert("interruptible_on_opponent_turn".to_string(), serde_json::json!(d.interruptible_on_opponent_turn));
+        m.insert("update_facing_on_exit".to_string(), serde_json::json!(d.update_facing_on_exit));
+        m.insert("dynamic_iasa".to_string(), serde_json::json!(d.dynamic_iasa));
+        m.insert("backdash_iasa".to_string(), serde_json::json!(d.backdash_iasa));
+        m.insert("allow_framecheat".to_string(), serde_json::json!(d.allow_framecheat));
+        m.insert("next_state_on_hold".to_string(), serde_json::json!(d.next_state_on_hold));
+        m.insert("next_state_on_hold_on_opponent_turn".to_string(), serde_json::json!(d.next_state_on_hold_on_opponent_turn));
+        m.insert("combo_only".to_string(), serde_json::json!(d.combo_only));
+        m.insert("neutral_only".to_string(), serde_json::json!(d.neutral_only));
+        m.insert("end_feint".to_string(), serde_json::json!(d.end_feint));
+        m.insert("usable_from_whiff_cancel_if_possible".to_string(), serde_json::json!(d.usable_from_whiff_cancel_if_possible));
+        m.insert("count_projectile_hits".to_string(), serde_json::json!(d.count_projectile_hits));
+        m.insert("hold_restart".to_string(), serde_json::json!(d.hold_restart.map(name_of_base)));
+        m.insert("busy_interrupt_type".to_string(), serde_json::json!((d.busy_interrupt_type as i32)));
+        m.insert("burst_cancellable".to_string(), serde_json::json!(d.burst_cancellable));
+        m.insert("burstable".to_string(), serde_json::json!(d.burstable));
+        m.insert("self_hit_cancellable".to_string(), serde_json::json!(d.self_hit_cancellable));
+        m.insert("self_interruptable".to_string(), serde_json::json!(d.self_interruptable));
+        m.insert("reversible".to_string(), serde_json::json!(d.reversible));
+        m.insert("instant_cancellable".to_string(), serde_json::json!(d.instant_cancellable));
+        m.insert("force_feintable".to_string(), serde_json::json!(d.force_feintable));
+        m.insert("can_feint_if_possible".to_string(), serde_json::json!(d.can_feint_if_possible));
+        m.insert("selectable".to_string(), serde_json::json!(d.selectable));
+        m.insert("interrupt_from_string".to_string(), serde_json::json!(d.interrupt_from_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("interrupt_into_string".to_string(), serde_json::json!(d.interrupt_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("hit_cancel_into_string".to_string(), serde_json::json!(d.hit_cancel_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("interrupt_exceptions_string".to_string(), serde_json::json!(d.interrupt_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("hit_cancel_exceptions_string".to_string(), serde_json::json!(d.hit_cancel_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("always_usable".to_string(), serde_json::json!(d.always_usable));
+        m.insert("allowed_stances_string".to_string(), serde_json::json!(d.allowed_stances_string.iter().map(|v| token_of_stance(*v)).collect::<Vec<_>>()));
+        m.insert("change_stance_to".to_string(), serde_json::json!(d.change_stance_to.map(token_of_stance)));
+        m.insert("release_opponent_on_startup".to_string(), serde_json::json!(d.release_opponent_on_startup));
+        m.insert("release_opponent_on_exit".to_string(), serde_json::json!(d.release_opponent_on_exit));
+        m.insert("initiative_effect".to_string(), serde_json::json!(d.initiative_effect));
+        m.insert("initiative_startup_reduction_amount".to_string(), serde_json::json!(d.initiative_startup_reduction_amount));
+        m.insert("apply_pushback".to_string(), serde_json::json!(d.apply_pushback));
+        m.insert("beats_backdash".to_string(), serde_json::json!(d.beats_backdash));
+        m.insert("no_collision_start_frame".to_string(), serde_json::json!(d.no_collision_start_frame));
+        m.insert("no_collision_end_frame".to_string(), serde_json::json!(d.no_collision_end_frame));
+        m.insert("can_be_counterhit".to_string(), serde_json::json!(d.can_be_counterhit));
+        m.insert("tick_priority".to_string(), serde_json::json!(d.tick_priority));
+        m.insert("velocity_forward_meter_gain_multiplier".to_string(), serde_json::json!(d.velocity_forward_meter_gain_multiplier.map(|v| v.0)));
+        m.insert("whiff_meter_gain_multiplier".to_string(), serde_json::json!(d.whiff_meter_gain_multiplier.map(|v| v.0)));
+        m.insert("draw_cancel_on_block".to_string(), serde_json::json!(d.draw_cancel_on_block));
+        m.insert("draw_cancel_on_block_min_tick".to_string(), serde_json::json!(d.draw_cancel_on_block_min_tick));
+        m.insert("type".to_string(), serde_json::json!((d.action_type as i32)));
+        m.insert("air_type".to_string(), serde_json::json!((d.air_type as i32)));
+        m.insert("super_level_".to_string(), serde_json::json!(d.super_level_));
+        m.insert("supers_used_".to_string(), serde_json::json!(d.supers_used_));
+        m.insert("super_freeze_ticks_".to_string(), serde_json::json!(d.super_freeze_ticks_));
+        m.insert("super_effect_".to_string(), serde_json::json!(d.super_effect_));
+        m.insert("scale_combo_meter_".to_string(), serde_json::json!(d.scale_combo_meter_));
+        m.insert("force_super_effect".to_string(), serde_json::json!(d.force_super_effect));
+        m.insert("super_level".to_string(), serde_json::json!(d.super_level));
+        m.insert("supers_used".to_string(), serde_json::json!(d.supers_used));
+        m.insert("super_freeze_ticks".to_string(), serde_json::json!(d.super_freeze_ticks));
+        m.insert("super_effect".to_string(), serde_json::json!(d.super_effect));
+        m.insert("scale_combo_meter".to_string(), serde_json::json!(d.scale_combo_meter));
+        m.insert("release".to_string(), serde_json::json!(d.release));
+        m.insert("release_frame".to_string(), serde_json::json!(d.release_frame));
+        m.insert("use_start_throw_pos".to_string(), serde_json::json!(d.use_start_throw_pos));
+        m.insert("start_throw_pos_x".to_string(), serde_json::json!(d.start_throw_pos_x));
+        m.insert("start_throw_pos_y".to_string(), serde_json::json!(d.start_throw_pos_y));
+        m.insert("use_release_throw_pos".to_string(), serde_json::json!(d.use_release_throw_pos));
+        m.insert("release_throw_pos_x".to_string(), serde_json::json!(d.release_throw_pos_x));
+        m.insert("release_throw_pos_y".to_string(), serde_json::json!(d.release_throw_pos_y));
+        m.insert("hitstun_ticks".to_string(), serde_json::json!(d.hitstun_ticks));
+        m.insert("knockback".to_string(), serde_json::json!(d.knockback.map(|v| v.0)));
+        m.insert("dir_x".to_string(), serde_json::json!(d.dir_x.map(|v| v.0)));
+        m.insert("dir_y".to_string(), serde_json::json!(d.dir_y.map(|v| v.0)));
+        m.insert("knockdown".to_string(), serde_json::json!(d.knockdown));
+        m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(d.knockdown_extends_hitstun));
+        m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(d.aerial_hit_state)));
+        m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(d.grounded_hit_state)));
+        m.insert("damage".to_string(), serde_json::json!(d.damage));
+        m.insert("damage_in_combo".to_string(), serde_json::json!(d.damage_in_combo));
+        m.insert("reverse".to_string(), serde_json::json!(d.reverse));
+        m.insert("disable_collision".to_string(), serde_json::json!(d.disable_collision));
+        m.insert("ground_bounce".to_string(), serde_json::json!(d.ground_bounce));
+        m.insert("hits_otg".to_string(), serde_json::json!(d.hits_otg));
+        m.insert("increment_combo".to_string(), serde_json::json!(d.increment_combo));
+        m.insert("hard_knockdown".to_string(), serde_json::json!(d.hard_knockdown));
+        m.insert("force_grounded".to_string(), serde_json::json!(d.force_grounded));
+        m.insert("air_ground_bounce".to_string(), serde_json::json!(d.air_ground_bounce));
+        m.insert("wall_slam".to_string(), serde_json::json!(d.wall_slam));
+        m.insert("di_modifier".to_string(), serde_json::json!(d.di_modifier.map(|v| v.0)));
+        m.insert("minimum_grounded_frames".to_string(), serde_json::json!(d.minimum_grounded_frames));
+        m.insert("damage_proration".to_string(), serde_json::json!(d.damage_proration));
+        m.insert("hit_height".to_string(), serde_json::json!((d.hit_height as i32)));
+        m.insert("misc_data".to_string(), serde_json::json!(d.misc_data.map(token_of_misc)));
+        m.insert("forward_throw_state".to_string(), serde_json::json!(name_of_base(d.forward_throw_state)));
+        m.insert("back_throw_state".to_string(), serde_json::json!(name_of_base(d.back_throw_state)));
+        m.insert("down_throw_state".to_string(), serde_json::json!(name_of_base(d.down_throw_state)));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "base",
-                "record": "hitbox",
-                "state": name_of_base(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_base),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_base),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("base"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_base(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_base)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_base)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "base",
-        "record": "root",
-        "gravity": base::ROOT.gravity.map(|v| v.0),
-        "ground_friction": base::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": base::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": base::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": base::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": base::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": base::ROOT.damages_own_team,
-        "has_projectile_parry_window": base::ROOT.has_projectile_parry_window,
-        "always_parriable": base::ROOT.always_parriable,
-        "num_air_movements": base::ROOT.num_air_movements,
-        "lose_one_air_option_in_neutral": base::ROOT.lose_one_air_option_in_neutral,
-        "use_air_option_bar": base::ROOT.use_air_option_bar,
-        "air_option_bar_max": base::ROOT.air_option_bar_max,
-        "air_option_bar": base::ROOT.air_option_bar,
-        "damage_taken_modifier": base::ROOT.damage_taken_modifier.map(|v| v.0),
-        "knockback_taken_modifier": base::ROOT.knockback_taken_modifier.map(|v| v.0),
-        "di_modifier": base::ROOT.di_modifier.map(|v| v.0),
-        "num_feints": base::ROOT.num_feints,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("base"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(base::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(base::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(base::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(base::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(base::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(base::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(base::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(base::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(base::ROOT.always_parriable));
+    m.insert("num_air_movements".to_string(), serde_json::json!(base::ROOT.num_air_movements));
+    m.insert("lose_one_air_option_in_neutral".to_string(), serde_json::json!(base::ROOT.lose_one_air_option_in_neutral));
+    m.insert("use_air_option_bar".to_string(), serde_json::json!(base::ROOT.use_air_option_bar));
+    m.insert("air_option_bar_max".to_string(), serde_json::json!(base::ROOT.air_option_bar_max));
+    m.insert("air_option_bar".to_string(), serde_json::json!(base::ROOT.air_option_bar));
+    m.insert("damage_taken_modifier".to_string(), serde_json::json!(base::ROOT.damage_taken_modifier.map(|v| v.0)));
+    m.insert("knockback_taken_modifier".to_string(), serde_json::json!(base::ROOT.knockback_taken_modifier.map(|v| v.0)));
+    m.insert("di_modifier".to_string(), serde_json::json!(base::ROOT.di_modifier.map(|v| v.0)));
+    m.insert("num_feints".to_string(), serde_json::json!(base::ROOT.num_feints));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_ninja(out: &mut Vec<serde_json::Value>) {
     for s in ninja::ALL_STATES.iter().copied() {
         let d = ninja::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "ninja",
-            "record": "state",
-            "state": name_of_ninja(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_ninja),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-            "uses_air_movement": d.uses_air_movement,
-            "ignore_air_option_use_in_combos": d.ignore_air_option_use_in_combos,
-            "land_cancel": d.land_cancel,
-            "landing_recovery": d.landing_recovery,
-            "min_land_cancel_frame": d.min_land_cancel_frame,
-            "land_cancel_state": name_of_ninja(d.land_cancel_state),
-            "iasa_at": d.iasa_at,
-            "iasa_on_hit": d.iasa_on_hit,
-            "iasa_on_hit_on_block": d.iasa_on_hit_on_block,
-            "interrupt_frames": d.interrupt_frames.to_vec(),
-            "throw_techable": d.throw_techable,
-            "interruptible_on_opponent_turn": d.interruptible_on_opponent_turn,
-            "update_facing_on_exit": d.update_facing_on_exit,
-            "dynamic_iasa": d.dynamic_iasa,
-            "backdash_iasa": d.backdash_iasa,
-            "allow_framecheat": d.allow_framecheat,
-            "next_state_on_hold": d.next_state_on_hold,
-            "next_state_on_hold_on_opponent_turn": d.next_state_on_hold_on_opponent_turn,
-            "combo_only": d.combo_only,
-            "neutral_only": d.neutral_only,
-            "end_feint": d.end_feint,
-            "usable_from_whiff_cancel_if_possible": d.usable_from_whiff_cancel_if_possible,
-            "count_projectile_hits": d.count_projectile_hits,
-            "hold_restart": d.hold_restart.map(name_of_ninja),
-            "busy_interrupt_type": (d.busy_interrupt_type as i32),
-            "burst_cancellable": d.burst_cancellable,
-            "burstable": d.burstable,
-            "self_hit_cancellable": d.self_hit_cancellable,
-            "self_interruptable": d.self_interruptable,
-            "reversible": d.reversible,
-            "instant_cancellable": d.instant_cancellable,
-            "force_feintable": d.force_feintable,
-            "can_feint_if_possible": d.can_feint_if_possible,
-            "selectable": d.selectable,
-            "interrupt_from_string": d.interrupt_from_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "interrupt_into_string": d.interrupt_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "hit_cancel_into_string": d.hit_cancel_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "interrupt_exceptions_string": d.interrupt_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "hit_cancel_exceptions_string": d.hit_cancel_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "always_usable": d.always_usable,
-            "allowed_stances_string": d.allowed_stances_string.iter().map(|v| token_of_stance(*v)).collect::<Vec<_>>(),
-            "change_stance_to": d.change_stance_to.map(token_of_stance),
-            "release_opponent_on_startup": d.release_opponent_on_startup,
-            "release_opponent_on_exit": d.release_opponent_on_exit,
-            "initiative_effect": d.initiative_effect,
-            "initiative_startup_reduction_amount": d.initiative_startup_reduction_amount,
-            "apply_pushback": d.apply_pushback,
-            "beats_backdash": d.beats_backdash,
-            "no_collision_start_frame": d.no_collision_start_frame,
-            "no_collision_end_frame": d.no_collision_end_frame,
-            "can_be_counterhit": d.can_be_counterhit,
-            "tick_priority": d.tick_priority,
-            "velocity_forward_meter_gain_multiplier": d.velocity_forward_meter_gain_multiplier.map(|v| v.0),
-            "whiff_meter_gain_multiplier": d.whiff_meter_gain_multiplier.map(|v| v.0),
-            "draw_cancel_on_block": d.draw_cancel_on_block,
-            "draw_cancel_on_block_min_tick": d.draw_cancel_on_block_min_tick,
-            "type": (d.action_type as i32),
-            "air_type": (d.air_type as i32),
-            "super_level_": d.super_level_,
-            "supers_used_": d.supers_used_,
-            "super_freeze_ticks_": d.super_freeze_ticks_,
-            "super_effect_": d.super_effect_,
-            "scale_combo_meter_": d.scale_combo_meter_,
-            "force_super_effect": d.force_super_effect,
-            "super_level": d.super_level,
-            "supers_used": d.supers_used,
-            "super_freeze_ticks": d.super_freeze_ticks,
-            "super_effect": d.super_effect,
-            "scale_combo_meter": d.scale_combo_meter,
-            "release": d.release,
-            "release_frame": d.release_frame,
-            "use_start_throw_pos": d.use_start_throw_pos,
-            "start_throw_pos_x": d.start_throw_pos_x,
-            "start_throw_pos_y": d.start_throw_pos_y,
-            "use_release_throw_pos": d.use_release_throw_pos,
-            "release_throw_pos_x": d.release_throw_pos_x,
-            "release_throw_pos_y": d.release_throw_pos_y,
-            "hitstun_ticks": d.hitstun_ticks,
-            "knockback": d.knockback.map(|v| v.0),
-            "dir_x": d.dir_x.map(|v| v.0),
-            "dir_y": d.dir_y.map(|v| v.0),
-            "knockdown": d.knockdown,
-            "knockdown_extends_hitstun": d.knockdown_extends_hitstun,
-            "aerial_hit_state": name_of_base(d.aerial_hit_state),
-            "grounded_hit_state": name_of_base(d.grounded_hit_state),
-            "damage": d.damage,
-            "damage_in_combo": d.damage_in_combo,
-            "reverse": d.reverse,
-            "disable_collision": d.disable_collision,
-            "ground_bounce": d.ground_bounce,
-            "hits_otg": d.hits_otg,
-            "increment_combo": d.increment_combo,
-            "hard_knockdown": d.hard_knockdown,
-            "force_grounded": d.force_grounded,
-            "air_ground_bounce": d.air_ground_bounce,
-            "wall_slam": d.wall_slam,
-            "di_modifier": d.di_modifier.map(|v| v.0),
-            "minimum_grounded_frames": d.minimum_grounded_frames,
-            "damage_proration": d.damage_proration,
-            "hit_height": (d.hit_height as i32),
-            "misc_data": d.misc_data.map(token_of_misc),
-            "forward_throw_state": name_of_ninja(d.forward_throw_state),
-            "back_throw_state": name_of_ninja(d.back_throw_state),
-            "down_throw_state": name_of_ninja(d.down_throw_state),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("ninja"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_ninja(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(name_of_ninja)));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        m.insert("uses_air_movement".to_string(), serde_json::json!(d.uses_air_movement));
+        m.insert("ignore_air_option_use_in_combos".to_string(), serde_json::json!(d.ignore_air_option_use_in_combos));
+        m.insert("land_cancel".to_string(), serde_json::json!(d.land_cancel));
+        m.insert("landing_recovery".to_string(), serde_json::json!(d.landing_recovery));
+        m.insert("min_land_cancel_frame".to_string(), serde_json::json!(d.min_land_cancel_frame));
+        m.insert("land_cancel_state".to_string(), serde_json::json!(name_of_ninja(d.land_cancel_state)));
+        m.insert("iasa_at".to_string(), serde_json::json!(d.iasa_at));
+        m.insert("iasa_on_hit".to_string(), serde_json::json!(d.iasa_on_hit));
+        m.insert("iasa_on_hit_on_block".to_string(), serde_json::json!(d.iasa_on_hit_on_block));
+        m.insert("interrupt_frames".to_string(), serde_json::json!(d.interrupt_frames.to_vec()));
+        m.insert("throw_techable".to_string(), serde_json::json!(d.throw_techable));
+        m.insert("interruptible_on_opponent_turn".to_string(), serde_json::json!(d.interruptible_on_opponent_turn));
+        m.insert("update_facing_on_exit".to_string(), serde_json::json!(d.update_facing_on_exit));
+        m.insert("dynamic_iasa".to_string(), serde_json::json!(d.dynamic_iasa));
+        m.insert("backdash_iasa".to_string(), serde_json::json!(d.backdash_iasa));
+        m.insert("allow_framecheat".to_string(), serde_json::json!(d.allow_framecheat));
+        m.insert("next_state_on_hold".to_string(), serde_json::json!(d.next_state_on_hold));
+        m.insert("next_state_on_hold_on_opponent_turn".to_string(), serde_json::json!(d.next_state_on_hold_on_opponent_turn));
+        m.insert("combo_only".to_string(), serde_json::json!(d.combo_only));
+        m.insert("neutral_only".to_string(), serde_json::json!(d.neutral_only));
+        m.insert("end_feint".to_string(), serde_json::json!(d.end_feint));
+        m.insert("usable_from_whiff_cancel_if_possible".to_string(), serde_json::json!(d.usable_from_whiff_cancel_if_possible));
+        m.insert("count_projectile_hits".to_string(), serde_json::json!(d.count_projectile_hits));
+        m.insert("hold_restart".to_string(), serde_json::json!(d.hold_restart.map(name_of_ninja)));
+        m.insert("busy_interrupt_type".to_string(), serde_json::json!((d.busy_interrupt_type as i32)));
+        m.insert("burst_cancellable".to_string(), serde_json::json!(d.burst_cancellable));
+        m.insert("burstable".to_string(), serde_json::json!(d.burstable));
+        m.insert("self_hit_cancellable".to_string(), serde_json::json!(d.self_hit_cancellable));
+        m.insert("self_interruptable".to_string(), serde_json::json!(d.self_interruptable));
+        m.insert("reversible".to_string(), serde_json::json!(d.reversible));
+        m.insert("instant_cancellable".to_string(), serde_json::json!(d.instant_cancellable));
+        m.insert("force_feintable".to_string(), serde_json::json!(d.force_feintable));
+        m.insert("can_feint_if_possible".to_string(), serde_json::json!(d.can_feint_if_possible));
+        m.insert("selectable".to_string(), serde_json::json!(d.selectable));
+        m.insert("interrupt_from_string".to_string(), serde_json::json!(d.interrupt_from_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("interrupt_into_string".to_string(), serde_json::json!(d.interrupt_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("hit_cancel_into_string".to_string(), serde_json::json!(d.hit_cancel_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("interrupt_exceptions_string".to_string(), serde_json::json!(d.interrupt_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("hit_cancel_exceptions_string".to_string(), serde_json::json!(d.hit_cancel_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("always_usable".to_string(), serde_json::json!(d.always_usable));
+        m.insert("allowed_stances_string".to_string(), serde_json::json!(d.allowed_stances_string.iter().map(|v| token_of_stance(*v)).collect::<Vec<_>>()));
+        m.insert("change_stance_to".to_string(), serde_json::json!(d.change_stance_to.map(token_of_stance)));
+        m.insert("release_opponent_on_startup".to_string(), serde_json::json!(d.release_opponent_on_startup));
+        m.insert("release_opponent_on_exit".to_string(), serde_json::json!(d.release_opponent_on_exit));
+        m.insert("initiative_effect".to_string(), serde_json::json!(d.initiative_effect));
+        m.insert("initiative_startup_reduction_amount".to_string(), serde_json::json!(d.initiative_startup_reduction_amount));
+        m.insert("apply_pushback".to_string(), serde_json::json!(d.apply_pushback));
+        m.insert("beats_backdash".to_string(), serde_json::json!(d.beats_backdash));
+        m.insert("no_collision_start_frame".to_string(), serde_json::json!(d.no_collision_start_frame));
+        m.insert("no_collision_end_frame".to_string(), serde_json::json!(d.no_collision_end_frame));
+        m.insert("can_be_counterhit".to_string(), serde_json::json!(d.can_be_counterhit));
+        m.insert("tick_priority".to_string(), serde_json::json!(d.tick_priority));
+        m.insert("velocity_forward_meter_gain_multiplier".to_string(), serde_json::json!(d.velocity_forward_meter_gain_multiplier.map(|v| v.0)));
+        m.insert("whiff_meter_gain_multiplier".to_string(), serde_json::json!(d.whiff_meter_gain_multiplier.map(|v| v.0)));
+        m.insert("draw_cancel_on_block".to_string(), serde_json::json!(d.draw_cancel_on_block));
+        m.insert("draw_cancel_on_block_min_tick".to_string(), serde_json::json!(d.draw_cancel_on_block_min_tick));
+        m.insert("type".to_string(), serde_json::json!((d.action_type as i32)));
+        m.insert("air_type".to_string(), serde_json::json!((d.air_type as i32)));
+        m.insert("super_level_".to_string(), serde_json::json!(d.super_level_));
+        m.insert("supers_used_".to_string(), serde_json::json!(d.supers_used_));
+        m.insert("super_freeze_ticks_".to_string(), serde_json::json!(d.super_freeze_ticks_));
+        m.insert("super_effect_".to_string(), serde_json::json!(d.super_effect_));
+        m.insert("scale_combo_meter_".to_string(), serde_json::json!(d.scale_combo_meter_));
+        m.insert("force_super_effect".to_string(), serde_json::json!(d.force_super_effect));
+        m.insert("super_level".to_string(), serde_json::json!(d.super_level));
+        m.insert("supers_used".to_string(), serde_json::json!(d.supers_used));
+        m.insert("super_freeze_ticks".to_string(), serde_json::json!(d.super_freeze_ticks));
+        m.insert("super_effect".to_string(), serde_json::json!(d.super_effect));
+        m.insert("scale_combo_meter".to_string(), serde_json::json!(d.scale_combo_meter));
+        m.insert("release".to_string(), serde_json::json!(d.release));
+        m.insert("release_frame".to_string(), serde_json::json!(d.release_frame));
+        m.insert("use_start_throw_pos".to_string(), serde_json::json!(d.use_start_throw_pos));
+        m.insert("start_throw_pos_x".to_string(), serde_json::json!(d.start_throw_pos_x));
+        m.insert("start_throw_pos_y".to_string(), serde_json::json!(d.start_throw_pos_y));
+        m.insert("use_release_throw_pos".to_string(), serde_json::json!(d.use_release_throw_pos));
+        m.insert("release_throw_pos_x".to_string(), serde_json::json!(d.release_throw_pos_x));
+        m.insert("release_throw_pos_y".to_string(), serde_json::json!(d.release_throw_pos_y));
+        m.insert("hitstun_ticks".to_string(), serde_json::json!(d.hitstun_ticks));
+        m.insert("knockback".to_string(), serde_json::json!(d.knockback.map(|v| v.0)));
+        m.insert("dir_x".to_string(), serde_json::json!(d.dir_x.map(|v| v.0)));
+        m.insert("dir_y".to_string(), serde_json::json!(d.dir_y.map(|v| v.0)));
+        m.insert("knockdown".to_string(), serde_json::json!(d.knockdown));
+        m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(d.knockdown_extends_hitstun));
+        m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(d.aerial_hit_state)));
+        m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(d.grounded_hit_state)));
+        m.insert("damage".to_string(), serde_json::json!(d.damage));
+        m.insert("damage_in_combo".to_string(), serde_json::json!(d.damage_in_combo));
+        m.insert("reverse".to_string(), serde_json::json!(d.reverse));
+        m.insert("disable_collision".to_string(), serde_json::json!(d.disable_collision));
+        m.insert("ground_bounce".to_string(), serde_json::json!(d.ground_bounce));
+        m.insert("hits_otg".to_string(), serde_json::json!(d.hits_otg));
+        m.insert("increment_combo".to_string(), serde_json::json!(d.increment_combo));
+        m.insert("hard_knockdown".to_string(), serde_json::json!(d.hard_knockdown));
+        m.insert("force_grounded".to_string(), serde_json::json!(d.force_grounded));
+        m.insert("air_ground_bounce".to_string(), serde_json::json!(d.air_ground_bounce));
+        m.insert("wall_slam".to_string(), serde_json::json!(d.wall_slam));
+        m.insert("di_modifier".to_string(), serde_json::json!(d.di_modifier.map(|v| v.0)));
+        m.insert("minimum_grounded_frames".to_string(), serde_json::json!(d.minimum_grounded_frames));
+        m.insert("damage_proration".to_string(), serde_json::json!(d.damage_proration));
+        m.insert("hit_height".to_string(), serde_json::json!((d.hit_height as i32)));
+        m.insert("misc_data".to_string(), serde_json::json!(d.misc_data.map(token_of_misc)));
+        m.insert("forward_throw_state".to_string(), serde_json::json!(name_of_ninja(d.forward_throw_state)));
+        m.insert("back_throw_state".to_string(), serde_json::json!(name_of_ninja(d.back_throw_state)));
+        m.insert("down_throw_state".to_string(), serde_json::json!(name_of_ninja(d.down_throw_state)));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "ninja",
-                "record": "hitbox",
-                "state": name_of_ninja(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_ninja),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_ninja),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("ninja"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_ninja(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_ninja)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_ninja)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "ninja",
-        "record": "root",
-        "gravity": ninja::ROOT.gravity.map(|v| v.0),
-        "ground_friction": ninja::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": ninja::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": ninja::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": ninja::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": ninja::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": ninja::ROOT.damages_own_team,
-        "has_projectile_parry_window": ninja::ROOT.has_projectile_parry_window,
-        "always_parriable": ninja::ROOT.always_parriable,
-        "num_air_movements": ninja::ROOT.num_air_movements,
-        "lose_one_air_option_in_neutral": ninja::ROOT.lose_one_air_option_in_neutral,
-        "use_air_option_bar": ninja::ROOT.use_air_option_bar,
-        "air_option_bar_max": ninja::ROOT.air_option_bar_max,
-        "air_option_bar": ninja::ROOT.air_option_bar,
-        "damage_taken_modifier": ninja::ROOT.damage_taken_modifier.map(|v| v.0),
-        "knockback_taken_modifier": ninja::ROOT.knockback_taken_modifier.map(|v| v.0),
-        "di_modifier": ninja::ROOT.di_modifier.map(|v| v.0),
-        "num_feints": ninja::ROOT.num_feints,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("ninja"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(ninja::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(ninja::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(ninja::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(ninja::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(ninja::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(ninja::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(ninja::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(ninja::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(ninja::ROOT.always_parriable));
+    m.insert("num_air_movements".to_string(), serde_json::json!(ninja::ROOT.num_air_movements));
+    m.insert("lose_one_air_option_in_neutral".to_string(), serde_json::json!(ninja::ROOT.lose_one_air_option_in_neutral));
+    m.insert("use_air_option_bar".to_string(), serde_json::json!(ninja::ROOT.use_air_option_bar));
+    m.insert("air_option_bar_max".to_string(), serde_json::json!(ninja::ROOT.air_option_bar_max));
+    m.insert("air_option_bar".to_string(), serde_json::json!(ninja::ROOT.air_option_bar));
+    m.insert("damage_taken_modifier".to_string(), serde_json::json!(ninja::ROOT.damage_taken_modifier.map(|v| v.0)));
+    m.insert("knockback_taken_modifier".to_string(), serde_json::json!(ninja::ROOT.knockback_taken_modifier.map(|v| v.0)));
+    m.insert("di_modifier".to_string(), serde_json::json!(ninja::ROOT.di_modifier.map(|v| v.0)));
+    m.insert("num_feints".to_string(), serde_json::json!(ninja::ROOT.num_feints));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_cowboy(out: &mut Vec<serde_json::Value>) {
     for s in cowboy::ALL_STATES.iter().copied() {
         let d = cowboy::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "cowboy",
-            "record": "state",
-            "state": name_of_cowboy(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_cowboy),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-            "uses_air_movement": d.uses_air_movement,
-            "ignore_air_option_use_in_combos": d.ignore_air_option_use_in_combos,
-            "land_cancel": d.land_cancel,
-            "landing_recovery": d.landing_recovery,
-            "min_land_cancel_frame": d.min_land_cancel_frame,
-            "land_cancel_state": name_of_cowboy(d.land_cancel_state),
-            "iasa_at": d.iasa_at,
-            "iasa_on_hit": d.iasa_on_hit,
-            "iasa_on_hit_on_block": d.iasa_on_hit_on_block,
-            "interrupt_frames": d.interrupt_frames.to_vec(),
-            "throw_techable": d.throw_techable,
-            "interruptible_on_opponent_turn": d.interruptible_on_opponent_turn,
-            "update_facing_on_exit": d.update_facing_on_exit,
-            "dynamic_iasa": d.dynamic_iasa,
-            "backdash_iasa": d.backdash_iasa,
-            "allow_framecheat": d.allow_framecheat,
-            "next_state_on_hold": d.next_state_on_hold,
-            "next_state_on_hold_on_opponent_turn": d.next_state_on_hold_on_opponent_turn,
-            "combo_only": d.combo_only,
-            "neutral_only": d.neutral_only,
-            "end_feint": d.end_feint,
-            "usable_from_whiff_cancel_if_possible": d.usable_from_whiff_cancel_if_possible,
-            "count_projectile_hits": d.count_projectile_hits,
-            "hold_restart": d.hold_restart.map(name_of_cowboy),
-            "busy_interrupt_type": (d.busy_interrupt_type as i32),
-            "burst_cancellable": d.burst_cancellable,
-            "burstable": d.burstable,
-            "self_hit_cancellable": d.self_hit_cancellable,
-            "self_interruptable": d.self_interruptable,
-            "reversible": d.reversible,
-            "instant_cancellable": d.instant_cancellable,
-            "force_feintable": d.force_feintable,
-            "can_feint_if_possible": d.can_feint_if_possible,
-            "selectable": d.selectable,
-            "interrupt_from_string": d.interrupt_from_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "interrupt_into_string": d.interrupt_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "hit_cancel_into_string": d.hit_cancel_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "interrupt_exceptions_string": d.interrupt_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "hit_cancel_exceptions_string": d.hit_cancel_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "always_usable": d.always_usable,
-            "allowed_stances_string": d.allowed_stances_string.iter().map(|v| token_of_stance(*v)).collect::<Vec<_>>(),
-            "change_stance_to": d.change_stance_to.map(token_of_stance),
-            "release_opponent_on_startup": d.release_opponent_on_startup,
-            "release_opponent_on_exit": d.release_opponent_on_exit,
-            "initiative_effect": d.initiative_effect,
-            "initiative_startup_reduction_amount": d.initiative_startup_reduction_amount,
-            "apply_pushback": d.apply_pushback,
-            "beats_backdash": d.beats_backdash,
-            "no_collision_start_frame": d.no_collision_start_frame,
-            "no_collision_end_frame": d.no_collision_end_frame,
-            "can_be_counterhit": d.can_be_counterhit,
-            "tick_priority": d.tick_priority,
-            "velocity_forward_meter_gain_multiplier": d.velocity_forward_meter_gain_multiplier.map(|v| v.0),
-            "whiff_meter_gain_multiplier": d.whiff_meter_gain_multiplier.map(|v| v.0),
-            "draw_cancel_on_block": d.draw_cancel_on_block,
-            "draw_cancel_on_block_min_tick": d.draw_cancel_on_block_min_tick,
-            "type": (d.action_type as i32),
-            "air_type": (d.air_type as i32),
-            "super_level_": d.super_level_,
-            "supers_used_": d.supers_used_,
-            "super_freeze_ticks_": d.super_freeze_ticks_,
-            "super_effect_": d.super_effect_,
-            "scale_combo_meter_": d.scale_combo_meter_,
-            "force_super_effect": d.force_super_effect,
-            "super_level": d.super_level,
-            "supers_used": d.supers_used,
-            "super_freeze_ticks": d.super_freeze_ticks,
-            "super_effect": d.super_effect,
-            "scale_combo_meter": d.scale_combo_meter,
-            "release": d.release,
-            "release_frame": d.release_frame,
-            "use_start_throw_pos": d.use_start_throw_pos,
-            "start_throw_pos_x": d.start_throw_pos_x,
-            "start_throw_pos_y": d.start_throw_pos_y,
-            "use_release_throw_pos": d.use_release_throw_pos,
-            "release_throw_pos_x": d.release_throw_pos_x,
-            "release_throw_pos_y": d.release_throw_pos_y,
-            "hitstun_ticks": d.hitstun_ticks,
-            "knockback": d.knockback.map(|v| v.0),
-            "dir_x": d.dir_x.map(|v| v.0),
-            "dir_y": d.dir_y.map(|v| v.0),
-            "knockdown": d.knockdown,
-            "knockdown_extends_hitstun": d.knockdown_extends_hitstun,
-            "aerial_hit_state": name_of_base(d.aerial_hit_state),
-            "grounded_hit_state": name_of_base(d.grounded_hit_state),
-            "damage": d.damage,
-            "damage_in_combo": d.damage_in_combo,
-            "reverse": d.reverse,
-            "disable_collision": d.disable_collision,
-            "ground_bounce": d.ground_bounce,
-            "hits_otg": d.hits_otg,
-            "increment_combo": d.increment_combo,
-            "hard_knockdown": d.hard_knockdown,
-            "force_grounded": d.force_grounded,
-            "air_ground_bounce": d.air_ground_bounce,
-            "wall_slam": d.wall_slam,
-            "di_modifier": d.di_modifier.map(|v| v.0),
-            "minimum_grounded_frames": d.minimum_grounded_frames,
-            "damage_proration": d.damage_proration,
-            "hit_height": (d.hit_height as i32),
-            "misc_data": d.misc_data.map(token_of_misc),
-            "forward_throw_state": name_of_cowboy(d.forward_throw_state),
-            "back_throw_state": name_of_cowboy(d.back_throw_state),
-            "down_throw_state": name_of_cowboy(d.down_throw_state),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("cowboy"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_cowboy(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(name_of_cowboy)));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        m.insert("uses_air_movement".to_string(), serde_json::json!(d.uses_air_movement));
+        m.insert("ignore_air_option_use_in_combos".to_string(), serde_json::json!(d.ignore_air_option_use_in_combos));
+        m.insert("land_cancel".to_string(), serde_json::json!(d.land_cancel));
+        m.insert("landing_recovery".to_string(), serde_json::json!(d.landing_recovery));
+        m.insert("min_land_cancel_frame".to_string(), serde_json::json!(d.min_land_cancel_frame));
+        m.insert("land_cancel_state".to_string(), serde_json::json!(name_of_cowboy(d.land_cancel_state)));
+        m.insert("iasa_at".to_string(), serde_json::json!(d.iasa_at));
+        m.insert("iasa_on_hit".to_string(), serde_json::json!(d.iasa_on_hit));
+        m.insert("iasa_on_hit_on_block".to_string(), serde_json::json!(d.iasa_on_hit_on_block));
+        m.insert("interrupt_frames".to_string(), serde_json::json!(d.interrupt_frames.to_vec()));
+        m.insert("throw_techable".to_string(), serde_json::json!(d.throw_techable));
+        m.insert("interruptible_on_opponent_turn".to_string(), serde_json::json!(d.interruptible_on_opponent_turn));
+        m.insert("update_facing_on_exit".to_string(), serde_json::json!(d.update_facing_on_exit));
+        m.insert("dynamic_iasa".to_string(), serde_json::json!(d.dynamic_iasa));
+        m.insert("backdash_iasa".to_string(), serde_json::json!(d.backdash_iasa));
+        m.insert("allow_framecheat".to_string(), serde_json::json!(d.allow_framecheat));
+        m.insert("next_state_on_hold".to_string(), serde_json::json!(d.next_state_on_hold));
+        m.insert("next_state_on_hold_on_opponent_turn".to_string(), serde_json::json!(d.next_state_on_hold_on_opponent_turn));
+        m.insert("combo_only".to_string(), serde_json::json!(d.combo_only));
+        m.insert("neutral_only".to_string(), serde_json::json!(d.neutral_only));
+        m.insert("end_feint".to_string(), serde_json::json!(d.end_feint));
+        m.insert("usable_from_whiff_cancel_if_possible".to_string(), serde_json::json!(d.usable_from_whiff_cancel_if_possible));
+        m.insert("count_projectile_hits".to_string(), serde_json::json!(d.count_projectile_hits));
+        m.insert("hold_restart".to_string(), serde_json::json!(d.hold_restart.map(name_of_cowboy)));
+        m.insert("busy_interrupt_type".to_string(), serde_json::json!((d.busy_interrupt_type as i32)));
+        m.insert("burst_cancellable".to_string(), serde_json::json!(d.burst_cancellable));
+        m.insert("burstable".to_string(), serde_json::json!(d.burstable));
+        m.insert("self_hit_cancellable".to_string(), serde_json::json!(d.self_hit_cancellable));
+        m.insert("self_interruptable".to_string(), serde_json::json!(d.self_interruptable));
+        m.insert("reversible".to_string(), serde_json::json!(d.reversible));
+        m.insert("instant_cancellable".to_string(), serde_json::json!(d.instant_cancellable));
+        m.insert("force_feintable".to_string(), serde_json::json!(d.force_feintable));
+        m.insert("can_feint_if_possible".to_string(), serde_json::json!(d.can_feint_if_possible));
+        m.insert("selectable".to_string(), serde_json::json!(d.selectable));
+        m.insert("interrupt_from_string".to_string(), serde_json::json!(d.interrupt_from_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("interrupt_into_string".to_string(), serde_json::json!(d.interrupt_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("hit_cancel_into_string".to_string(), serde_json::json!(d.hit_cancel_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("interrupt_exceptions_string".to_string(), serde_json::json!(d.interrupt_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("hit_cancel_exceptions_string".to_string(), serde_json::json!(d.hit_cancel_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("always_usable".to_string(), serde_json::json!(d.always_usable));
+        m.insert("allowed_stances_string".to_string(), serde_json::json!(d.allowed_stances_string.iter().map(|v| token_of_stance(*v)).collect::<Vec<_>>()));
+        m.insert("change_stance_to".to_string(), serde_json::json!(d.change_stance_to.map(token_of_stance)));
+        m.insert("release_opponent_on_startup".to_string(), serde_json::json!(d.release_opponent_on_startup));
+        m.insert("release_opponent_on_exit".to_string(), serde_json::json!(d.release_opponent_on_exit));
+        m.insert("initiative_effect".to_string(), serde_json::json!(d.initiative_effect));
+        m.insert("initiative_startup_reduction_amount".to_string(), serde_json::json!(d.initiative_startup_reduction_amount));
+        m.insert("apply_pushback".to_string(), serde_json::json!(d.apply_pushback));
+        m.insert("beats_backdash".to_string(), serde_json::json!(d.beats_backdash));
+        m.insert("no_collision_start_frame".to_string(), serde_json::json!(d.no_collision_start_frame));
+        m.insert("no_collision_end_frame".to_string(), serde_json::json!(d.no_collision_end_frame));
+        m.insert("can_be_counterhit".to_string(), serde_json::json!(d.can_be_counterhit));
+        m.insert("tick_priority".to_string(), serde_json::json!(d.tick_priority));
+        m.insert("velocity_forward_meter_gain_multiplier".to_string(), serde_json::json!(d.velocity_forward_meter_gain_multiplier.map(|v| v.0)));
+        m.insert("whiff_meter_gain_multiplier".to_string(), serde_json::json!(d.whiff_meter_gain_multiplier.map(|v| v.0)));
+        m.insert("draw_cancel_on_block".to_string(), serde_json::json!(d.draw_cancel_on_block));
+        m.insert("draw_cancel_on_block_min_tick".to_string(), serde_json::json!(d.draw_cancel_on_block_min_tick));
+        m.insert("type".to_string(), serde_json::json!((d.action_type as i32)));
+        m.insert("air_type".to_string(), serde_json::json!((d.air_type as i32)));
+        m.insert("super_level_".to_string(), serde_json::json!(d.super_level_));
+        m.insert("supers_used_".to_string(), serde_json::json!(d.supers_used_));
+        m.insert("super_freeze_ticks_".to_string(), serde_json::json!(d.super_freeze_ticks_));
+        m.insert("super_effect_".to_string(), serde_json::json!(d.super_effect_));
+        m.insert("scale_combo_meter_".to_string(), serde_json::json!(d.scale_combo_meter_));
+        m.insert("force_super_effect".to_string(), serde_json::json!(d.force_super_effect));
+        m.insert("super_level".to_string(), serde_json::json!(d.super_level));
+        m.insert("supers_used".to_string(), serde_json::json!(d.supers_used));
+        m.insert("super_freeze_ticks".to_string(), serde_json::json!(d.super_freeze_ticks));
+        m.insert("super_effect".to_string(), serde_json::json!(d.super_effect));
+        m.insert("scale_combo_meter".to_string(), serde_json::json!(d.scale_combo_meter));
+        m.insert("release".to_string(), serde_json::json!(d.release));
+        m.insert("release_frame".to_string(), serde_json::json!(d.release_frame));
+        m.insert("use_start_throw_pos".to_string(), serde_json::json!(d.use_start_throw_pos));
+        m.insert("start_throw_pos_x".to_string(), serde_json::json!(d.start_throw_pos_x));
+        m.insert("start_throw_pos_y".to_string(), serde_json::json!(d.start_throw_pos_y));
+        m.insert("use_release_throw_pos".to_string(), serde_json::json!(d.use_release_throw_pos));
+        m.insert("release_throw_pos_x".to_string(), serde_json::json!(d.release_throw_pos_x));
+        m.insert("release_throw_pos_y".to_string(), serde_json::json!(d.release_throw_pos_y));
+        m.insert("hitstun_ticks".to_string(), serde_json::json!(d.hitstun_ticks));
+        m.insert("knockback".to_string(), serde_json::json!(d.knockback.map(|v| v.0)));
+        m.insert("dir_x".to_string(), serde_json::json!(d.dir_x.map(|v| v.0)));
+        m.insert("dir_y".to_string(), serde_json::json!(d.dir_y.map(|v| v.0)));
+        m.insert("knockdown".to_string(), serde_json::json!(d.knockdown));
+        m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(d.knockdown_extends_hitstun));
+        m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(d.aerial_hit_state)));
+        m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(d.grounded_hit_state)));
+        m.insert("damage".to_string(), serde_json::json!(d.damage));
+        m.insert("damage_in_combo".to_string(), serde_json::json!(d.damage_in_combo));
+        m.insert("reverse".to_string(), serde_json::json!(d.reverse));
+        m.insert("disable_collision".to_string(), serde_json::json!(d.disable_collision));
+        m.insert("ground_bounce".to_string(), serde_json::json!(d.ground_bounce));
+        m.insert("hits_otg".to_string(), serde_json::json!(d.hits_otg));
+        m.insert("increment_combo".to_string(), serde_json::json!(d.increment_combo));
+        m.insert("hard_knockdown".to_string(), serde_json::json!(d.hard_knockdown));
+        m.insert("force_grounded".to_string(), serde_json::json!(d.force_grounded));
+        m.insert("air_ground_bounce".to_string(), serde_json::json!(d.air_ground_bounce));
+        m.insert("wall_slam".to_string(), serde_json::json!(d.wall_slam));
+        m.insert("di_modifier".to_string(), serde_json::json!(d.di_modifier.map(|v| v.0)));
+        m.insert("minimum_grounded_frames".to_string(), serde_json::json!(d.minimum_grounded_frames));
+        m.insert("damage_proration".to_string(), serde_json::json!(d.damage_proration));
+        m.insert("hit_height".to_string(), serde_json::json!((d.hit_height as i32)));
+        m.insert("misc_data".to_string(), serde_json::json!(d.misc_data.map(token_of_misc)));
+        m.insert("forward_throw_state".to_string(), serde_json::json!(name_of_cowboy(d.forward_throw_state)));
+        m.insert("back_throw_state".to_string(), serde_json::json!(name_of_cowboy(d.back_throw_state)));
+        m.insert("down_throw_state".to_string(), serde_json::json!(name_of_cowboy(d.down_throw_state)));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "cowboy",
-                "record": "hitbox",
-                "state": name_of_cowboy(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_cowboy),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_cowboy),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("cowboy"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_cowboy(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_cowboy)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_cowboy)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "cowboy",
-        "record": "root",
-        "gravity": cowboy::ROOT.gravity.map(|v| v.0),
-        "ground_friction": cowboy::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": cowboy::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": cowboy::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": cowboy::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": cowboy::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": cowboy::ROOT.damages_own_team,
-        "has_projectile_parry_window": cowboy::ROOT.has_projectile_parry_window,
-        "always_parriable": cowboy::ROOT.always_parriable,
-        "num_air_movements": cowboy::ROOT.num_air_movements,
-        "lose_one_air_option_in_neutral": cowboy::ROOT.lose_one_air_option_in_neutral,
-        "use_air_option_bar": cowboy::ROOT.use_air_option_bar,
-        "air_option_bar_max": cowboy::ROOT.air_option_bar_max,
-        "air_option_bar": cowboy::ROOT.air_option_bar,
-        "damage_taken_modifier": cowboy::ROOT.damage_taken_modifier.map(|v| v.0),
-        "knockback_taken_modifier": cowboy::ROOT.knockback_taken_modifier.map(|v| v.0),
-        "di_modifier": cowboy::ROOT.di_modifier.map(|v| v.0),
-        "num_feints": cowboy::ROOT.num_feints,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("cowboy"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(cowboy::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(cowboy::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(cowboy::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(cowboy::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(cowboy::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(cowboy::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(cowboy::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(cowboy::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(cowboy::ROOT.always_parriable));
+    m.insert("num_air_movements".to_string(), serde_json::json!(cowboy::ROOT.num_air_movements));
+    m.insert("lose_one_air_option_in_neutral".to_string(), serde_json::json!(cowboy::ROOT.lose_one_air_option_in_neutral));
+    m.insert("use_air_option_bar".to_string(), serde_json::json!(cowboy::ROOT.use_air_option_bar));
+    m.insert("air_option_bar_max".to_string(), serde_json::json!(cowboy::ROOT.air_option_bar_max));
+    m.insert("air_option_bar".to_string(), serde_json::json!(cowboy::ROOT.air_option_bar));
+    m.insert("damage_taken_modifier".to_string(), serde_json::json!(cowboy::ROOT.damage_taken_modifier.map(|v| v.0)));
+    m.insert("knockback_taken_modifier".to_string(), serde_json::json!(cowboy::ROOT.knockback_taken_modifier.map(|v| v.0)));
+    m.insert("di_modifier".to_string(), serde_json::json!(cowboy::ROOT.di_modifier.map(|v| v.0)));
+    m.insert("num_feints".to_string(), serde_json::json!(cowboy::ROOT.num_feints));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_wizard(out: &mut Vec<serde_json::Value>) {
     for s in wizard::ALL_STATES.iter().copied() {
         let d = wizard::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "wizard",
-            "record": "state",
-            "state": name_of_wizard(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_wizard),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-            "uses_air_movement": d.uses_air_movement,
-            "ignore_air_option_use_in_combos": d.ignore_air_option_use_in_combos,
-            "land_cancel": d.land_cancel,
-            "landing_recovery": d.landing_recovery,
-            "min_land_cancel_frame": d.min_land_cancel_frame,
-            "land_cancel_state": name_of_wizard(d.land_cancel_state),
-            "iasa_at": d.iasa_at,
-            "iasa_on_hit": d.iasa_on_hit,
-            "iasa_on_hit_on_block": d.iasa_on_hit_on_block,
-            "interrupt_frames": d.interrupt_frames.to_vec(),
-            "throw_techable": d.throw_techable,
-            "interruptible_on_opponent_turn": d.interruptible_on_opponent_turn,
-            "update_facing_on_exit": d.update_facing_on_exit,
-            "dynamic_iasa": d.dynamic_iasa,
-            "backdash_iasa": d.backdash_iasa,
-            "allow_framecheat": d.allow_framecheat,
-            "next_state_on_hold": d.next_state_on_hold,
-            "next_state_on_hold_on_opponent_turn": d.next_state_on_hold_on_opponent_turn,
-            "combo_only": d.combo_only,
-            "neutral_only": d.neutral_only,
-            "end_feint": d.end_feint,
-            "usable_from_whiff_cancel_if_possible": d.usable_from_whiff_cancel_if_possible,
-            "count_projectile_hits": d.count_projectile_hits,
-            "hold_restart": d.hold_restart.map(name_of_wizard),
-            "busy_interrupt_type": (d.busy_interrupt_type as i32),
-            "burst_cancellable": d.burst_cancellable,
-            "burstable": d.burstable,
-            "self_hit_cancellable": d.self_hit_cancellable,
-            "self_interruptable": d.self_interruptable,
-            "reversible": d.reversible,
-            "instant_cancellable": d.instant_cancellable,
-            "force_feintable": d.force_feintable,
-            "can_feint_if_possible": d.can_feint_if_possible,
-            "selectable": d.selectable,
-            "interrupt_from_string": d.interrupt_from_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "interrupt_into_string": d.interrupt_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "hit_cancel_into_string": d.hit_cancel_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "interrupt_exceptions_string": d.interrupt_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "hit_cancel_exceptions_string": d.hit_cancel_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "always_usable": d.always_usable,
-            "allowed_stances_string": d.allowed_stances_string.iter().map(|v| token_of_stance(*v)).collect::<Vec<_>>(),
-            "change_stance_to": d.change_stance_to.map(token_of_stance),
-            "release_opponent_on_startup": d.release_opponent_on_startup,
-            "release_opponent_on_exit": d.release_opponent_on_exit,
-            "initiative_effect": d.initiative_effect,
-            "initiative_startup_reduction_amount": d.initiative_startup_reduction_amount,
-            "apply_pushback": d.apply_pushback,
-            "beats_backdash": d.beats_backdash,
-            "no_collision_start_frame": d.no_collision_start_frame,
-            "no_collision_end_frame": d.no_collision_end_frame,
-            "can_be_counterhit": d.can_be_counterhit,
-            "tick_priority": d.tick_priority,
-            "velocity_forward_meter_gain_multiplier": d.velocity_forward_meter_gain_multiplier.map(|v| v.0),
-            "whiff_meter_gain_multiplier": d.whiff_meter_gain_multiplier.map(|v| v.0),
-            "draw_cancel_on_block": d.draw_cancel_on_block,
-            "draw_cancel_on_block_min_tick": d.draw_cancel_on_block_min_tick,
-            "type": (d.action_type as i32),
-            "air_type": (d.air_type as i32),
-            "super_level_": d.super_level_,
-            "supers_used_": d.supers_used_,
-            "super_freeze_ticks_": d.super_freeze_ticks_,
-            "super_effect_": d.super_effect_,
-            "scale_combo_meter_": d.scale_combo_meter_,
-            "force_super_effect": d.force_super_effect,
-            "super_level": d.super_level,
-            "supers_used": d.supers_used,
-            "super_freeze_ticks": d.super_freeze_ticks,
-            "super_effect": d.super_effect,
-            "scale_combo_meter": d.scale_combo_meter,
-            "release": d.release,
-            "release_frame": d.release_frame,
-            "use_start_throw_pos": d.use_start_throw_pos,
-            "start_throw_pos_x": d.start_throw_pos_x,
-            "start_throw_pos_y": d.start_throw_pos_y,
-            "use_release_throw_pos": d.use_release_throw_pos,
-            "release_throw_pos_x": d.release_throw_pos_x,
-            "release_throw_pos_y": d.release_throw_pos_y,
-            "hitstun_ticks": d.hitstun_ticks,
-            "knockback": d.knockback.map(|v| v.0),
-            "dir_x": d.dir_x.map(|v| v.0),
-            "dir_y": d.dir_y.map(|v| v.0),
-            "knockdown": d.knockdown,
-            "knockdown_extends_hitstun": d.knockdown_extends_hitstun,
-            "aerial_hit_state": name_of_base(d.aerial_hit_state),
-            "grounded_hit_state": name_of_base(d.grounded_hit_state),
-            "damage": d.damage,
-            "damage_in_combo": d.damage_in_combo,
-            "reverse": d.reverse,
-            "disable_collision": d.disable_collision,
-            "ground_bounce": d.ground_bounce,
-            "hits_otg": d.hits_otg,
-            "increment_combo": d.increment_combo,
-            "hard_knockdown": d.hard_knockdown,
-            "force_grounded": d.force_grounded,
-            "air_ground_bounce": d.air_ground_bounce,
-            "wall_slam": d.wall_slam,
-            "di_modifier": d.di_modifier.map(|v| v.0),
-            "minimum_grounded_frames": d.minimum_grounded_frames,
-            "damage_proration": d.damage_proration,
-            "hit_height": (d.hit_height as i32),
-            "misc_data": d.misc_data.map(token_of_misc),
-            "forward_throw_state": name_of_wizard(d.forward_throw_state),
-            "back_throw_state": name_of_wizard(d.back_throw_state),
-            "down_throw_state": name_of_wizard(d.down_throw_state),
-            "trigger_orb_attack": d.trigger_orb_attack,
-            "trigger_orb_type": d.trigger_orb_type.map(token_of_orb),
-            "trigger_orb_delay": d.trigger_orb_delay,
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("wizard"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_wizard(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(name_of_wizard)));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        m.insert("uses_air_movement".to_string(), serde_json::json!(d.uses_air_movement));
+        m.insert("ignore_air_option_use_in_combos".to_string(), serde_json::json!(d.ignore_air_option_use_in_combos));
+        m.insert("land_cancel".to_string(), serde_json::json!(d.land_cancel));
+        m.insert("landing_recovery".to_string(), serde_json::json!(d.landing_recovery));
+        m.insert("min_land_cancel_frame".to_string(), serde_json::json!(d.min_land_cancel_frame));
+        m.insert("land_cancel_state".to_string(), serde_json::json!(name_of_wizard(d.land_cancel_state)));
+        m.insert("iasa_at".to_string(), serde_json::json!(d.iasa_at));
+        m.insert("iasa_on_hit".to_string(), serde_json::json!(d.iasa_on_hit));
+        m.insert("iasa_on_hit_on_block".to_string(), serde_json::json!(d.iasa_on_hit_on_block));
+        m.insert("interrupt_frames".to_string(), serde_json::json!(d.interrupt_frames.to_vec()));
+        m.insert("throw_techable".to_string(), serde_json::json!(d.throw_techable));
+        m.insert("interruptible_on_opponent_turn".to_string(), serde_json::json!(d.interruptible_on_opponent_turn));
+        m.insert("update_facing_on_exit".to_string(), serde_json::json!(d.update_facing_on_exit));
+        m.insert("dynamic_iasa".to_string(), serde_json::json!(d.dynamic_iasa));
+        m.insert("backdash_iasa".to_string(), serde_json::json!(d.backdash_iasa));
+        m.insert("allow_framecheat".to_string(), serde_json::json!(d.allow_framecheat));
+        m.insert("next_state_on_hold".to_string(), serde_json::json!(d.next_state_on_hold));
+        m.insert("next_state_on_hold_on_opponent_turn".to_string(), serde_json::json!(d.next_state_on_hold_on_opponent_turn));
+        m.insert("combo_only".to_string(), serde_json::json!(d.combo_only));
+        m.insert("neutral_only".to_string(), serde_json::json!(d.neutral_only));
+        m.insert("end_feint".to_string(), serde_json::json!(d.end_feint));
+        m.insert("usable_from_whiff_cancel_if_possible".to_string(), serde_json::json!(d.usable_from_whiff_cancel_if_possible));
+        m.insert("count_projectile_hits".to_string(), serde_json::json!(d.count_projectile_hits));
+        m.insert("hold_restart".to_string(), serde_json::json!(d.hold_restart.map(name_of_wizard)));
+        m.insert("busy_interrupt_type".to_string(), serde_json::json!((d.busy_interrupt_type as i32)));
+        m.insert("burst_cancellable".to_string(), serde_json::json!(d.burst_cancellable));
+        m.insert("burstable".to_string(), serde_json::json!(d.burstable));
+        m.insert("self_hit_cancellable".to_string(), serde_json::json!(d.self_hit_cancellable));
+        m.insert("self_interruptable".to_string(), serde_json::json!(d.self_interruptable));
+        m.insert("reversible".to_string(), serde_json::json!(d.reversible));
+        m.insert("instant_cancellable".to_string(), serde_json::json!(d.instant_cancellable));
+        m.insert("force_feintable".to_string(), serde_json::json!(d.force_feintable));
+        m.insert("can_feint_if_possible".to_string(), serde_json::json!(d.can_feint_if_possible));
+        m.insert("selectable".to_string(), serde_json::json!(d.selectable));
+        m.insert("interrupt_from_string".to_string(), serde_json::json!(d.interrupt_from_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("interrupt_into_string".to_string(), serde_json::json!(d.interrupt_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("hit_cancel_into_string".to_string(), serde_json::json!(d.hit_cancel_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("interrupt_exceptions_string".to_string(), serde_json::json!(d.interrupt_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("hit_cancel_exceptions_string".to_string(), serde_json::json!(d.hit_cancel_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("always_usable".to_string(), serde_json::json!(d.always_usable));
+        m.insert("allowed_stances_string".to_string(), serde_json::json!(d.allowed_stances_string.iter().map(|v| token_of_stance(*v)).collect::<Vec<_>>()));
+        m.insert("change_stance_to".to_string(), serde_json::json!(d.change_stance_to.map(token_of_stance)));
+        m.insert("release_opponent_on_startup".to_string(), serde_json::json!(d.release_opponent_on_startup));
+        m.insert("release_opponent_on_exit".to_string(), serde_json::json!(d.release_opponent_on_exit));
+        m.insert("initiative_effect".to_string(), serde_json::json!(d.initiative_effect));
+        m.insert("initiative_startup_reduction_amount".to_string(), serde_json::json!(d.initiative_startup_reduction_amount));
+        m.insert("apply_pushback".to_string(), serde_json::json!(d.apply_pushback));
+        m.insert("beats_backdash".to_string(), serde_json::json!(d.beats_backdash));
+        m.insert("no_collision_start_frame".to_string(), serde_json::json!(d.no_collision_start_frame));
+        m.insert("no_collision_end_frame".to_string(), serde_json::json!(d.no_collision_end_frame));
+        m.insert("can_be_counterhit".to_string(), serde_json::json!(d.can_be_counterhit));
+        m.insert("tick_priority".to_string(), serde_json::json!(d.tick_priority));
+        m.insert("velocity_forward_meter_gain_multiplier".to_string(), serde_json::json!(d.velocity_forward_meter_gain_multiplier.map(|v| v.0)));
+        m.insert("whiff_meter_gain_multiplier".to_string(), serde_json::json!(d.whiff_meter_gain_multiplier.map(|v| v.0)));
+        m.insert("draw_cancel_on_block".to_string(), serde_json::json!(d.draw_cancel_on_block));
+        m.insert("draw_cancel_on_block_min_tick".to_string(), serde_json::json!(d.draw_cancel_on_block_min_tick));
+        m.insert("type".to_string(), serde_json::json!((d.action_type as i32)));
+        m.insert("air_type".to_string(), serde_json::json!((d.air_type as i32)));
+        m.insert("super_level_".to_string(), serde_json::json!(d.super_level_));
+        m.insert("supers_used_".to_string(), serde_json::json!(d.supers_used_));
+        m.insert("super_freeze_ticks_".to_string(), serde_json::json!(d.super_freeze_ticks_));
+        m.insert("super_effect_".to_string(), serde_json::json!(d.super_effect_));
+        m.insert("scale_combo_meter_".to_string(), serde_json::json!(d.scale_combo_meter_));
+        m.insert("force_super_effect".to_string(), serde_json::json!(d.force_super_effect));
+        m.insert("super_level".to_string(), serde_json::json!(d.super_level));
+        m.insert("supers_used".to_string(), serde_json::json!(d.supers_used));
+        m.insert("super_freeze_ticks".to_string(), serde_json::json!(d.super_freeze_ticks));
+        m.insert("super_effect".to_string(), serde_json::json!(d.super_effect));
+        m.insert("scale_combo_meter".to_string(), serde_json::json!(d.scale_combo_meter));
+        m.insert("release".to_string(), serde_json::json!(d.release));
+        m.insert("release_frame".to_string(), serde_json::json!(d.release_frame));
+        m.insert("use_start_throw_pos".to_string(), serde_json::json!(d.use_start_throw_pos));
+        m.insert("start_throw_pos_x".to_string(), serde_json::json!(d.start_throw_pos_x));
+        m.insert("start_throw_pos_y".to_string(), serde_json::json!(d.start_throw_pos_y));
+        m.insert("use_release_throw_pos".to_string(), serde_json::json!(d.use_release_throw_pos));
+        m.insert("release_throw_pos_x".to_string(), serde_json::json!(d.release_throw_pos_x));
+        m.insert("release_throw_pos_y".to_string(), serde_json::json!(d.release_throw_pos_y));
+        m.insert("hitstun_ticks".to_string(), serde_json::json!(d.hitstun_ticks));
+        m.insert("knockback".to_string(), serde_json::json!(d.knockback.map(|v| v.0)));
+        m.insert("dir_x".to_string(), serde_json::json!(d.dir_x.map(|v| v.0)));
+        m.insert("dir_y".to_string(), serde_json::json!(d.dir_y.map(|v| v.0)));
+        m.insert("knockdown".to_string(), serde_json::json!(d.knockdown));
+        m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(d.knockdown_extends_hitstun));
+        m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(d.aerial_hit_state)));
+        m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(d.grounded_hit_state)));
+        m.insert("damage".to_string(), serde_json::json!(d.damage));
+        m.insert("damage_in_combo".to_string(), serde_json::json!(d.damage_in_combo));
+        m.insert("reverse".to_string(), serde_json::json!(d.reverse));
+        m.insert("disable_collision".to_string(), serde_json::json!(d.disable_collision));
+        m.insert("ground_bounce".to_string(), serde_json::json!(d.ground_bounce));
+        m.insert("hits_otg".to_string(), serde_json::json!(d.hits_otg));
+        m.insert("increment_combo".to_string(), serde_json::json!(d.increment_combo));
+        m.insert("hard_knockdown".to_string(), serde_json::json!(d.hard_knockdown));
+        m.insert("force_grounded".to_string(), serde_json::json!(d.force_grounded));
+        m.insert("air_ground_bounce".to_string(), serde_json::json!(d.air_ground_bounce));
+        m.insert("wall_slam".to_string(), serde_json::json!(d.wall_slam));
+        m.insert("di_modifier".to_string(), serde_json::json!(d.di_modifier.map(|v| v.0)));
+        m.insert("minimum_grounded_frames".to_string(), serde_json::json!(d.minimum_grounded_frames));
+        m.insert("damage_proration".to_string(), serde_json::json!(d.damage_proration));
+        m.insert("hit_height".to_string(), serde_json::json!((d.hit_height as i32)));
+        m.insert("misc_data".to_string(), serde_json::json!(d.misc_data.map(token_of_misc)));
+        m.insert("forward_throw_state".to_string(), serde_json::json!(name_of_wizard(d.forward_throw_state)));
+        m.insert("back_throw_state".to_string(), serde_json::json!(name_of_wizard(d.back_throw_state)));
+        m.insert("down_throw_state".to_string(), serde_json::json!(name_of_wizard(d.down_throw_state)));
+        m.insert("trigger_orb_attack".to_string(), serde_json::json!(d.trigger_orb_attack));
+        m.insert("trigger_orb_type".to_string(), serde_json::json!(d.trigger_orb_type.map(token_of_orb)));
+        m.insert("trigger_orb_delay".to_string(), serde_json::json!(d.trigger_orb_delay));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "wizard",
-                "record": "hitbox",
-                "state": name_of_wizard(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_wizard),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_wizard),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("wizard"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_wizard(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_wizard)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_wizard)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "wizard",
-        "record": "root",
-        "gravity": wizard::ROOT.gravity.map(|v| v.0),
-        "ground_friction": wizard::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": wizard::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": wizard::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": wizard::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": wizard::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": wizard::ROOT.damages_own_team,
-        "has_projectile_parry_window": wizard::ROOT.has_projectile_parry_window,
-        "always_parriable": wizard::ROOT.always_parriable,
-        "num_air_movements": wizard::ROOT.num_air_movements,
-        "lose_one_air_option_in_neutral": wizard::ROOT.lose_one_air_option_in_neutral,
-        "use_air_option_bar": wizard::ROOT.use_air_option_bar,
-        "air_option_bar_max": wizard::ROOT.air_option_bar_max,
-        "air_option_bar": wizard::ROOT.air_option_bar,
-        "damage_taken_modifier": wizard::ROOT.damage_taken_modifier.map(|v| v.0),
-        "knockback_taken_modifier": wizard::ROOT.knockback_taken_modifier.map(|v| v.0),
-        "di_modifier": wizard::ROOT.di_modifier.map(|v| v.0),
-        "num_feints": wizard::ROOT.num_feints,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("wizard"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(wizard::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(wizard::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(wizard::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(wizard::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(wizard::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(wizard::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(wizard::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(wizard::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(wizard::ROOT.always_parriable));
+    m.insert("num_air_movements".to_string(), serde_json::json!(wizard::ROOT.num_air_movements));
+    m.insert("lose_one_air_option_in_neutral".to_string(), serde_json::json!(wizard::ROOT.lose_one_air_option_in_neutral));
+    m.insert("use_air_option_bar".to_string(), serde_json::json!(wizard::ROOT.use_air_option_bar));
+    m.insert("air_option_bar_max".to_string(), serde_json::json!(wizard::ROOT.air_option_bar_max));
+    m.insert("air_option_bar".to_string(), serde_json::json!(wizard::ROOT.air_option_bar));
+    m.insert("damage_taken_modifier".to_string(), serde_json::json!(wizard::ROOT.damage_taken_modifier.map(|v| v.0)));
+    m.insert("knockback_taken_modifier".to_string(), serde_json::json!(wizard::ROOT.knockback_taken_modifier.map(|v| v.0)));
+    m.insert("di_modifier".to_string(), serde_json::json!(wizard::ROOT.di_modifier.map(|v| v.0)));
+    m.insert("num_feints".to_string(), serde_json::json!(wizard::ROOT.num_feints));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_robot(out: &mut Vec<serde_json::Value>) {
     for s in robot::ALL_STATES.iter().copied() {
         let d = robot::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "robot",
-            "record": "state",
-            "state": name_of_robot(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_robot),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-            "uses_air_movement": d.uses_air_movement,
-            "ignore_air_option_use_in_combos": d.ignore_air_option_use_in_combos,
-            "land_cancel": d.land_cancel,
-            "landing_recovery": d.landing_recovery,
-            "min_land_cancel_frame": d.min_land_cancel_frame,
-            "land_cancel_state": name_of_robot(d.land_cancel_state),
-            "iasa_at": d.iasa_at,
-            "iasa_on_hit": d.iasa_on_hit,
-            "iasa_on_hit_on_block": d.iasa_on_hit_on_block,
-            "interrupt_frames": d.interrupt_frames.to_vec(),
-            "throw_techable": d.throw_techable,
-            "interruptible_on_opponent_turn": d.interruptible_on_opponent_turn,
-            "update_facing_on_exit": d.update_facing_on_exit,
-            "dynamic_iasa": d.dynamic_iasa,
-            "backdash_iasa": d.backdash_iasa,
-            "allow_framecheat": d.allow_framecheat,
-            "next_state_on_hold": d.next_state_on_hold,
-            "next_state_on_hold_on_opponent_turn": d.next_state_on_hold_on_opponent_turn,
-            "combo_only": d.combo_only,
-            "neutral_only": d.neutral_only,
-            "end_feint": d.end_feint,
-            "usable_from_whiff_cancel_if_possible": d.usable_from_whiff_cancel_if_possible,
-            "count_projectile_hits": d.count_projectile_hits,
-            "hold_restart": d.hold_restart.map(name_of_robot),
-            "busy_interrupt_type": (d.busy_interrupt_type as i32),
-            "burst_cancellable": d.burst_cancellable,
-            "burstable": d.burstable,
-            "self_hit_cancellable": d.self_hit_cancellable,
-            "self_interruptable": d.self_interruptable,
-            "reversible": d.reversible,
-            "instant_cancellable": d.instant_cancellable,
-            "force_feintable": d.force_feintable,
-            "can_feint_if_possible": d.can_feint_if_possible,
-            "selectable": d.selectable,
-            "interrupt_from_string": d.interrupt_from_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "interrupt_into_string": d.interrupt_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "hit_cancel_into_string": d.hit_cancel_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "interrupt_exceptions_string": d.interrupt_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "hit_cancel_exceptions_string": d.hit_cancel_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "always_usable": d.always_usable,
-            "allowed_stances_string": d.allowed_stances_string.iter().map(|v| token_of_stance(*v)).collect::<Vec<_>>(),
-            "change_stance_to": d.change_stance_to.map(token_of_stance),
-            "release_opponent_on_startup": d.release_opponent_on_startup,
-            "release_opponent_on_exit": d.release_opponent_on_exit,
-            "initiative_effect": d.initiative_effect,
-            "initiative_startup_reduction_amount": d.initiative_startup_reduction_amount,
-            "apply_pushback": d.apply_pushback,
-            "beats_backdash": d.beats_backdash,
-            "no_collision_start_frame": d.no_collision_start_frame,
-            "no_collision_end_frame": d.no_collision_end_frame,
-            "can_be_counterhit": d.can_be_counterhit,
-            "tick_priority": d.tick_priority,
-            "velocity_forward_meter_gain_multiplier": d.velocity_forward_meter_gain_multiplier.map(|v| v.0),
-            "whiff_meter_gain_multiplier": d.whiff_meter_gain_multiplier.map(|v| v.0),
-            "draw_cancel_on_block": d.draw_cancel_on_block,
-            "draw_cancel_on_block_min_tick": d.draw_cancel_on_block_min_tick,
-            "type": (d.action_type as i32),
-            "air_type": (d.air_type as i32),
-            "super_level_": d.super_level_,
-            "supers_used_": d.supers_used_,
-            "super_freeze_ticks_": d.super_freeze_ticks_,
-            "super_effect_": d.super_effect_,
-            "scale_combo_meter_": d.scale_combo_meter_,
-            "force_super_effect": d.force_super_effect,
-            "super_level": d.super_level,
-            "supers_used": d.supers_used,
-            "super_freeze_ticks": d.super_freeze_ticks,
-            "super_effect": d.super_effect,
-            "scale_combo_meter": d.scale_combo_meter,
-            "release": d.release,
-            "release_frame": d.release_frame,
-            "use_start_throw_pos": d.use_start_throw_pos,
-            "start_throw_pos_x": d.start_throw_pos_x,
-            "start_throw_pos_y": d.start_throw_pos_y,
-            "use_release_throw_pos": d.use_release_throw_pos,
-            "release_throw_pos_x": d.release_throw_pos_x,
-            "release_throw_pos_y": d.release_throw_pos_y,
-            "hitstun_ticks": d.hitstun_ticks,
-            "knockback": d.knockback.map(|v| v.0),
-            "dir_x": d.dir_x.map(|v| v.0),
-            "dir_y": d.dir_y.map(|v| v.0),
-            "knockdown": d.knockdown,
-            "knockdown_extends_hitstun": d.knockdown_extends_hitstun,
-            "aerial_hit_state": name_of_base(d.aerial_hit_state),
-            "grounded_hit_state": name_of_base(d.grounded_hit_state),
-            "damage": d.damage,
-            "damage_in_combo": d.damage_in_combo,
-            "reverse": d.reverse,
-            "disable_collision": d.disable_collision,
-            "ground_bounce": d.ground_bounce,
-            "hits_otg": d.hits_otg,
-            "increment_combo": d.increment_combo,
-            "hard_knockdown": d.hard_knockdown,
-            "force_grounded": d.force_grounded,
-            "air_ground_bounce": d.air_ground_bounce,
-            "wall_slam": d.wall_slam,
-            "di_modifier": d.di_modifier.map(|v| v.0),
-            "minimum_grounded_frames": d.minimum_grounded_frames,
-            "damage_proration": d.damage_proration,
-            "hit_height": (d.hit_height as i32),
-            "misc_data": d.misc_data.map(token_of_misc),
-            "forward_throw_state": name_of_robot(d.forward_throw_state),
-            "back_throw_state": name_of_robot(d.back_throw_state),
-            "down_throw_state": name_of_robot(d.down_throw_state),
-            "is_super": d.is_super,
-            "can_fly": d.can_fly,
-            "throw_invuln_frames": d.throw_invuln_frames,
-            "super_scale_combo_meter": d.super_scale_combo_meter,
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("robot"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_robot(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(name_of_robot)));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        m.insert("uses_air_movement".to_string(), serde_json::json!(d.uses_air_movement));
+        m.insert("ignore_air_option_use_in_combos".to_string(), serde_json::json!(d.ignore_air_option_use_in_combos));
+        m.insert("land_cancel".to_string(), serde_json::json!(d.land_cancel));
+        m.insert("landing_recovery".to_string(), serde_json::json!(d.landing_recovery));
+        m.insert("min_land_cancel_frame".to_string(), serde_json::json!(d.min_land_cancel_frame));
+        m.insert("land_cancel_state".to_string(), serde_json::json!(name_of_robot(d.land_cancel_state)));
+        m.insert("iasa_at".to_string(), serde_json::json!(d.iasa_at));
+        m.insert("iasa_on_hit".to_string(), serde_json::json!(d.iasa_on_hit));
+        m.insert("iasa_on_hit_on_block".to_string(), serde_json::json!(d.iasa_on_hit_on_block));
+        m.insert("interrupt_frames".to_string(), serde_json::json!(d.interrupt_frames.to_vec()));
+        m.insert("throw_techable".to_string(), serde_json::json!(d.throw_techable));
+        m.insert("interruptible_on_opponent_turn".to_string(), serde_json::json!(d.interruptible_on_opponent_turn));
+        m.insert("update_facing_on_exit".to_string(), serde_json::json!(d.update_facing_on_exit));
+        m.insert("dynamic_iasa".to_string(), serde_json::json!(d.dynamic_iasa));
+        m.insert("backdash_iasa".to_string(), serde_json::json!(d.backdash_iasa));
+        m.insert("allow_framecheat".to_string(), serde_json::json!(d.allow_framecheat));
+        m.insert("next_state_on_hold".to_string(), serde_json::json!(d.next_state_on_hold));
+        m.insert("next_state_on_hold_on_opponent_turn".to_string(), serde_json::json!(d.next_state_on_hold_on_opponent_turn));
+        m.insert("combo_only".to_string(), serde_json::json!(d.combo_only));
+        m.insert("neutral_only".to_string(), serde_json::json!(d.neutral_only));
+        m.insert("end_feint".to_string(), serde_json::json!(d.end_feint));
+        m.insert("usable_from_whiff_cancel_if_possible".to_string(), serde_json::json!(d.usable_from_whiff_cancel_if_possible));
+        m.insert("count_projectile_hits".to_string(), serde_json::json!(d.count_projectile_hits));
+        m.insert("hold_restart".to_string(), serde_json::json!(d.hold_restart.map(name_of_robot)));
+        m.insert("busy_interrupt_type".to_string(), serde_json::json!((d.busy_interrupt_type as i32)));
+        m.insert("burst_cancellable".to_string(), serde_json::json!(d.burst_cancellable));
+        m.insert("burstable".to_string(), serde_json::json!(d.burstable));
+        m.insert("self_hit_cancellable".to_string(), serde_json::json!(d.self_hit_cancellable));
+        m.insert("self_interruptable".to_string(), serde_json::json!(d.self_interruptable));
+        m.insert("reversible".to_string(), serde_json::json!(d.reversible));
+        m.insert("instant_cancellable".to_string(), serde_json::json!(d.instant_cancellable));
+        m.insert("force_feintable".to_string(), serde_json::json!(d.force_feintable));
+        m.insert("can_feint_if_possible".to_string(), serde_json::json!(d.can_feint_if_possible));
+        m.insert("selectable".to_string(), serde_json::json!(d.selectable));
+        m.insert("interrupt_from_string".to_string(), serde_json::json!(d.interrupt_from_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("interrupt_into_string".to_string(), serde_json::json!(d.interrupt_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("hit_cancel_into_string".to_string(), serde_json::json!(d.hit_cancel_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("interrupt_exceptions_string".to_string(), serde_json::json!(d.interrupt_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("hit_cancel_exceptions_string".to_string(), serde_json::json!(d.hit_cancel_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("always_usable".to_string(), serde_json::json!(d.always_usable));
+        m.insert("allowed_stances_string".to_string(), serde_json::json!(d.allowed_stances_string.iter().map(|v| token_of_stance(*v)).collect::<Vec<_>>()));
+        m.insert("change_stance_to".to_string(), serde_json::json!(d.change_stance_to.map(token_of_stance)));
+        m.insert("release_opponent_on_startup".to_string(), serde_json::json!(d.release_opponent_on_startup));
+        m.insert("release_opponent_on_exit".to_string(), serde_json::json!(d.release_opponent_on_exit));
+        m.insert("initiative_effect".to_string(), serde_json::json!(d.initiative_effect));
+        m.insert("initiative_startup_reduction_amount".to_string(), serde_json::json!(d.initiative_startup_reduction_amount));
+        m.insert("apply_pushback".to_string(), serde_json::json!(d.apply_pushback));
+        m.insert("beats_backdash".to_string(), serde_json::json!(d.beats_backdash));
+        m.insert("no_collision_start_frame".to_string(), serde_json::json!(d.no_collision_start_frame));
+        m.insert("no_collision_end_frame".to_string(), serde_json::json!(d.no_collision_end_frame));
+        m.insert("can_be_counterhit".to_string(), serde_json::json!(d.can_be_counterhit));
+        m.insert("tick_priority".to_string(), serde_json::json!(d.tick_priority));
+        m.insert("velocity_forward_meter_gain_multiplier".to_string(), serde_json::json!(d.velocity_forward_meter_gain_multiplier.map(|v| v.0)));
+        m.insert("whiff_meter_gain_multiplier".to_string(), serde_json::json!(d.whiff_meter_gain_multiplier.map(|v| v.0)));
+        m.insert("draw_cancel_on_block".to_string(), serde_json::json!(d.draw_cancel_on_block));
+        m.insert("draw_cancel_on_block_min_tick".to_string(), serde_json::json!(d.draw_cancel_on_block_min_tick));
+        m.insert("type".to_string(), serde_json::json!((d.action_type as i32)));
+        m.insert("air_type".to_string(), serde_json::json!((d.air_type as i32)));
+        m.insert("super_level_".to_string(), serde_json::json!(d.super_level_));
+        m.insert("supers_used_".to_string(), serde_json::json!(d.supers_used_));
+        m.insert("super_freeze_ticks_".to_string(), serde_json::json!(d.super_freeze_ticks_));
+        m.insert("super_effect_".to_string(), serde_json::json!(d.super_effect_));
+        m.insert("scale_combo_meter_".to_string(), serde_json::json!(d.scale_combo_meter_));
+        m.insert("force_super_effect".to_string(), serde_json::json!(d.force_super_effect));
+        m.insert("super_level".to_string(), serde_json::json!(d.super_level));
+        m.insert("supers_used".to_string(), serde_json::json!(d.supers_used));
+        m.insert("super_freeze_ticks".to_string(), serde_json::json!(d.super_freeze_ticks));
+        m.insert("super_effect".to_string(), serde_json::json!(d.super_effect));
+        m.insert("scale_combo_meter".to_string(), serde_json::json!(d.scale_combo_meter));
+        m.insert("release".to_string(), serde_json::json!(d.release));
+        m.insert("release_frame".to_string(), serde_json::json!(d.release_frame));
+        m.insert("use_start_throw_pos".to_string(), serde_json::json!(d.use_start_throw_pos));
+        m.insert("start_throw_pos_x".to_string(), serde_json::json!(d.start_throw_pos_x));
+        m.insert("start_throw_pos_y".to_string(), serde_json::json!(d.start_throw_pos_y));
+        m.insert("use_release_throw_pos".to_string(), serde_json::json!(d.use_release_throw_pos));
+        m.insert("release_throw_pos_x".to_string(), serde_json::json!(d.release_throw_pos_x));
+        m.insert("release_throw_pos_y".to_string(), serde_json::json!(d.release_throw_pos_y));
+        m.insert("hitstun_ticks".to_string(), serde_json::json!(d.hitstun_ticks));
+        m.insert("knockback".to_string(), serde_json::json!(d.knockback.map(|v| v.0)));
+        m.insert("dir_x".to_string(), serde_json::json!(d.dir_x.map(|v| v.0)));
+        m.insert("dir_y".to_string(), serde_json::json!(d.dir_y.map(|v| v.0)));
+        m.insert("knockdown".to_string(), serde_json::json!(d.knockdown));
+        m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(d.knockdown_extends_hitstun));
+        m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(d.aerial_hit_state)));
+        m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(d.grounded_hit_state)));
+        m.insert("damage".to_string(), serde_json::json!(d.damage));
+        m.insert("damage_in_combo".to_string(), serde_json::json!(d.damage_in_combo));
+        m.insert("reverse".to_string(), serde_json::json!(d.reverse));
+        m.insert("disable_collision".to_string(), serde_json::json!(d.disable_collision));
+        m.insert("ground_bounce".to_string(), serde_json::json!(d.ground_bounce));
+        m.insert("hits_otg".to_string(), serde_json::json!(d.hits_otg));
+        m.insert("increment_combo".to_string(), serde_json::json!(d.increment_combo));
+        m.insert("hard_knockdown".to_string(), serde_json::json!(d.hard_knockdown));
+        m.insert("force_grounded".to_string(), serde_json::json!(d.force_grounded));
+        m.insert("air_ground_bounce".to_string(), serde_json::json!(d.air_ground_bounce));
+        m.insert("wall_slam".to_string(), serde_json::json!(d.wall_slam));
+        m.insert("di_modifier".to_string(), serde_json::json!(d.di_modifier.map(|v| v.0)));
+        m.insert("minimum_grounded_frames".to_string(), serde_json::json!(d.minimum_grounded_frames));
+        m.insert("damage_proration".to_string(), serde_json::json!(d.damage_proration));
+        m.insert("hit_height".to_string(), serde_json::json!((d.hit_height as i32)));
+        m.insert("misc_data".to_string(), serde_json::json!(d.misc_data.map(token_of_misc)));
+        m.insert("forward_throw_state".to_string(), serde_json::json!(name_of_robot(d.forward_throw_state)));
+        m.insert("back_throw_state".to_string(), serde_json::json!(name_of_robot(d.back_throw_state)));
+        m.insert("down_throw_state".to_string(), serde_json::json!(name_of_robot(d.down_throw_state)));
+        m.insert("is_super".to_string(), serde_json::json!(d.is_super));
+        m.insert("can_fly".to_string(), serde_json::json!(d.can_fly));
+        m.insert("throw_invuln_frames".to_string(), serde_json::json!(d.throw_invuln_frames));
+        m.insert("super_scale_combo_meter".to_string(), serde_json::json!(d.super_scale_combo_meter));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "robot",
-                "record": "hitbox",
-                "state": name_of_robot(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_robot),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_robot),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("robot"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_robot(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_robot)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_robot)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "robot",
-        "record": "root",
-        "gravity": robot::ROOT.gravity.map(|v| v.0),
-        "ground_friction": robot::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": robot::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": robot::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": robot::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": robot::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": robot::ROOT.damages_own_team,
-        "has_projectile_parry_window": robot::ROOT.has_projectile_parry_window,
-        "always_parriable": robot::ROOT.always_parriable,
-        "num_air_movements": robot::ROOT.num_air_movements,
-        "lose_one_air_option_in_neutral": robot::ROOT.lose_one_air_option_in_neutral,
-        "use_air_option_bar": robot::ROOT.use_air_option_bar,
-        "air_option_bar_max": robot::ROOT.air_option_bar_max,
-        "air_option_bar": robot::ROOT.air_option_bar,
-        "damage_taken_modifier": robot::ROOT.damage_taken_modifier.map(|v| v.0),
-        "knockback_taken_modifier": robot::ROOT.knockback_taken_modifier.map(|v| v.0),
-        "di_modifier": robot::ROOT.di_modifier.map(|v| v.0),
-        "num_feints": robot::ROOT.num_feints,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("robot"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(robot::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(robot::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(robot::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(robot::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(robot::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(robot::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(robot::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(robot::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(robot::ROOT.always_parriable));
+    m.insert("num_air_movements".to_string(), serde_json::json!(robot::ROOT.num_air_movements));
+    m.insert("lose_one_air_option_in_neutral".to_string(), serde_json::json!(robot::ROOT.lose_one_air_option_in_neutral));
+    m.insert("use_air_option_bar".to_string(), serde_json::json!(robot::ROOT.use_air_option_bar));
+    m.insert("air_option_bar_max".to_string(), serde_json::json!(robot::ROOT.air_option_bar_max));
+    m.insert("air_option_bar".to_string(), serde_json::json!(robot::ROOT.air_option_bar));
+    m.insert("damage_taken_modifier".to_string(), serde_json::json!(robot::ROOT.damage_taken_modifier.map(|v| v.0)));
+    m.insert("knockback_taken_modifier".to_string(), serde_json::json!(robot::ROOT.knockback_taken_modifier.map(|v| v.0)));
+    m.insert("di_modifier".to_string(), serde_json::json!(robot::ROOT.di_modifier.map(|v| v.0)));
+    m.insert("num_feints".to_string(), serde_json::json!(robot::ROOT.num_feints));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_mutant(out: &mut Vec<serde_json::Value>) {
     for s in mutant::ALL_STATES.iter().copied() {
         let d = mutant::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "mutant",
-            "record": "state",
-            "state": name_of_mutant(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_mutant),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-            "uses_air_movement": d.uses_air_movement,
-            "ignore_air_option_use_in_combos": d.ignore_air_option_use_in_combos,
-            "land_cancel": d.land_cancel,
-            "landing_recovery": d.landing_recovery,
-            "min_land_cancel_frame": d.min_land_cancel_frame,
-            "land_cancel_state": name_of_mutant(d.land_cancel_state),
-            "iasa_at": d.iasa_at,
-            "iasa_on_hit": d.iasa_on_hit,
-            "iasa_on_hit_on_block": d.iasa_on_hit_on_block,
-            "interrupt_frames": d.interrupt_frames.to_vec(),
-            "throw_techable": d.throw_techable,
-            "interruptible_on_opponent_turn": d.interruptible_on_opponent_turn,
-            "update_facing_on_exit": d.update_facing_on_exit,
-            "dynamic_iasa": d.dynamic_iasa,
-            "backdash_iasa": d.backdash_iasa,
-            "allow_framecheat": d.allow_framecheat,
-            "next_state_on_hold": d.next_state_on_hold,
-            "next_state_on_hold_on_opponent_turn": d.next_state_on_hold_on_opponent_turn,
-            "combo_only": d.combo_only,
-            "neutral_only": d.neutral_only,
-            "end_feint": d.end_feint,
-            "usable_from_whiff_cancel_if_possible": d.usable_from_whiff_cancel_if_possible,
-            "count_projectile_hits": d.count_projectile_hits,
-            "hold_restart": d.hold_restart.map(name_of_mutant),
-            "busy_interrupt_type": (d.busy_interrupt_type as i32),
-            "burst_cancellable": d.burst_cancellable,
-            "burstable": d.burstable,
-            "self_hit_cancellable": d.self_hit_cancellable,
-            "self_interruptable": d.self_interruptable,
-            "reversible": d.reversible,
-            "instant_cancellable": d.instant_cancellable,
-            "force_feintable": d.force_feintable,
-            "can_feint_if_possible": d.can_feint_if_possible,
-            "selectable": d.selectable,
-            "interrupt_from_string": d.interrupt_from_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "interrupt_into_string": d.interrupt_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "hit_cancel_into_string": d.hit_cancel_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "interrupt_exceptions_string": d.interrupt_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "hit_cancel_exceptions_string": d.hit_cancel_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>(),
-            "always_usable": d.always_usable,
-            "allowed_stances_string": d.allowed_stances_string.iter().map(|v| token_of_stance(*v)).collect::<Vec<_>>(),
-            "change_stance_to": d.change_stance_to.map(token_of_stance),
-            "release_opponent_on_startup": d.release_opponent_on_startup,
-            "release_opponent_on_exit": d.release_opponent_on_exit,
-            "initiative_effect": d.initiative_effect,
-            "initiative_startup_reduction_amount": d.initiative_startup_reduction_amount,
-            "apply_pushback": d.apply_pushback,
-            "beats_backdash": d.beats_backdash,
-            "no_collision_start_frame": d.no_collision_start_frame,
-            "no_collision_end_frame": d.no_collision_end_frame,
-            "can_be_counterhit": d.can_be_counterhit,
-            "tick_priority": d.tick_priority,
-            "velocity_forward_meter_gain_multiplier": d.velocity_forward_meter_gain_multiplier.map(|v| v.0),
-            "whiff_meter_gain_multiplier": d.whiff_meter_gain_multiplier.map(|v| v.0),
-            "draw_cancel_on_block": d.draw_cancel_on_block,
-            "draw_cancel_on_block_min_tick": d.draw_cancel_on_block_min_tick,
-            "type": (d.action_type as i32),
-            "air_type": (d.air_type as i32),
-            "super_level_": d.super_level_,
-            "supers_used_": d.supers_used_,
-            "super_freeze_ticks_": d.super_freeze_ticks_,
-            "super_effect_": d.super_effect_,
-            "scale_combo_meter_": d.scale_combo_meter_,
-            "force_super_effect": d.force_super_effect,
-            "super_level": d.super_level,
-            "supers_used": d.supers_used,
-            "super_freeze_ticks": d.super_freeze_ticks,
-            "super_effect": d.super_effect,
-            "scale_combo_meter": d.scale_combo_meter,
-            "release": d.release,
-            "release_frame": d.release_frame,
-            "use_start_throw_pos": d.use_start_throw_pos,
-            "start_throw_pos_x": d.start_throw_pos_x,
-            "start_throw_pos_y": d.start_throw_pos_y,
-            "use_release_throw_pos": d.use_release_throw_pos,
-            "release_throw_pos_x": d.release_throw_pos_x,
-            "release_throw_pos_y": d.release_throw_pos_y,
-            "hitstun_ticks": d.hitstun_ticks,
-            "knockback": d.knockback.map(|v| v.0),
-            "dir_x": d.dir_x.map(|v| v.0),
-            "dir_y": d.dir_y.map(|v| v.0),
-            "knockdown": d.knockdown,
-            "knockdown_extends_hitstun": d.knockdown_extends_hitstun,
-            "aerial_hit_state": name_of_base(d.aerial_hit_state),
-            "grounded_hit_state": name_of_base(d.grounded_hit_state),
-            "damage": d.damage,
-            "damage_in_combo": d.damage_in_combo,
-            "reverse": d.reverse,
-            "disable_collision": d.disable_collision,
-            "ground_bounce": d.ground_bounce,
-            "hits_otg": d.hits_otg,
-            "increment_combo": d.increment_combo,
-            "hard_knockdown": d.hard_knockdown,
-            "force_grounded": d.force_grounded,
-            "air_ground_bounce": d.air_ground_bounce,
-            "wall_slam": d.wall_slam,
-            "di_modifier": d.di_modifier.map(|v| v.0),
-            "minimum_grounded_frames": d.minimum_grounded_frames,
-            "damage_proration": d.damage_proration,
-            "hit_height": (d.hit_height as i32),
-            "misc_data": d.misc_data.map(token_of_misc),
-            "forward_throw_state": name_of_mutant(d.forward_throw_state),
-            "back_throw_state": name_of_mutant(d.back_throw_state),
-            "down_throw_state": name_of_mutant(d.down_throw_state),
-            "moving_up_only": d.moving_up_only,
-            "moving_down_only": d.moving_down_only,
-            "force_air_juke": d.force_air_juke,
-            "force_air_juke_allow_down": d.force_air_juke_allow_down,
-            "juke_on_block": d.juke_on_block,
-            "juke_pip_max_blocks": d.juke_pip_max_blocks,
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("mutant"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_mutant(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(name_of_mutant)));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        m.insert("uses_air_movement".to_string(), serde_json::json!(d.uses_air_movement));
+        m.insert("ignore_air_option_use_in_combos".to_string(), serde_json::json!(d.ignore_air_option_use_in_combos));
+        m.insert("land_cancel".to_string(), serde_json::json!(d.land_cancel));
+        m.insert("landing_recovery".to_string(), serde_json::json!(d.landing_recovery));
+        m.insert("min_land_cancel_frame".to_string(), serde_json::json!(d.min_land_cancel_frame));
+        m.insert("land_cancel_state".to_string(), serde_json::json!(name_of_mutant(d.land_cancel_state)));
+        m.insert("iasa_at".to_string(), serde_json::json!(d.iasa_at));
+        m.insert("iasa_on_hit".to_string(), serde_json::json!(d.iasa_on_hit));
+        m.insert("iasa_on_hit_on_block".to_string(), serde_json::json!(d.iasa_on_hit_on_block));
+        m.insert("interrupt_frames".to_string(), serde_json::json!(d.interrupt_frames.to_vec()));
+        m.insert("throw_techable".to_string(), serde_json::json!(d.throw_techable));
+        m.insert("interruptible_on_opponent_turn".to_string(), serde_json::json!(d.interruptible_on_opponent_turn));
+        m.insert("update_facing_on_exit".to_string(), serde_json::json!(d.update_facing_on_exit));
+        m.insert("dynamic_iasa".to_string(), serde_json::json!(d.dynamic_iasa));
+        m.insert("backdash_iasa".to_string(), serde_json::json!(d.backdash_iasa));
+        m.insert("allow_framecheat".to_string(), serde_json::json!(d.allow_framecheat));
+        m.insert("next_state_on_hold".to_string(), serde_json::json!(d.next_state_on_hold));
+        m.insert("next_state_on_hold_on_opponent_turn".to_string(), serde_json::json!(d.next_state_on_hold_on_opponent_turn));
+        m.insert("combo_only".to_string(), serde_json::json!(d.combo_only));
+        m.insert("neutral_only".to_string(), serde_json::json!(d.neutral_only));
+        m.insert("end_feint".to_string(), serde_json::json!(d.end_feint));
+        m.insert("usable_from_whiff_cancel_if_possible".to_string(), serde_json::json!(d.usable_from_whiff_cancel_if_possible));
+        m.insert("count_projectile_hits".to_string(), serde_json::json!(d.count_projectile_hits));
+        m.insert("hold_restart".to_string(), serde_json::json!(d.hold_restart.map(name_of_mutant)));
+        m.insert("busy_interrupt_type".to_string(), serde_json::json!((d.busy_interrupt_type as i32)));
+        m.insert("burst_cancellable".to_string(), serde_json::json!(d.burst_cancellable));
+        m.insert("burstable".to_string(), serde_json::json!(d.burstable));
+        m.insert("self_hit_cancellable".to_string(), serde_json::json!(d.self_hit_cancellable));
+        m.insert("self_interruptable".to_string(), serde_json::json!(d.self_interruptable));
+        m.insert("reversible".to_string(), serde_json::json!(d.reversible));
+        m.insert("instant_cancellable".to_string(), serde_json::json!(d.instant_cancellable));
+        m.insert("force_feintable".to_string(), serde_json::json!(d.force_feintable));
+        m.insert("can_feint_if_possible".to_string(), serde_json::json!(d.can_feint_if_possible));
+        m.insert("selectable".to_string(), serde_json::json!(d.selectable));
+        m.insert("interrupt_from_string".to_string(), serde_json::json!(d.interrupt_from_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("interrupt_into_string".to_string(), serde_json::json!(d.interrupt_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("hit_cancel_into_string".to_string(), serde_json::json!(d.hit_cancel_into_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("interrupt_exceptions_string".to_string(), serde_json::json!(d.interrupt_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("hit_cancel_exceptions_string".to_string(), serde_json::json!(d.hit_cancel_exceptions_string.iter().map(|v| token_of_category(*v)).collect::<Vec<_>>()));
+        m.insert("always_usable".to_string(), serde_json::json!(d.always_usable));
+        m.insert("allowed_stances_string".to_string(), serde_json::json!(d.allowed_stances_string.iter().map(|v| token_of_stance(*v)).collect::<Vec<_>>()));
+        m.insert("change_stance_to".to_string(), serde_json::json!(d.change_stance_to.map(token_of_stance)));
+        m.insert("release_opponent_on_startup".to_string(), serde_json::json!(d.release_opponent_on_startup));
+        m.insert("release_opponent_on_exit".to_string(), serde_json::json!(d.release_opponent_on_exit));
+        m.insert("initiative_effect".to_string(), serde_json::json!(d.initiative_effect));
+        m.insert("initiative_startup_reduction_amount".to_string(), serde_json::json!(d.initiative_startup_reduction_amount));
+        m.insert("apply_pushback".to_string(), serde_json::json!(d.apply_pushback));
+        m.insert("beats_backdash".to_string(), serde_json::json!(d.beats_backdash));
+        m.insert("no_collision_start_frame".to_string(), serde_json::json!(d.no_collision_start_frame));
+        m.insert("no_collision_end_frame".to_string(), serde_json::json!(d.no_collision_end_frame));
+        m.insert("can_be_counterhit".to_string(), serde_json::json!(d.can_be_counterhit));
+        m.insert("tick_priority".to_string(), serde_json::json!(d.tick_priority));
+        m.insert("velocity_forward_meter_gain_multiplier".to_string(), serde_json::json!(d.velocity_forward_meter_gain_multiplier.map(|v| v.0)));
+        m.insert("whiff_meter_gain_multiplier".to_string(), serde_json::json!(d.whiff_meter_gain_multiplier.map(|v| v.0)));
+        m.insert("draw_cancel_on_block".to_string(), serde_json::json!(d.draw_cancel_on_block));
+        m.insert("draw_cancel_on_block_min_tick".to_string(), serde_json::json!(d.draw_cancel_on_block_min_tick));
+        m.insert("type".to_string(), serde_json::json!((d.action_type as i32)));
+        m.insert("air_type".to_string(), serde_json::json!((d.air_type as i32)));
+        m.insert("super_level_".to_string(), serde_json::json!(d.super_level_));
+        m.insert("supers_used_".to_string(), serde_json::json!(d.supers_used_));
+        m.insert("super_freeze_ticks_".to_string(), serde_json::json!(d.super_freeze_ticks_));
+        m.insert("super_effect_".to_string(), serde_json::json!(d.super_effect_));
+        m.insert("scale_combo_meter_".to_string(), serde_json::json!(d.scale_combo_meter_));
+        m.insert("force_super_effect".to_string(), serde_json::json!(d.force_super_effect));
+        m.insert("super_level".to_string(), serde_json::json!(d.super_level));
+        m.insert("supers_used".to_string(), serde_json::json!(d.supers_used));
+        m.insert("super_freeze_ticks".to_string(), serde_json::json!(d.super_freeze_ticks));
+        m.insert("super_effect".to_string(), serde_json::json!(d.super_effect));
+        m.insert("scale_combo_meter".to_string(), serde_json::json!(d.scale_combo_meter));
+        m.insert("release".to_string(), serde_json::json!(d.release));
+        m.insert("release_frame".to_string(), serde_json::json!(d.release_frame));
+        m.insert("use_start_throw_pos".to_string(), serde_json::json!(d.use_start_throw_pos));
+        m.insert("start_throw_pos_x".to_string(), serde_json::json!(d.start_throw_pos_x));
+        m.insert("start_throw_pos_y".to_string(), serde_json::json!(d.start_throw_pos_y));
+        m.insert("use_release_throw_pos".to_string(), serde_json::json!(d.use_release_throw_pos));
+        m.insert("release_throw_pos_x".to_string(), serde_json::json!(d.release_throw_pos_x));
+        m.insert("release_throw_pos_y".to_string(), serde_json::json!(d.release_throw_pos_y));
+        m.insert("hitstun_ticks".to_string(), serde_json::json!(d.hitstun_ticks));
+        m.insert("knockback".to_string(), serde_json::json!(d.knockback.map(|v| v.0)));
+        m.insert("dir_x".to_string(), serde_json::json!(d.dir_x.map(|v| v.0)));
+        m.insert("dir_y".to_string(), serde_json::json!(d.dir_y.map(|v| v.0)));
+        m.insert("knockdown".to_string(), serde_json::json!(d.knockdown));
+        m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(d.knockdown_extends_hitstun));
+        m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(d.aerial_hit_state)));
+        m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(d.grounded_hit_state)));
+        m.insert("damage".to_string(), serde_json::json!(d.damage));
+        m.insert("damage_in_combo".to_string(), serde_json::json!(d.damage_in_combo));
+        m.insert("reverse".to_string(), serde_json::json!(d.reverse));
+        m.insert("disable_collision".to_string(), serde_json::json!(d.disable_collision));
+        m.insert("ground_bounce".to_string(), serde_json::json!(d.ground_bounce));
+        m.insert("hits_otg".to_string(), serde_json::json!(d.hits_otg));
+        m.insert("increment_combo".to_string(), serde_json::json!(d.increment_combo));
+        m.insert("hard_knockdown".to_string(), serde_json::json!(d.hard_knockdown));
+        m.insert("force_grounded".to_string(), serde_json::json!(d.force_grounded));
+        m.insert("air_ground_bounce".to_string(), serde_json::json!(d.air_ground_bounce));
+        m.insert("wall_slam".to_string(), serde_json::json!(d.wall_slam));
+        m.insert("di_modifier".to_string(), serde_json::json!(d.di_modifier.map(|v| v.0)));
+        m.insert("minimum_grounded_frames".to_string(), serde_json::json!(d.minimum_grounded_frames));
+        m.insert("damage_proration".to_string(), serde_json::json!(d.damage_proration));
+        m.insert("hit_height".to_string(), serde_json::json!((d.hit_height as i32)));
+        m.insert("misc_data".to_string(), serde_json::json!(d.misc_data.map(token_of_misc)));
+        m.insert("forward_throw_state".to_string(), serde_json::json!(name_of_mutant(d.forward_throw_state)));
+        m.insert("back_throw_state".to_string(), serde_json::json!(name_of_mutant(d.back_throw_state)));
+        m.insert("down_throw_state".to_string(), serde_json::json!(name_of_mutant(d.down_throw_state)));
+        m.insert("moving_up_only".to_string(), serde_json::json!(d.moving_up_only));
+        m.insert("moving_down_only".to_string(), serde_json::json!(d.moving_down_only));
+        m.insert("force_air_juke".to_string(), serde_json::json!(d.force_air_juke));
+        m.insert("force_air_juke_allow_down".to_string(), serde_json::json!(d.force_air_juke_allow_down));
+        m.insert("juke_on_block".to_string(), serde_json::json!(d.juke_on_block));
+        m.insert("juke_pip_max_blocks".to_string(), serde_json::json!(d.juke_pip_max_blocks));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "mutant",
-                "record": "hitbox",
-                "state": name_of_mutant(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_mutant),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_mutant),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("mutant"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_mutant(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_mutant)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_mutant)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "mutant",
-        "record": "root",
-        "gravity": mutant::ROOT.gravity.map(|v| v.0),
-        "ground_friction": mutant::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": mutant::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": mutant::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": mutant::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": mutant::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": mutant::ROOT.damages_own_team,
-        "has_projectile_parry_window": mutant::ROOT.has_projectile_parry_window,
-        "always_parriable": mutant::ROOT.always_parriable,
-        "num_air_movements": mutant::ROOT.num_air_movements,
-        "lose_one_air_option_in_neutral": mutant::ROOT.lose_one_air_option_in_neutral,
-        "use_air_option_bar": mutant::ROOT.use_air_option_bar,
-        "air_option_bar_max": mutant::ROOT.air_option_bar_max,
-        "air_option_bar": mutant::ROOT.air_option_bar,
-        "damage_taken_modifier": mutant::ROOT.damage_taken_modifier.map(|v| v.0),
-        "knockback_taken_modifier": mutant::ROOT.knockback_taken_modifier.map(|v| v.0),
-        "di_modifier": mutant::ROOT.di_modifier.map(|v| v.0),
-        "num_feints": mutant::ROOT.num_feints,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("mutant"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(mutant::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(mutant::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(mutant::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(mutant::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(mutant::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(mutant::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(mutant::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(mutant::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(mutant::ROOT.always_parriable));
+    m.insert("num_air_movements".to_string(), serde_json::json!(mutant::ROOT.num_air_movements));
+    m.insert("lose_one_air_option_in_neutral".to_string(), serde_json::json!(mutant::ROOT.lose_one_air_option_in_neutral));
+    m.insert("use_air_option_bar".to_string(), serde_json::json!(mutant::ROOT.use_air_option_bar));
+    m.insert("air_option_bar_max".to_string(), serde_json::json!(mutant::ROOT.air_option_bar_max));
+    m.insert("air_option_bar".to_string(), serde_json::json!(mutant::ROOT.air_option_bar));
+    m.insert("damage_taken_modifier".to_string(), serde_json::json!(mutant::ROOT.damage_taken_modifier.map(|v| v.0)));
+    m.insert("knockback_taken_modifier".to_string(), serde_json::json!(mutant::ROOT.knockback_taken_modifier.map(|v| v.0)));
+    m.insert("di_modifier".to_string(), serde_json::json!(mutant::ROOT.di_modifier.map(|v| v.0)));
+    m.insert("num_feints".to_string(), serde_json::json!(mutant::ROOT.num_feints));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_grappling_hook(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::grappling_hook::ALL_STATES.iter().copied() {
         let d = projectiles::grappling_hook::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "grappling_hook",
-            "record": "state",
-            "state": name_of_grappling_hook(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_grappling_hook),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("grappling_hook"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_grappling_hook(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::grappling_hook::FallbackState::Own(s) => name_of_grappling_hook(s), projectiles::grappling_hook::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "grappling_hook",
-                "record": "hitbox",
-                "state": name_of_grappling_hook(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_grappling_hook),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_grappling_hook),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("grappling_hook"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_grappling_hook(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_grappling_hook)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_grappling_hook)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "grappling_hook",
-        "record": "root",
-        "gravity": projectiles::grappling_hook::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::grappling_hook::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::grappling_hook::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::grappling_hook::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::grappling_hook::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::grappling_hook::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::grappling_hook::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::grappling_hook::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::grappling_hook::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::grappling_hook::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::grappling_hook::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::grappling_hook::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::grappling_hook::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::grappling_hook::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::grappling_hook::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::grappling_hook::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::grappling_hook::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::grappling_hook::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::grappling_hook::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::grappling_hook::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::grappling_hook::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::grappling_hook::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("grappling_hook"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::grappling_hook::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_heavy_whip_wave(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::heavy_whip_wave::ALL_STATES.iter().copied() {
         let d = projectiles::heavy_whip_wave::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "heavy_whip_wave",
-            "record": "state",
-            "state": name_of_heavy_whip_wave(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_heavy_whip_wave),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("heavy_whip_wave"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_heavy_whip_wave(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::heavy_whip_wave::FallbackState::Own(s) => name_of_heavy_whip_wave(s), projectiles::heavy_whip_wave::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "heavy_whip_wave",
-                "record": "hitbox",
-                "state": name_of_heavy_whip_wave(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_heavy_whip_wave),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_heavy_whip_wave),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("heavy_whip_wave"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_heavy_whip_wave(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_heavy_whip_wave)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_heavy_whip_wave)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "heavy_whip_wave",
-        "record": "root",
-        "gravity": projectiles::heavy_whip_wave::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::heavy_whip_wave::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::heavy_whip_wave::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::heavy_whip_wave::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::heavy_whip_wave::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::heavy_whip_wave::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::heavy_whip_wave::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::heavy_whip_wave::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::heavy_whip_wave::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::heavy_whip_wave::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::heavy_whip_wave::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::heavy_whip_wave::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::heavy_whip_wave::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::heavy_whip_wave::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::heavy_whip_wave::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::heavy_whip_wave::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::heavy_whip_wave::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::heavy_whip_wave::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::heavy_whip_wave::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::heavy_whip_wave::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::heavy_whip_wave::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::heavy_whip_wave::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("heavy_whip_wave"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::heavy_whip_wave::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_heavy_whip_wave_high(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::heavy_whip_wave_high::ALL_STATES.iter().copied() {
         let d = projectiles::heavy_whip_wave_high::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "heavy_whip_wave_high",
-            "record": "state",
-            "state": name_of_heavy_whip_wave_high(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_heavy_whip_wave_high),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("heavy_whip_wave_high"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_heavy_whip_wave_high(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::heavy_whip_wave_high::FallbackState::Own(s) => name_of_heavy_whip_wave_high(s), projectiles::heavy_whip_wave_high::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "heavy_whip_wave_high",
-                "record": "hitbox",
-                "state": name_of_heavy_whip_wave_high(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_heavy_whip_wave_high),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_heavy_whip_wave_high),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("heavy_whip_wave_high"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_heavy_whip_wave_high(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_heavy_whip_wave_high)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_heavy_whip_wave_high)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "heavy_whip_wave_high",
-        "record": "root",
-        "gravity": projectiles::heavy_whip_wave_high::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::heavy_whip_wave_high::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::heavy_whip_wave_high::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::heavy_whip_wave_high::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::heavy_whip_wave_high::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::heavy_whip_wave_high::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::heavy_whip_wave_high::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::heavy_whip_wave_high::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::heavy_whip_wave_high::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::heavy_whip_wave_high::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::heavy_whip_wave_high::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::heavy_whip_wave_high::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::heavy_whip_wave_high::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::heavy_whip_wave_high::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::heavy_whip_wave_high::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::heavy_whip_wave_high::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::heavy_whip_wave_high::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::heavy_whip_wave_high::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::heavy_whip_wave_high::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::heavy_whip_wave_high::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::heavy_whip_wave_high::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::heavy_whip_wave_high::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("heavy_whip_wave_high"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::heavy_whip_wave_high::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_whip_wave(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::whip_wave::ALL_STATES.iter().copied() {
         let d = projectiles::whip_wave::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "whip_wave",
-            "record": "state",
-            "state": name_of_whip_wave(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_whip_wave),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("whip_wave"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_whip_wave(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::whip_wave::FallbackState::Own(s) => name_of_whip_wave(s), projectiles::whip_wave::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "whip_wave",
-                "record": "hitbox",
-                "state": name_of_whip_wave(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_whip_wave),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_whip_wave),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("whip_wave"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_whip_wave(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_whip_wave)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_whip_wave)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "whip_wave",
-        "record": "root",
-        "gravity": projectiles::whip_wave::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::whip_wave::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::whip_wave::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::whip_wave::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::whip_wave::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::whip_wave::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::whip_wave::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::whip_wave::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::whip_wave::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::whip_wave::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::whip_wave::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::whip_wave::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::whip_wave::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::whip_wave::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::whip_wave::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::whip_wave::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::whip_wave::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::whip_wave::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::whip_wave::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::whip_wave::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::whip_wave::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::whip_wave::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("whip_wave"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::whip_wave::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_after_image(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::after_image::ALL_STATES.iter().copied() {
         let d = projectiles::after_image::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "after_image",
-            "record": "state",
-            "state": name_of_after_image(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_after_image),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("after_image"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_after_image(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::after_image::FallbackState::Own(s) => name_of_after_image(s), projectiles::after_image::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "after_image",
-                "record": "hitbox",
-                "state": name_of_after_image(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_after_image),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_after_image),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("after_image"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_after_image(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_after_image)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_after_image)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "after_image",
-        "record": "root",
-        "gravity": projectiles::after_image::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::after_image::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::after_image::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::after_image::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::after_image::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::after_image::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::after_image::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::after_image::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::after_image::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::after_image::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::after_image::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::after_image::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::after_image::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::after_image::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::after_image::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::after_image::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::after_image::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::after_image::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::after_image::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::after_image::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::after_image::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::after_image::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("after_image"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::after_image::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::after_image::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::after_image::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::after_image::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::after_image::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::after_image::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::after_image::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::after_image::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::after_image::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::after_image::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::after_image::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::after_image::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::after_image::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::after_image::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::after_image::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::after_image::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::after_image::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::after_image::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::after_image::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::after_image::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::after_image::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::after_image::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_spark_bomb(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::spark_bomb::ALL_STATES.iter().copied() {
         let d = projectiles::spark_bomb::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "spark_bomb",
-            "record": "state",
-            "state": name_of_spark_bomb(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_spark_bomb),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("spark_bomb"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_spark_bomb(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::spark_bomb::FallbackState::Own(s) => name_of_spark_bomb(s), projectiles::spark_bomb::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "spark_bomb",
-                "record": "hitbox",
-                "state": name_of_spark_bomb(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_spark_bomb),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_spark_bomb),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("spark_bomb"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_spark_bomb(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_spark_bomb)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_spark_bomb)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "spark_bomb",
-        "record": "root",
-        "gravity": projectiles::spark_bomb::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::spark_bomb::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::spark_bomb::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::spark_bomb::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::spark_bomb::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::spark_bomb::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::spark_bomb::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::spark_bomb::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::spark_bomb::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::spark_bomb::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::spark_bomb::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::spark_bomb::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::spark_bomb::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::spark_bomb::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::spark_bomb::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::spark_bomb::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::spark_bomb::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::spark_bomb::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::spark_bomb::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::spark_bomb::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::spark_bomb::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::spark_bomb::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("spark_bomb"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::spark_bomb::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_telekinesis_boulder(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::telekinesis_boulder::ALL_STATES.iter().copied() {
         let d = projectiles::telekinesis_boulder::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "telekinesis_boulder",
-            "record": "state",
-            "state": name_of_telekinesis_boulder(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_telekinesis_boulder),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("telekinesis_boulder"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_telekinesis_boulder(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::telekinesis_boulder::FallbackState::Own(s) => name_of_telekinesis_boulder(s), projectiles::telekinesis_boulder::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "telekinesis_boulder",
-                "record": "hitbox",
-                "state": name_of_telekinesis_boulder(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_telekinesis_boulder),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_telekinesis_boulder),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("telekinesis_boulder"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_telekinesis_boulder(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_telekinesis_boulder)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_telekinesis_boulder)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "telekinesis_boulder",
-        "record": "root",
-        "gravity": projectiles::telekinesis_boulder::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::telekinesis_boulder::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::telekinesis_boulder::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::telekinesis_boulder::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::telekinesis_boulder::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::telekinesis_boulder::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::telekinesis_boulder::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::telekinesis_boulder::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::telekinesis_boulder::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::telekinesis_boulder::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::telekinesis_boulder::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::telekinesis_boulder::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::telekinesis_boulder::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::telekinesis_boulder::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::telekinesis_boulder::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::telekinesis_boulder::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::telekinesis_boulder::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::telekinesis_boulder::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::telekinesis_boulder::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::telekinesis_boulder::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::telekinesis_boulder::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::telekinesis_boulder::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("telekinesis_boulder"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::telekinesis_boulder::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_vile_clutch(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::vile_clutch::ALL_STATES.iter().copied() {
         let d = projectiles::vile_clutch::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "vile_clutch",
-            "record": "state",
-            "state": name_of_vile_clutch(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_vile_clutch),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("vile_clutch"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_vile_clutch(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::vile_clutch::FallbackState::Own(s) => name_of_vile_clutch(s), projectiles::vile_clutch::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "vile_clutch",
-                "record": "hitbox",
-                "state": name_of_vile_clutch(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_vile_clutch),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_vile_clutch),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("vile_clutch"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_vile_clutch(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_vile_clutch)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_vile_clutch)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "vile_clutch",
-        "record": "root",
-        "gravity": projectiles::vile_clutch::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::vile_clutch::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::vile_clutch::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::vile_clutch::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::vile_clutch::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::vile_clutch::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::vile_clutch::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::vile_clutch::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::vile_clutch::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::vile_clutch::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::vile_clutch::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::vile_clutch::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::vile_clutch::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::vile_clutch::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::vile_clutch::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::vile_clutch::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::vile_clutch::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::vile_clutch::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::vile_clutch::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::vile_clutch::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::vile_clutch::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::vile_clutch::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("vile_clutch"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::vile_clutch::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_ground_fire_loic(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::ground_fire_loic::ALL_STATES.iter().copied() {
         let d = projectiles::ground_fire_loic::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "ground_fire_loic",
-            "record": "state",
-            "state": name_of_ground_fire_loic(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_ground_fire_loic),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("ground_fire_loic"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_ground_fire_loic(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::ground_fire_loic::FallbackState::Own(s) => name_of_ground_fire_loic(s), projectiles::ground_fire_loic::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "ground_fire_loic",
-                "record": "hitbox",
-                "state": name_of_ground_fire_loic(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_ground_fire_loic),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_ground_fire_loic),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("ground_fire_loic"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_ground_fire_loic(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_ground_fire_loic)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_ground_fire_loic)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "ground_fire_loic",
-        "record": "root",
-        "gravity": projectiles::ground_fire_loic::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::ground_fire_loic::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::ground_fire_loic::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::ground_fire_loic::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::ground_fire_loic::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::ground_fire_loic::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::ground_fire_loic::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::ground_fire_loic::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::ground_fire_loic::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::ground_fire_loic::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::ground_fire_loic::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::ground_fire_loic::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::ground_fire_loic::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::ground_fire_loic::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::ground_fire_loic::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::ground_fire_loic::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::ground_fire_loic::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::ground_fire_loic::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::ground_fire_loic::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::ground_fire_loic::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::ground_fire_loic::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::ground_fire_loic::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("ground_fire_loic"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::ground_fire_loic::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_ground_fire(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::ground_fire::ALL_STATES.iter().copied() {
         let d = projectiles::ground_fire::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "ground_fire",
-            "record": "state",
-            "state": name_of_ground_fire(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_ground_fire),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("ground_fire"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_ground_fire(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::ground_fire::FallbackState::Own(s) => name_of_ground_fire(s), projectiles::ground_fire::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "ground_fire",
-                "record": "hitbox",
-                "state": name_of_ground_fire(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_ground_fire),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_ground_fire),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("ground_fire"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_ground_fire(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_ground_fire)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_ground_fire)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "ground_fire",
-        "record": "root",
-        "gravity": projectiles::ground_fire::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::ground_fire::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::ground_fire::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::ground_fire::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::ground_fire::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::ground_fire::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::ground_fire::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::ground_fire::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::ground_fire::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::ground_fire::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::ground_fire::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::ground_fire::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::ground_fire::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::ground_fire::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::ground_fire::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::ground_fire::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::ground_fire::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::ground_fire::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::ground_fire::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::ground_fire::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::ground_fire::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::ground_fire::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("ground_fire"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::ground_fire::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_orbital_strike(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::orbital_strike::ALL_STATES.iter().copied() {
         let d = projectiles::orbital_strike::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "orbital_strike",
-            "record": "state",
-            "state": name_of_orbital_strike(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_orbital_strike),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("orbital_strike"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_orbital_strike(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::orbital_strike::FallbackState::Own(s) => name_of_orbital_strike(s), projectiles::orbital_strike::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "orbital_strike",
-                "record": "hitbox",
-                "state": name_of_orbital_strike(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_orbital_strike),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_orbital_strike),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("orbital_strike"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_orbital_strike(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_orbital_strike)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_orbital_strike)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "orbital_strike",
-        "record": "root",
-        "gravity": projectiles::orbital_strike::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::orbital_strike::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::orbital_strike::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::orbital_strike::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::orbital_strike::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::orbital_strike::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::orbital_strike::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::orbital_strike::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::orbital_strike::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::orbital_strike::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::orbital_strike::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::orbital_strike::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::orbital_strike::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::orbital_strike::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::orbital_strike::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::orbital_strike::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::orbital_strike::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::orbital_strike::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::orbital_strike::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::orbital_strike::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::orbital_strike::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::orbital_strike::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("orbital_strike"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::orbital_strike::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_robot_grenade(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::robot_grenade::ALL_STATES.iter().copied() {
         let d = projectiles::robot_grenade::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "robot_grenade",
-            "record": "state",
-            "state": name_of_robot_grenade(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_robot_grenade),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("robot_grenade"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_robot_grenade(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::robot_grenade::FallbackState::Own(s) => name_of_robot_grenade(s), projectiles::robot_grenade::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "robot_grenade",
-                "record": "hitbox",
-                "state": name_of_robot_grenade(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_robot_grenade),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_robot_grenade),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("robot_grenade"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_robot_grenade(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_robot_grenade)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_robot_grenade)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "robot_grenade",
-        "record": "root",
-        "gravity": projectiles::robot_grenade::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::robot_grenade::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::robot_grenade::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::robot_grenade::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::robot_grenade::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::robot_grenade::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::robot_grenade::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::robot_grenade::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::robot_grenade::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::robot_grenade::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::robot_grenade::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::robot_grenade::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::robot_grenade::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::robot_grenade::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::robot_grenade::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::robot_grenade::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::robot_grenade::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::robot_grenade::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::robot_grenade::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::robot_grenade::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::robot_grenade::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::robot_grenade::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("robot_grenade"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::robot_grenade::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_missile(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::missile::ALL_STATES.iter().copied() {
         let d = projectiles::missile::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "missile",
-            "record": "state",
-            "state": name_of_missile(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_missile),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("missile"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_missile(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::missile::FallbackState::Own(s) => name_of_missile(s), projectiles::missile::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "missile",
-                "record": "hitbox",
-                "state": name_of_missile(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_missile),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_missile),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("missile"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_missile(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_missile)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_missile)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "missile",
-        "record": "root",
-        "gravity": projectiles::missile::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::missile::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::missile::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::missile::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::missile::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::missile::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::missile::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::missile::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::missile::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::missile::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::missile::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::missile::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::missile::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::missile::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::missile::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::missile::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::missile::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::missile::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::missile::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::missile::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::missile::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::missile::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("missile"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::missile::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::missile::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::missile::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::missile::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::missile::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::missile::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::missile::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::missile::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::missile::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::missile::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::missile::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::missile::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::missile::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::missile::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::missile::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::missile::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::missile::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::missile::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::missile::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::missile::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::missile::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::missile::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_poison(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::poison::ALL_STATES.iter().copied() {
         let d = projectiles::poison::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "poison",
-            "record": "state",
-            "state": name_of_poison(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_poison),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("poison"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_poison(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::poison::FallbackState::Own(s) => name_of_poison(s), projectiles::poison::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "poison",
-                "record": "hitbox",
-                "state": name_of_poison(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_poison),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_poison),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("poison"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_poison(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_poison)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_poison)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "poison",
-        "record": "root",
-        "gravity": projectiles::poison::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::poison::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::poison::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::poison::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::poison::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::poison::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::poison::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::poison::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::poison::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::poison::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::poison::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::poison::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::poison::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::poison::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::poison::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::poison::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::poison::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::poison::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::poison::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::poison::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::poison::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::poison::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("poison"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::poison::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::poison::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::poison::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::poison::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::poison::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::poison::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::poison::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::poison::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::poison::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::poison::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::poison::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::poison::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::poison::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::poison::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::poison::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::poison::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::poison::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::poison::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::poison::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::poison::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::poison::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::poison::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_caustic_spike(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::caustic_spike::ALL_STATES.iter().copied() {
         let d = projectiles::caustic_spike::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "caustic_spike",
-            "record": "state",
-            "state": name_of_caustic_spike(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_caustic_spike),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("caustic_spike"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_caustic_spike(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::caustic_spike::FallbackState::Own(s) => name_of_caustic_spike(s), projectiles::caustic_spike::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "caustic_spike",
-                "record": "hitbox",
-                "state": name_of_caustic_spike(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_caustic_spike),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_caustic_spike),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("caustic_spike"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_caustic_spike(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_caustic_spike)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_caustic_spike)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "caustic_spike",
-        "record": "root",
-        "gravity": projectiles::caustic_spike::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::caustic_spike::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::caustic_spike::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::caustic_spike::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::caustic_spike::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::caustic_spike::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::caustic_spike::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::caustic_spike::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::caustic_spike::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::caustic_spike::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::caustic_spike::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::caustic_spike::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::caustic_spike::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::caustic_spike::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::caustic_spike::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::caustic_spike::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::caustic_spike::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::caustic_spike::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::caustic_spike::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::caustic_spike::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::caustic_spike::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::caustic_spike::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("caustic_spike"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::caustic_spike::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_gas_bomb(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::gas_bomb::ALL_STATES.iter().copied() {
         let d = projectiles::gas_bomb::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "gas_bomb",
-            "record": "state",
-            "state": name_of_gas_bomb(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_gas_bomb),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("gas_bomb"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_gas_bomb(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::gas_bomb::FallbackState::Own(s) => name_of_gas_bomb(s), projectiles::gas_bomb::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "gas_bomb",
-                "record": "hitbox",
-                "state": name_of_gas_bomb(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_gas_bomb),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_gas_bomb),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("gas_bomb"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_gas_bomb(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_gas_bomb)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_gas_bomb)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "gas_bomb",
-        "record": "root",
-        "gravity": projectiles::gas_bomb::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::gas_bomb::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::gas_bomb::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::gas_bomb::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::gas_bomb::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::gas_bomb::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::gas_bomb::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::gas_bomb::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::gas_bomb::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::gas_bomb::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::gas_bomb::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::gas_bomb::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::gas_bomb::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::gas_bomb::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::gas_bomb::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::gas_bomb::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::gas_bomb::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::gas_bomb::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::gas_bomb::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::gas_bomb::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::gas_bomb::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::gas_bomb::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("gas_bomb"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::gas_bomb::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn dump_shockwave(out: &mut Vec<serde_json::Value>) {
     for s in projectiles::shockwave::ALL_STATES.iter().copied() {
         let d = projectiles::shockwave::state_data(s);
-        out.push(serde_json::json!({
-            "scope": "shockwave",
-            "record": "state",
-            "state": name_of_shockwave(s),
-            "apply_forces": d.apply_forces,
-            "apply_fric": d.apply_fric,
-            "apply_grav": d.apply_grav,
-            "reset_momentum": d.reset_momentum,
-            "reset_x_momentum": d.reset_x_momentum,
-            "reset_y_momentum": d.reset_y_momentum,
-            "apply_custom_x_fric": d.apply_custom_x_fric,
-            "apply_custom_y_fric": d.apply_custom_y_fric,
-            "apply_custom_grav": d.apply_custom_grav,
-            "apply_forces_no_limit": d.apply_forces_no_limit,
-            "custom_x_fric": d.custom_x_fric.map(|v| v.0),
-            "custom_y_fric": d.custom_y_fric.map(|v| v.0),
-            "custom_grav": d.custom_grav.map(|v| v.0),
-            "custom_grav_max_fall_speed": d.custom_grav_max_fall_speed.map(|v| v.0),
-            "apply_custom_limits": d.apply_custom_limits,
-            "custom_max_air_speed": d.custom_max_air_speed.map(|v| v.0),
-            "custom_max_ground_speed": d.custom_max_ground_speed.map(|v| v.0),
-            "anim_length": d.anim_length,
-            "endless": d.endless,
-            "disable_at_end": d.disable_at_end,
-            "force_dir_x": d.force_dir_x.map(|v| v.0),
-            "force_dir_y": d.force_dir_y.map(|v| v.0),
-            "force_speed": d.force_speed.map(|v| v.0),
-            "force_tick": d.force_tick,
-            "enter_force_dir_x": d.enter_force_dir_x.map(|v| v.0),
-            "enter_force_dir_y": d.enter_force_dir_y.map(|v| v.0),
-            "enter_force_speed": d.enter_force_speed.map(|v| v.0),
-            "projectile_scene": d.projectile_scene.map(token_of_projectile),
-            "projectile_tick": d.projectile_tick,
-            "projectile_pos_x": d.projectile_pos_x,
-            "projectile_pos_y": d.projectile_pos_y,
-            "projectile_local_pos": d.projectile_local_pos,
-            "projectile_match_facing": d.projectile_match_facing,
-            "extra_parry_hitlag": d.extra_parry_hitlag,
-            "flip_frame": d.flip_frame,
-            "force_same_direction_as_previous_state": d.force_same_direction_as_previous_state,
-            "earliest_hitbox": d.earliest_hitbox,
-            "fallback_state": d.fallback_state.map(name_of_shockwave),
-            "throw_positions": d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>(),
-        }));
+        let mut m = serde_json::Map::new();
+        m.insert("scope".to_string(), serde_json::json!("shockwave"));
+        m.insert("record".to_string(), serde_json::json!("state"));
+        m.insert("state".to_string(), serde_json::json!(name_of_shockwave(s)));
+        m.insert("apply_forces".to_string(), serde_json::json!(d.apply_forces));
+        m.insert("apply_fric".to_string(), serde_json::json!(d.apply_fric));
+        m.insert("apply_grav".to_string(), serde_json::json!(d.apply_grav));
+        m.insert("reset_momentum".to_string(), serde_json::json!(d.reset_momentum));
+        m.insert("reset_x_momentum".to_string(), serde_json::json!(d.reset_x_momentum));
+        m.insert("reset_y_momentum".to_string(), serde_json::json!(d.reset_y_momentum));
+        m.insert("apply_custom_x_fric".to_string(), serde_json::json!(d.apply_custom_x_fric));
+        m.insert("apply_custom_y_fric".to_string(), serde_json::json!(d.apply_custom_y_fric));
+        m.insert("apply_custom_grav".to_string(), serde_json::json!(d.apply_custom_grav));
+        m.insert("apply_forces_no_limit".to_string(), serde_json::json!(d.apply_forces_no_limit));
+        m.insert("custom_x_fric".to_string(), serde_json::json!(d.custom_x_fric.map(|v| v.0)));
+        m.insert("custom_y_fric".to_string(), serde_json::json!(d.custom_y_fric.map(|v| v.0)));
+        m.insert("custom_grav".to_string(), serde_json::json!(d.custom_grav.map(|v| v.0)));
+        m.insert("custom_grav_max_fall_speed".to_string(), serde_json::json!(d.custom_grav_max_fall_speed.map(|v| v.0)));
+        m.insert("apply_custom_limits".to_string(), serde_json::json!(d.apply_custom_limits));
+        m.insert("custom_max_air_speed".to_string(), serde_json::json!(d.custom_max_air_speed.map(|v| v.0)));
+        m.insert("custom_max_ground_speed".to_string(), serde_json::json!(d.custom_max_ground_speed.map(|v| v.0)));
+        m.insert("anim_length".to_string(), serde_json::json!(d.anim_length));
+        m.insert("endless".to_string(), serde_json::json!(d.endless));
+        m.insert("disable_at_end".to_string(), serde_json::json!(d.disable_at_end));
+        m.insert("force_dir_x".to_string(), serde_json::json!(d.force_dir_x.map(|v| v.0)));
+        m.insert("force_dir_y".to_string(), serde_json::json!(d.force_dir_y.map(|v| v.0)));
+        m.insert("force_speed".to_string(), serde_json::json!(d.force_speed.map(|v| v.0)));
+        m.insert("force_tick".to_string(), serde_json::json!(d.force_tick));
+        m.insert("enter_force_dir_x".to_string(), serde_json::json!(d.enter_force_dir_x.map(|v| v.0)));
+        m.insert("enter_force_dir_y".to_string(), serde_json::json!(d.enter_force_dir_y.map(|v| v.0)));
+        m.insert("enter_force_speed".to_string(), serde_json::json!(d.enter_force_speed.map(|v| v.0)));
+        m.insert("projectile_scene".to_string(), serde_json::json!(d.projectile_scene.map(token_of_projectile)));
+        m.insert("projectile_tick".to_string(), serde_json::json!(d.projectile_tick));
+        m.insert("projectile_pos_x".to_string(), serde_json::json!(d.projectile_pos_x));
+        m.insert("projectile_pos_y".to_string(), serde_json::json!(d.projectile_pos_y));
+        m.insert("projectile_local_pos".to_string(), serde_json::json!(d.projectile_local_pos));
+        m.insert("projectile_match_facing".to_string(), serde_json::json!(d.projectile_match_facing));
+        m.insert("extra_parry_hitlag".to_string(), serde_json::json!(d.extra_parry_hitlag));
+        m.insert("flip_frame".to_string(), serde_json::json!(d.flip_frame));
+        m.insert("force_same_direction_as_previous_state".to_string(), serde_json::json!(d.force_same_direction_as_previous_state));
+        m.insert("earliest_hitbox".to_string(), serde_json::json!(d.earliest_hitbox));
+        m.insert("fallback_state".to_string(), serde_json::json!(d.fallback_state.map(|v| match v { projectiles::shockwave::FallbackState::Own(s) => name_of_shockwave(s), projectiles::shockwave::FallbackState::Base(s) => name_of_base(s), })));
+        m.insert("throw_positions".to_string(), serde_json::json!(d.throw_positions.iter().map(|p| serde_json::json!({"animation": token_of_throw_animation(p.animation), "frame": p.frame, "x": p.x, "y": p.y})).collect::<Vec<_>>()));
+        out.push(serde_json::Value::Object(m));
         for (i, h) in d.hitboxes.iter().enumerate() {
-            out.push(serde_json::json!({
-                "scope": "shockwave",
-                "record": "hitbox",
-                "state": name_of_shockwave(s),
-                "hitbox_index": i,
-                "activated": h.activated,
-                "damage": h.damage,
-                "damage_in_combo": h.damage_in_combo,
-                "minimum_damage": h.minimum_damage,
-                "chip_damage_modifier": h.chip_damage_modifier.map(|v| v.0),
-                "hitbox_type": (h.hitbox_type as i32),
-                "hitstun_ticks": h.hitstun_ticks,
-                "combo_hitstun_ticks": h.combo_hitstun_ticks,
-                "hitlag_ticks": h.hitlag_ticks,
-                "victim_hitlag": h.victim_hitlag,
-                "combo_victim_hitlag": h.combo_victim_hitlag,
-                "damage_proration": h.damage_proration,
-                "scale_combo": h.scale_combo,
-                "combo_scaling_amount": h.combo_scaling_amount,
-                "cancellable": h.cancellable,
-                "increment_combo": h.increment_combo,
-                "hits_otg": h.hits_otg,
-                "hits_vs_standing": h.hits_vs_standing,
-                "hits_vs_grounded": h.hits_vs_grounded,
-                "hits_vs_aerial": h.hits_vs_aerial,
-                "can_counter_hit": h.can_counter_hit,
-                "di_modifier": h.di_modifier.map(|v| v.0),
-                "sdi_modifier": h.sdi_modifier.map(|v| v.0),
-                "meter_gain_modifier": h.meter_gain_modifier.map(|v| v.0),
-                "parry_meter_gain": h.parry_meter_gain,
-                "ignore_armor": h.ignore_armor,
-                "followup_state": h.followup_state.map(name_of_shockwave),
-                "force_grounded": h.force_grounded,
-                "can_clash": h.can_clash,
-                "hits_vs_dizzy": h.hits_vs_dizzy,
-                "beats_grab": h.beats_grab,
-                "hits_projectiles": h.hits_projectiles,
-                "ignore_projectile_armor": h.ignore_projectile_armor,
-                "allowed_to_hit_own_team": h.allowed_to_hit_own_team,
-                "guard_break": h.guard_break,
-                "guard_break_proration": h.guard_break_proration,
-                "block_punishable": h.block_punishable,
-                "parriable": h.parriable,
-                "block_cancel_allowed": h.block_cancel_allowed,
-                "plus_frames": h.plus_frames,
-                "hit_height": (h.hit_height as i32),
-                "priority": h.priority,
-                "group": h.group,
-                "dir_x": h.dir_x.map(|v| v.0),
-                "dir_y": h.dir_y.map(|v| v.0),
-                "knockback": h.knockback.map(|v| v.0),
-                "launch_reversible": h.launch_reversible,
-                "vacuum": h.vacuum,
-                "send_away_from_center": h.send_away_from_center,
-                "block_pushback_modifier": h.block_pushback_modifier.map(|v| v.0),
-                "block_pushback_reversible": h.block_pushback_reversible,
-                "block_reverse_pushback_modifier": h.block_reverse_pushback_modifier.map(|v| v.0),
-                "pushback_x": h.pushback_x.map(|v| v.0),
-                "grounded_hit_state": name_of_base(h.grounded_hit_state),
-                "aerial_hit_state": name_of_base(h.aerial_hit_state),
-                "minimum_grounded_frames": h.minimum_grounded_frames,
-                "knockdown": h.knockdown,
-                "knockdown_extends_hitstun": h.knockdown_extends_hitstun,
-                "hard_knockdown": h.hard_knockdown,
-                "disable_collision": h.disable_collision,
-                "air_ground_bounce": h.air_ground_bounce,
-                "ground_bounce": h.ground_bounce,
-                "ground_bounce_knockback_modifier": h.ground_bounce_knockback_modifier.map(|v| v.0),
-                "wall_slam": h.wall_slam,
-                "x": h.x,
-                "y": h.y,
-                "width": h.width,
-                "height": h.height,
-                "start_tick": h.start_tick,
-                "active_ticks": h.active_ticks,
-                "always_on": h.always_on,
-                "looping": h.looping,
-                "loop_active_ticks": h.loop_active_ticks,
-                "loop_inactive_ticks": h.loop_inactive_ticks,
-                "misc_data": h.misc_data.map(token_of_misc),
-                "throw_state": h.throw_state.map(name_of_shockwave),
-                "to_x": h.to_x,
-                "to_y": h.to_y,
-            }));
+            let mut m = serde_json::Map::new();
+            m.insert("scope".to_string(), serde_json::json!("shockwave"));
+            m.insert("record".to_string(), serde_json::json!("hitbox"));
+            m.insert("state".to_string(), serde_json::json!(name_of_shockwave(s)));
+            m.insert("hitbox_index".to_string(), serde_json::json!(i));
+            m.insert("activated".to_string(), serde_json::json!(h.activated));
+            m.insert("damage".to_string(), serde_json::json!(h.damage));
+            m.insert("damage_in_combo".to_string(), serde_json::json!(h.damage_in_combo));
+            m.insert("minimum_damage".to_string(), serde_json::json!(h.minimum_damage));
+            m.insert("chip_damage_modifier".to_string(), serde_json::json!(h.chip_damage_modifier.map(|v| v.0)));
+            m.insert("hitbox_type".to_string(), serde_json::json!((h.hitbox_type as i32)));
+            m.insert("hitstun_ticks".to_string(), serde_json::json!(h.hitstun_ticks));
+            m.insert("combo_hitstun_ticks".to_string(), serde_json::json!(h.combo_hitstun_ticks));
+            m.insert("hitlag_ticks".to_string(), serde_json::json!(h.hitlag_ticks));
+            m.insert("victim_hitlag".to_string(), serde_json::json!(h.victim_hitlag));
+            m.insert("combo_victim_hitlag".to_string(), serde_json::json!(h.combo_victim_hitlag));
+            m.insert("damage_proration".to_string(), serde_json::json!(h.damage_proration));
+            m.insert("scale_combo".to_string(), serde_json::json!(h.scale_combo));
+            m.insert("combo_scaling_amount".to_string(), serde_json::json!(h.combo_scaling_amount));
+            m.insert("cancellable".to_string(), serde_json::json!(h.cancellable));
+            m.insert("increment_combo".to_string(), serde_json::json!(h.increment_combo));
+            m.insert("hits_otg".to_string(), serde_json::json!(h.hits_otg));
+            m.insert("hits_vs_standing".to_string(), serde_json::json!(h.hits_vs_standing));
+            m.insert("hits_vs_grounded".to_string(), serde_json::json!(h.hits_vs_grounded));
+            m.insert("hits_vs_aerial".to_string(), serde_json::json!(h.hits_vs_aerial));
+            m.insert("can_counter_hit".to_string(), serde_json::json!(h.can_counter_hit));
+            m.insert("di_modifier".to_string(), serde_json::json!(h.di_modifier.map(|v| v.0)));
+            m.insert("sdi_modifier".to_string(), serde_json::json!(h.sdi_modifier.map(|v| v.0)));
+            m.insert("meter_gain_modifier".to_string(), serde_json::json!(h.meter_gain_modifier.map(|v| v.0)));
+            m.insert("parry_meter_gain".to_string(), serde_json::json!(h.parry_meter_gain));
+            m.insert("ignore_armor".to_string(), serde_json::json!(h.ignore_armor));
+            m.insert("followup_state".to_string(), serde_json::json!(h.followup_state.map(name_of_shockwave)));
+            m.insert("force_grounded".to_string(), serde_json::json!(h.force_grounded));
+            m.insert("can_clash".to_string(), serde_json::json!(h.can_clash));
+            m.insert("hits_vs_dizzy".to_string(), serde_json::json!(h.hits_vs_dizzy));
+            m.insert("beats_grab".to_string(), serde_json::json!(h.beats_grab));
+            m.insert("hits_projectiles".to_string(), serde_json::json!(h.hits_projectiles));
+            m.insert("ignore_projectile_armor".to_string(), serde_json::json!(h.ignore_projectile_armor));
+            m.insert("allowed_to_hit_own_team".to_string(), serde_json::json!(h.allowed_to_hit_own_team));
+            m.insert("guard_break".to_string(), serde_json::json!(h.guard_break));
+            m.insert("guard_break_proration".to_string(), serde_json::json!(h.guard_break_proration));
+            m.insert("block_punishable".to_string(), serde_json::json!(h.block_punishable));
+            m.insert("parriable".to_string(), serde_json::json!(h.parriable));
+            m.insert("block_cancel_allowed".to_string(), serde_json::json!(h.block_cancel_allowed));
+            m.insert("plus_frames".to_string(), serde_json::json!(h.plus_frames));
+            m.insert("hit_height".to_string(), serde_json::json!((h.hit_height as i32)));
+            m.insert("priority".to_string(), serde_json::json!(h.priority));
+            m.insert("group".to_string(), serde_json::json!(h.group));
+            m.insert("dir_x".to_string(), serde_json::json!(h.dir_x.map(|v| v.0)));
+            m.insert("dir_y".to_string(), serde_json::json!(h.dir_y.map(|v| v.0)));
+            m.insert("knockback".to_string(), serde_json::json!(h.knockback.map(|v| v.0)));
+            m.insert("launch_reversible".to_string(), serde_json::json!(h.launch_reversible));
+            m.insert("vacuum".to_string(), serde_json::json!(h.vacuum));
+            m.insert("send_away_from_center".to_string(), serde_json::json!(h.send_away_from_center));
+            m.insert("block_pushback_modifier".to_string(), serde_json::json!(h.block_pushback_modifier.map(|v| v.0)));
+            m.insert("block_pushback_reversible".to_string(), serde_json::json!(h.block_pushback_reversible));
+            m.insert("block_reverse_pushback_modifier".to_string(), serde_json::json!(h.block_reverse_pushback_modifier.map(|v| v.0)));
+            m.insert("pushback_x".to_string(), serde_json::json!(h.pushback_x.map(|v| v.0)));
+            m.insert("grounded_hit_state".to_string(), serde_json::json!(name_of_base(h.grounded_hit_state)));
+            m.insert("aerial_hit_state".to_string(), serde_json::json!(name_of_base(h.aerial_hit_state)));
+            m.insert("minimum_grounded_frames".to_string(), serde_json::json!(h.minimum_grounded_frames));
+            m.insert("knockdown".to_string(), serde_json::json!(h.knockdown));
+            m.insert("knockdown_extends_hitstun".to_string(), serde_json::json!(h.knockdown_extends_hitstun));
+            m.insert("hard_knockdown".to_string(), serde_json::json!(h.hard_knockdown));
+            m.insert("disable_collision".to_string(), serde_json::json!(h.disable_collision));
+            m.insert("air_ground_bounce".to_string(), serde_json::json!(h.air_ground_bounce));
+            m.insert("ground_bounce".to_string(), serde_json::json!(h.ground_bounce));
+            m.insert("ground_bounce_knockback_modifier".to_string(), serde_json::json!(h.ground_bounce_knockback_modifier.map(|v| v.0)));
+            m.insert("wall_slam".to_string(), serde_json::json!(h.wall_slam));
+            m.insert("x".to_string(), serde_json::json!(h.x));
+            m.insert("y".to_string(), serde_json::json!(h.y));
+            m.insert("width".to_string(), serde_json::json!(h.width));
+            m.insert("height".to_string(), serde_json::json!(h.height));
+            m.insert("start_tick".to_string(), serde_json::json!(h.start_tick));
+            m.insert("active_ticks".to_string(), serde_json::json!(h.active_ticks));
+            m.insert("always_on".to_string(), serde_json::json!(h.always_on));
+            m.insert("looping".to_string(), serde_json::json!(h.looping));
+            m.insert("loop_active_ticks".to_string(), serde_json::json!(h.loop_active_ticks));
+            m.insert("loop_inactive_ticks".to_string(), serde_json::json!(h.loop_inactive_ticks));
+            m.insert("misc_data".to_string(), serde_json::json!(h.misc_data.map(token_of_misc)));
+            m.insert("throw_state".to_string(), serde_json::json!(h.throw_state.map(name_of_shockwave)));
+            m.insert("to_x".to_string(), serde_json::json!(h.to_x));
+            m.insert("to_y".to_string(), serde_json::json!(h.to_y));
+            out.push(serde_json::Value::Object(m));
         }
     }
-    out.push(serde_json::json!({
-        "scope": "shockwave",
-        "record": "root",
-        "gravity": projectiles::shockwave::ROOT.gravity.map(|v| v.0),
-        "ground_friction": projectiles::shockwave::ROOT.ground_friction.map(|v| v.0),
-        "air_friction": projectiles::shockwave::ROOT.air_friction.map(|v| v.0),
-        "max_ground_speed": projectiles::shockwave::ROOT.max_ground_speed.map(|v| v.0),
-        "max_air_speed": projectiles::shockwave::ROOT.max_air_speed.map(|v| v.0),
-        "max_fall_speed": projectiles::shockwave::ROOT.max_fall_speed.map(|v| v.0),
-        "damages_own_team": projectiles::shockwave::ROOT.damages_own_team,
-        "has_projectile_parry_window": projectiles::shockwave::ROOT.has_projectile_parry_window,
-        "always_parriable": projectiles::shockwave::ROOT.always_parriable,
-        "immunity_susceptible": projectiles::shockwave::ROOT.immunity_susceptible,
-        "roll_immunity_susceptible": projectiles::shockwave::ROOT.roll_immunity_susceptible,
-        "deletes_other_projectiles": projectiles::shockwave::ROOT.deletes_other_projectiles,
-        "fizzle_on_ceiling": projectiles::shockwave::ROOT.fizzle_on_ceiling,
-        "movable": projectiles::shockwave::ROOT.movable,
-        "can_be_hit_by_melee": projectiles::shockwave::ROOT.can_be_hit_by_melee,
-        "hit_by_self_projectiles": projectiles::shockwave::ROOT.hit_by_self_projectiles,
-        "hit_cancel_on_hit": projectiles::shockwave::ROOT.hit_cancel_on_hit,
-        "free_cancel_on_hit": projectiles::shockwave::ROOT.free_cancel_on_hit,
-        "apply_hitlag_when_hit_by_melee": projectiles::shockwave::ROOT.apply_hitlag_when_hit_by_melee,
-        "projectile_immune": projectiles::shockwave::ROOT.projectile_immune,
-        "hitlag_modifier": projectiles::shockwave::ROOT.hitlag_modifier.map(|v| v.0),
-        "hookable": projectiles::shockwave::ROOT.hookable,
-    }));
+    let mut m = serde_json::Map::new();
+    m.insert("scope".to_string(), serde_json::json!("shockwave"));
+    m.insert("record".to_string(), serde_json::json!("root"));
+    m.insert("gravity".to_string(), serde_json::json!(projectiles::shockwave::ROOT.gravity.map(|v| v.0)));
+    m.insert("ground_friction".to_string(), serde_json::json!(projectiles::shockwave::ROOT.ground_friction.map(|v| v.0)));
+    m.insert("air_friction".to_string(), serde_json::json!(projectiles::shockwave::ROOT.air_friction.map(|v| v.0)));
+    m.insert("max_ground_speed".to_string(), serde_json::json!(projectiles::shockwave::ROOT.max_ground_speed.map(|v| v.0)));
+    m.insert("max_air_speed".to_string(), serde_json::json!(projectiles::shockwave::ROOT.max_air_speed.map(|v| v.0)));
+    m.insert("max_fall_speed".to_string(), serde_json::json!(projectiles::shockwave::ROOT.max_fall_speed.map(|v| v.0)));
+    m.insert("damages_own_team".to_string(), serde_json::json!(projectiles::shockwave::ROOT.damages_own_team));
+    m.insert("has_projectile_parry_window".to_string(), serde_json::json!(projectiles::shockwave::ROOT.has_projectile_parry_window));
+    m.insert("always_parriable".to_string(), serde_json::json!(projectiles::shockwave::ROOT.always_parriable));
+    m.insert("immunity_susceptible".to_string(), serde_json::json!(projectiles::shockwave::ROOT.immunity_susceptible));
+    m.insert("roll_immunity_susceptible".to_string(), serde_json::json!(projectiles::shockwave::ROOT.roll_immunity_susceptible));
+    m.insert("deletes_other_projectiles".to_string(), serde_json::json!(projectiles::shockwave::ROOT.deletes_other_projectiles));
+    m.insert("fizzle_on_ceiling".to_string(), serde_json::json!(projectiles::shockwave::ROOT.fizzle_on_ceiling));
+    m.insert("movable".to_string(), serde_json::json!(projectiles::shockwave::ROOT.movable));
+    m.insert("can_be_hit_by_melee".to_string(), serde_json::json!(projectiles::shockwave::ROOT.can_be_hit_by_melee));
+    m.insert("hit_by_self_projectiles".to_string(), serde_json::json!(projectiles::shockwave::ROOT.hit_by_self_projectiles));
+    m.insert("hit_cancel_on_hit".to_string(), serde_json::json!(projectiles::shockwave::ROOT.hit_cancel_on_hit));
+    m.insert("free_cancel_on_hit".to_string(), serde_json::json!(projectiles::shockwave::ROOT.free_cancel_on_hit));
+    m.insert("apply_hitlag_when_hit_by_melee".to_string(), serde_json::json!(projectiles::shockwave::ROOT.apply_hitlag_when_hit_by_melee));
+    m.insert("projectile_immune".to_string(), serde_json::json!(projectiles::shockwave::ROOT.projectile_immune));
+    m.insert("hitlag_modifier".to_string(), serde_json::json!(projectiles::shockwave::ROOT.hitlag_modifier.map(|v| v.0)));
+    m.insert("hookable".to_string(), serde_json::json!(projectiles::shockwave::ROOT.hookable));
+    out.push(serde_json::Value::Object(m));
 }
 
 fn main() {

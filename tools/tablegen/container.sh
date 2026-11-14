@@ -15,9 +15,12 @@
 #      the generated tables it depends on.
 #   3. Dump: table_dump (tools/tablegen/dump/) prints every table value
 #      as JSON Lines.
-#   4. Probe: a headless Godot run (tools/replay_check's Nix image)
-#      loads every scene named in the manifest and prints the engine's
-#      own values the same way.
+#   4. Probe: `tools/replay_check`'s own `run.py prepare` step mirrors
+#      the repository into a writable, asset-imported project copy
+#      (Godot's headless resource loader needs the `.import/` cache
+#      that step creates, which a read-only `/repo` mount cannot hold).
+#      A headless Godot run against that copy loads every scene named
+#      in the manifest and prints the engine's own values the same way.
 #   5. Compare: compare.py checks every field, by key, not by line
 #      order (see its own docstring), and writes report.json.
 #
@@ -75,9 +78,15 @@ podman run --rm --cpu-quota 800000 --cpu-period 100000 \
 
 echo "--- stage 4: probe the real engine ---"
 "$repo/tools/replay_check/build.sh"
+mkdir -p "$work/prepared"
+podman run --rm --init --cpu-quota 800000 --cpu-period 100000 \
+  -v "$repo:/repo:ro" \
+  -v "$work/prepared:/work" \
+  "$godot_image" \
+  --work /work prepare
 podman run --rm --init --cpu-quota 800000 --cpu-period 100000 \
   --entrypoint bash \
-  -v "$repo:/repo:ro" \
+  -v "$work/prepared:/work" \
   -v "$work/xdg:/xdg" \
   -v "$work/out:/out" \
   -v "$repo/tools/tablegen/manifest.json:/manifest.json:ro" \
@@ -95,7 +104,7 @@ podman run --rm --init --cpu-quota 800000 --cpu-period 100000 \
     read -r display_number </tmp/dispfd
     export DISPLAY=":$display_number"
     exec timeout 300 /opt/godotsteam/linux-351-editor.64 --no-window --audio-driver Dummy \
-      --fixed-fps 60 --path /repo res://tools/tablegen/TableGenProbe.tscn \
+      --fixed-fps 60 --path /work/project res://tools/tablegen/TableGenProbe.tscn \
       --tablegen-manifest=/manifest.json --tablegen-out=/out/godot_out.jsonl
   '
 

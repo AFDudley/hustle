@@ -7,9 +7,11 @@ and 5.
 
 Modules: `fixed`, the fixed-point number type; `godot_hash`, Godot
 3.5.1's `hash()` builtin; `rng`, the logic RNG (Godot's PCG32 plus
-`BetterRng`'s `choose` and `weighted_choice`); `fixed_text`, `&str`/
-`String` wrappers over `fixed`'s byte-based API, behind the `text`
-feature (off by default; see "The core and the shell" below).
+`BetterRng`'s `choose` and `weighted_choice`); `tables`, the five
+official characters' and their projectiles' data (see "`tables`" below);
+`fixed_text`, `&str`/`String` wrappers over `fixed`'s byte-based API,
+behind the `text` feature (off by default; see "The core and the shell"
+below).
 
 ## Why no dependencies
 
@@ -150,3 +152,30 @@ must avoid it), which does not need an axiom for `Try::branch` either.
   (`HustleCorePort` in `tools/lean_check/generated/`): 0 Aeneas errors,
   0 axioms, build green. See `tools/lean_check/README.md`,
   "port/hustle_core".
+- `tools/tablegen` checks `tables/` against a headless Godot probe of
+  the real `.tscn` scenes, field by field, state by state, hitbox by
+  hitbox. See `tools/tablegen/README.md`.
+
+## `tables`: the five characters' data
+
+`tables/` holds the five official characters' and their projectiles'
+data: `common.rs` (shared enums: cancel categories, stances, hit
+heights, and similar), `base.rs` (the 58 states `characters/BaseChar.tscn`
+defines, unmodified), one module per character (`ninja.rs`, `cowboy.rs`,
+`wizard.rs`, `robot.rs`, `mutant.rs`), and `projectiles/` (one module per
+projectile scene a character's states reference, found by a scan, not a
+fixed list).
+
+`tools/tablegen` generates this directory from the game's own `.tscn`
+and `.gd` files; see its own README.md for the schema, the kept and
+dropped field lists, and the two data anomalies it found and kept as
+explicit data rather than guessing at a fix. This is data only: the
+`_tick`/`_frame_N` behavior that reads it is a later slice (decision 9).
+
+A table's own `enum State`, `struct StateData`, `struct HitboxRecord`
+and `struct ...RootConstants` all follow this crate's Rust subset the
+same way `fixed.rs` and `rng.rs` do: plain, monomorphic structs and
+enums, no generics, no hash maps, a `fixed` field typed `Option<Fixed>`
+(never a bare `Fixed`), so the two real anomalies in the game's own data
+(a hitbox field holding a non-decimal string) store an explicit `None`
+instead of a panic or a guessed number.

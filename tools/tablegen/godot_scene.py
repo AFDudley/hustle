@@ -343,6 +343,19 @@ _EXPORT_START_RE = re.compile(
     r"^export(?:\(([^)]*)\))?\s+var\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?::\s*[A-Za-z_][A-Za-z0-9_]*\s*)?",
     re.MULTILINE,
 )
+# A top-level `const NAME = value` (optionally typed). A leaf script can
+# redeclare an inherited `export var`'s name as a `const` instead
+# (`characters/mutant/states/SlopDash.gd`'s `const force_air_juke = true`,
+# overriding `BeastState.gd`'s `export var force_air_juke = false`);
+# the live engine's `.get()` resolves to the `const` in that case
+# (checked against the probe), so this generator must see it too. A
+# const whose value is not a plain literal (an expression referencing
+# another const, e.g. `TK_HOVER_AMOUNT = HOVER_AMOUNT / 2`) is skipped,
+# not guessed: no kept field name collides with one of those.
+_CONST_START_RE = re.compile(
+    r"^const\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?::\s*[A-Za-z_][A-Za-z0-9_]*\s*)?=\s*",
+    re.MULTILINE,
+)
 
 
 def parse_gd_script(path: Path) -> ScriptInfo:
@@ -370,6 +383,15 @@ def parse_gd_script(path: Path) -> ScriptInfo:
             exports[name] = value
         else:
             exports_no_default.add(name)
+
+    for m in _CONST_START_RE.finditer(text):
+        name = m.group(1)
+        try:
+            value, _ = parse_value(text, m.end())
+        except (ParseError, IndexError, KeyError, AssertionError):
+            continue
+        exports[name] = value
+        exports_no_default.discard(name)
 
     return ScriptInfo(
         path=path,

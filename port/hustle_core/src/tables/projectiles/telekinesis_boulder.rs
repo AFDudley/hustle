@@ -23,6 +23,12 @@ pub const ALL_STATES: [State; 4] = [
     State::LaunchRedirect,
 ];
 
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum FallbackState {
+    Own(State),
+    Base(base::State),
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct HitboxRecord {
     pub kind: HitboxKind,
@@ -145,7 +151,7 @@ pub struct StateData {
     pub flip_frame: i32,
     pub force_same_direction_as_previous_state: bool,
     pub earliest_hitbox: i32,
-    pub fallback_state: Option<State>,
+    pub fallback_state: Option<FallbackState>,
     pub throw_positions: &'static [ThrowPositionEntry],
     pub hitboxes: &'static [HitboxRecord],
 }
@@ -190,7 +196,7 @@ pub fn state_data(s: State) -> StateData {
             flip_frame: -1,
             force_same_direction_as_previous_state: false,
             earliest_hitbox: 0,
-            fallback_state: Some(State::Default),
+            fallback_state: Some(FallbackState::Own(State::Default)),
             throw_positions: &[],
             hitboxes: &[],
         },
@@ -232,7 +238,7 @@ pub fn state_data(s: State) -> StateData {
             flip_frame: -1,
             force_same_direction_as_previous_state: false,
             earliest_hitbox: 0,
-            fallback_state: None,
+            fallback_state: Some(FallbackState::Base(base::State::Wait)),
             throw_positions: &[],
             hitboxes: &HITBOXES_DROP,
         },
@@ -274,7 +280,7 @@ pub fn state_data(s: State) -> StateData {
             flip_frame: -1,
             force_same_direction_as_previous_state: false,
             earliest_hitbox: 0,
-            fallback_state: None,
+            fallback_state: Some(FallbackState::Base(base::State::Wait)),
             throw_positions: &[],
             hitboxes: &HITBOXES_LAUNCH,
         },
@@ -316,7 +322,7 @@ pub fn state_data(s: State) -> StateData {
             flip_frame: -1,
             force_same_direction_as_previous_state: false,
             earliest_hitbox: 0,
-            fallback_state: None,
+            fallback_state: Some(FallbackState::Base(base::State::Wait)),
             throw_positions: &[],
             hitboxes: &HITBOXES_LAUNCHREDIRECT,
         },

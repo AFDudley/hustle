@@ -89,11 +89,19 @@ def main() -> int:
     only_godot = sorted(map(str, godot_keys - dump_keys))
     only_dump = sorted(map(str, dump_keys - godot_keys))
 
-    # Batch every "fixed" string value in the probe's output through
-    # fixed_parse once, up front.
+    # Batch every "fixed" value in the probe's output through
+    # fixed_parse once, up front. Godot does not coerce an exported
+    # `String`'s stored Variant to match the type hint on scene load
+    # (checked against the live probe): a `.tscn` override written as
+    # an unquoted number reads back as a real `int`/`float`, not a
+    # `String`. `fixed_key` matches `gen.py`'s own `extract_fields`
+    # coercion, so both sides key the same value the same way.
+    def fixed_key(v):
+        return str(int(v)) if isinstance(v, (int, float)) and not isinstance(v, bool) else v
+
     fixed_names = {name for name, tag in field_tags.items() if tag == "fixed"}
     fixed_strings = sorted(
-        {r[name] for r in godot for name in fixed_names if name in r}
+        {fixed_key(r[name]) for r in godot for name in fixed_names if name in r}
     )
     fixed_lookup = dict(zip(fixed_strings, fixed_raw_batch(fixed_strings)))
 
@@ -109,7 +117,7 @@ def main() -> int:
 
     def compare_field(name: str, tag: str, g_val, d_val, key) -> bool:
         if tag == "fixed":
-            return fixed_lookup[g_val] == d_val
+            return fixed_lookup[fixed_key(g_val)] == d_val
         if tag in ("stances", "categories") or tag.startswith("categories:"):
             return split_lines(g_val) == set(d_val)
         if tag == "throw_positions":

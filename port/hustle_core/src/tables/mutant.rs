@@ -1356,7 +1356,7 @@ pub fn state_data(s: State) -> StateData {
             down_throw_state: State::AirDownThrow,
             moving_up_only: false,
             moving_down_only: false,
-            force_air_juke: false,
+            force_air_juke: true,
             force_air_juke_allow_down: false,
             juke_on_block: false,
             juke_pip_max_blocks: 0,

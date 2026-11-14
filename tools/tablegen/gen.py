@@ -594,6 +594,15 @@ def rust_type(tag: str, is_base: bool = False) -> str:
     }[tag]
 
 
+def emit_fallback_state(raw: str, state_names: set[str]) -> str:
+    if not raw:
+        return "None"
+    if raw in state_names:
+        return f"Some(FallbackState::Own(State::{rust_variant(raw)}))"
+    assert raw in BASE_STATE_NAMES, ("fallback_state", raw)
+    return f"Some(FallbackState::Base(base::State::{rust_variant(raw)}))"
+
+
 def emit_value(tag: str, raw, scope: Scope, state_names: set[str], name: str = "") -> str:
     if tag == "bool":
         return "true" if raw else "false"
@@ -726,6 +735,20 @@ def emit_scope_rs(scope: Scope) -> str:
         out.append(f"    State::{rust_variant(e.name)},")
     out.append("];")
     out.append("")
+    if scope.kind == "projectile":
+        # `ObjectState.gd`'s `fallback_state` defaults to `"Wait"`, a
+        # base-only state name, for every object; a projectile's own
+        # state machine has no `Wait`, but some projectiles (`Lasso`,
+        # `RobotGrenade`, …) do override it to one of their own state
+        # names (checked against every `.tscn` occurrence). The real
+        # value can be either, so this wraps both instead of guessing
+        # one.
+        out.append("#[derive(Clone, Copy, PartialEq, Eq, Debug)]")
+        out.append("pub enum FallbackState {")
+        out.append("    Own(State),")
+        out.append("    Base(base::State),")
+        out.append("}")
+        out.append("")
     out.append("#[derive(Clone, Copy, Debug)]")
     out.append("pub struct HitboxRecord {")
     out.append("    pub kind: HitboxKind,")
@@ -736,7 +759,8 @@ def emit_scope_rs(scope: Scope) -> str:
     out.append("#[derive(Clone, Copy, Debug)]")
     out.append("pub struct StateData {")
     for name, tag in field_list:
-        out.append(f"    pub {rust_field(name)}: {rust_type(tag, scope.key == 'base')},")
+        field_type = "Option<FallbackState>" if name == "fallback_state" and scope.kind == "projectile" else rust_type(tag, scope.key == 'base')
+        out.append(f"    pub {rust_field(name)}: {field_type},")
     out.append("    pub hitboxes: &'static [HitboxRecord],")
     out.append("}")
     out.append("")
@@ -746,7 +770,11 @@ def emit_scope_rs(scope: Scope) -> str:
         out.append(f"        State::{rust_variant(e.name)} => StateData {{")
         for name, tag in field_list:
             raw, _ = e.fields[name]
-            out.append(f"            {rust_field(name)}: {emit_value(tag, raw, scope, state_names, name)},")
+            if name == "fallback_state" and scope.kind == "projectile":
+                value_expr = emit_fallback_state(raw, state_names)
+            else:
+                value_expr = emit_value(tag, raw, scope, state_names, name)
+            out.append(f"            {rust_field(name)}: {value_expr},")
         if e.hitboxes:
             out.append(f"            hitboxes: &HITBOXES_{rust_variant(e.name).upper()},")
         else:
@@ -943,6 +971,12 @@ def emit_dump_main(
         names = [e.name for e in scope.states]
         name_array(f"NAMES_{key.upper()}", f"name_of_{key}", f"{modpath}::State", names)
 
+    def push_map(indent: str, entries: list[tuple[str, str]]) -> None:
+        out.append(f"{indent}let mut m = serde_json::Map::new();")
+        for key_lit, expr in entries:
+            out.append(f'{indent}m.insert({key_lit}.to_string(), serde_json::json!({expr}));')
+        out.append(f"{indent}out.push(serde_json::Value::Object(m));")
+
     for key, modpath in all_keys:
         scope = scopes[key]
         field_list = scope_field_list(scope)
@@ -950,34 +984,43 @@ def emit_dump_main(
         out.append(f"fn dump_{key}(out: &mut Vec<serde_json::Value>) {{")
         out.append(f"    for s in {modpath}::ALL_STATES.iter().copied() {{")
         out.append(f"        let d = {modpath}::state_data(s);")
-        out.append("        out.push(serde_json::json!({")
-        out.append(f'            "scope": {json.dumps(key)},')
-        out.append('            "record": "state",')
-        out.append(f'            "state": {name_fn}(s),')
+        entries = [
+            (json.dumps("scope"), json.dumps(key)),
+            (json.dumps("record"), json.dumps("state")),
+            (json.dumps("state"), f"{name_fn}(s)"),
+        ]
         for name, tag in field_list:
-            expr = dump_field_expr(tag, f"d.{rust_field(name)}", name_fn)
-            out.append(f'            {json.dumps(name)}: {expr},')
-        out.append("        }));")
+            accessor = f"d.{rust_field(name)}"
+            if name == "fallback_state" and scope.kind == "projectile":
+                expr = (
+                    f"{accessor}.map(|v| match v {{ "
+                    f"{modpath}::FallbackState::Own(s) => {name_fn}(s), "
+                    f"{modpath}::FallbackState::Base(s) => name_of_base(s), }})"
+                )
+            else:
+                expr = dump_field_expr(tag, accessor, name_fn)
+            entries.append((json.dumps(name), expr))
+        push_map("        ", entries)
         out.append("        for (i, h) in d.hitboxes.iter().enumerate() {")
-        out.append("            out.push(serde_json::json!({")
-        out.append(f'                "scope": {json.dumps(key)},')
-        out.append('                "record": "hitbox",')
-        out.append(f'                "state": {name_fn}(s),')
-        out.append('                "hitbox_index": i,')
+        hentries = [
+            (json.dumps("scope"), json.dumps(key)),
+            (json.dumps("record"), json.dumps("hitbox")),
+            (json.dumps("state"), f"{name_fn}(s)"),
+            (json.dumps("hitbox_index"), "i"),
+        ]
         for name, tag in HITBOX_RECORD_FIELDS:
-            expr = dump_field_expr(tag, f"h.{rust_field(name)}", name_fn)
-            out.append(f'                {json.dumps(name)}: {expr},')
-        out.append("            }));")
+            hentries.append((json.dumps(name), dump_field_expr(tag, f"h.{rust_field(name)}", name_fn)))
+        push_map("            ", hentries)
         out.append("        }")
         out.append("    }")
         root_list = schema.FIGHTER_ROOT_FIELDS if scope.kind == "character" else schema.PROJECTILE_ROOT_FIELDS
-        out.append("    out.push(serde_json::json!({")
-        out.append(f'        "scope": {json.dumps(key)},')
-        out.append('        "record": "root",')
+        rentries = [
+            (json.dumps("scope"), json.dumps(key)),
+            (json.dumps("record"), json.dumps("root")),
+        ]
         for name, tag in root_list:
-            expr = dump_field_expr(tag, f"{modpath}::ROOT.{rust_field(name)}", name_fn)
-            out.append(f'        {json.dumps(name)}: {expr},')
-        out.append("    }));")
+            rentries.append((json.dumps(name), dump_field_expr(tag, f"{modpath}::ROOT.{rust_field(name)}", name_fn)))
+        push_map("    ", rentries)
         out.append("}")
         out.append("")
 

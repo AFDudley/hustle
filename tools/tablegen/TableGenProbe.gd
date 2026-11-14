@@ -34,8 +34,29 @@ func write_record(record: Dictionary) -> void:
 	record_count += 1
 
 
+const PROPERTY_USAGE_EDITOR = 2
+
+
+func is_exported(node: Object, name: String) -> bool:
+	# A kept field name can collide with an unrelated plain `var` a leaf
+	# move script declares for its own runtime bookkeeping
+	# (`characters/states/HurtAerial.gd`'s `var knockdown = false`, a
+	# copy of the attacking hitbox's flag, next to `ThrowState.gd`'s
+	# unrelated *exported* `knockdown`; `characters/robo/Roll.gd`'s
+	# `var can_fly = false` next to `RobotState.gd`'s exported
+	# `can_fly`; `characters/mutant/states/TwistAttack.gd`'s `var
+	# dir_x = "0"` next to `Hitbox.gd`'s exported `dir_x`). `.get()`
+	# cannot tell those apart; `get_property_list()`'s `usage` flags
+	# can: an exported property carries `PROPERTY_USAGE_EDITOR`, a
+	# plain script variable does not.
+	for prop in node.get_property_list():
+		if prop.name == name:
+			return (prop.usage & PROPERTY_USAGE_EDITOR) != 0
+	return false
+
+
 func get_prop(node: Object, name: String):
-	if node.get(name) == null:
+	if not is_exported(node, name):
 		return null
 	return node.get(name)
 
