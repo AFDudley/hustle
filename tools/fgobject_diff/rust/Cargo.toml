@@ -1,0 +1,16 @@
+[package]
+name = "fgobject_diff"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "fgobject_diff"
+path = "src/main.rs"
+
+[dependencies]
+# Staged next to this crate by tools/nix_image_build.sh's extra-source
+# argument (see ../build.sh); the path below is a sibling directory in
+# the staged flake source, not the real repo tree's port/hustle_core.
+hustle_core = { path = "../hustle_core", features = ["text"] }
+serde_json = "1"

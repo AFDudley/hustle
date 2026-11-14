@@ -7,11 +7,12 @@ and 5.
 
 Modules: `fixed`, the fixed-point number type; `godot_hash`, Godot
 3.5.1's `hash()` builtin; `rng`, the logic RNG (Godot's PCG32 plus
-`BetterRng`'s `choose` and `weighted_choice`); `tables`, the five
-official characters' and their projectiles' data (see "`tables`" below);
-`fixed_text`, `&str`/`String` wrappers over `fixed`'s byte-based API,
-behind the `text` feature (off by default; see "The core and the shell"
-below).
+`BetterRng`'s `choose` and `weighted_choice`); `physics`, the native
+`FGObject` class's object physics (gravity, friction, forces,
+movement, pushback); `tables`, the five official characters' and
+their projectiles' data (see "`tables`" below); `fixed_text`,
+`&str`/`String` wrappers over `fixed`'s byte-based API, behind the
+`text` feature (off by default; see "The core and the shell" below).
 
 ## Why no dependencies
 
@@ -160,6 +161,11 @@ carries zero axioms end to end.
   `godot_hash.rs` and `rng.rs`, including the `hash_fixed_display` probes
   against `fixed::Fixed::hash_display`: 160/160 records matched. See
   `tools/rng_diff/README.md`.
+- `tools/fgobject_diff` runs the game's native `FGObject` object physics
+  against `physics.rs` on a large edge-value probe set and on six real
+  matches played through the live path: the probe set matched
+  11,115/11,173 calls (99.5%; the three open mismatches are documented
+  there). See `tools/fgobject_diff/README.md`.
 - `tools/lean_check` runs Charon (MIR extraction) and Aeneas (LLBC → Lean
   translation) on this crate, then `lake build` on the result
   (`HustleCorePort` in `tools/lean_check/generated/`): 0 Aeneas errors,
