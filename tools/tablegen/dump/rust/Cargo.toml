@@ -1,0 +1,19 @@
+[package]
+name = "table_dump"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "table_dump"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = "1"
+# Staged next to this crate by tools/nix_image_build.sh's extra-source
+# argument (see ../build.sh); the path below is a sibling directory in
+# the staged flake source, not the real repo tree's port/hustle_core.
+# No features: table_dump reads the generated `tables` module with the
+# same plain `cargo build` Charon uses, so a mismatch between what
+# Charon sees and what this binary reads is impossible by construction.
+hustle_core = { path = "../hustle_core" }
