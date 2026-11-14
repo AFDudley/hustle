@@ -3,6 +3,7 @@
 module
 public import Aeneas
 public import HustleCorePort.Types
+public import HustleCorePort.FunsExternal
 @[expose] public section
 open Aeneas Aeneas.Std Result ControlFlow Error
 set_option linter.dupNamespace false
@@ -18,6 +19,9 @@ set_option maxHeartbeats 1000000
 
 /- You can set the `maxRecDepth` value with the `-max-recdepth` CLI option -/
 set_option maxRecDepth 2048
+
+/- You can remove the following line by using the CLI option `-all-computable`: -/
+noncomputable section
 
 namespace hustle_core
 
@@ -1826,5 +1830,371 @@ def rng.hash_static_rng
   let i2 ← lift (core.num.U64.wrapping_add rng_state i1)
   let i3 ← lift (UScalar.hcast .I64 i2)
   godot_hash.hash_int i3
+
+/-- [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::ActionType}::clone]:
+    Source: 'src/tables/common.rs', lines 11:9-11:14
+    Visibility: public -/
+def tables.common.ActionType.Insts.CoreCloneClone.clone
+  (self : tables.common.ActionType) : Result tables.common.ActionType := do
+  ok self
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::ActionType}]
+    Source: 'src/tables/common.rs', lines 11:9-11:14 -/
+@[reducible]
+def tables.common.ActionType.Insts.CoreCloneClone : core.clone.Clone
+  tables.common.ActionType := {
+  clone := tables.common.ActionType.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::marker::Copy for hustle_core::tables::common::ActionType}]
+    Source: 'src/tables/common.rs', lines 11:16-11:20 -/
+@[reducible]
+def tables.common.ActionType.Insts.CoreMarkerCopy : core.marker.Copy
+  tables.common.ActionType := {
+  cloneInst := tables.common.ActionType.Insts.CoreCloneClone
+}
+
+/-- [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::AirType}::clone]:
+    Source: 'src/tables/common.rs', lines 21:9-21:14
+    Visibility: public -/
+def tables.common.AirType.Insts.CoreCloneClone.clone
+  (self : tables.common.AirType) : Result tables.common.AirType := do
+  ok self
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::AirType}]
+    Source: 'src/tables/common.rs', lines 21:9-21:14 -/
+@[reducible]
+def tables.common.AirType.Insts.CoreCloneClone : core.clone.Clone
+  tables.common.AirType := {
+  clone := tables.common.AirType.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::marker::Copy for hustle_core::tables::common::AirType}]
+    Source: 'src/tables/common.rs', lines 21:16-21:20 -/
+@[reducible]
+def tables.common.AirType.Insts.CoreMarkerCopy : core.marker.Copy
+  tables.common.AirType := {
+  cloneInst := tables.common.AirType.Insts.CoreCloneClone
+}
+
+/-- [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::BusyInterrupt}::clone]:
+    Source: 'src/tables/common.rs', lines 28:9-28:14
+    Visibility: public -/
+def tables.common.BusyInterrupt.Insts.CoreCloneClone.clone
+  (self : tables.common.BusyInterrupt) :
+  Result tables.common.BusyInterrupt
+  := do
+  ok self
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::BusyInterrupt}]
+    Source: 'src/tables/common.rs', lines 28:9-28:14 -/
+@[reducible]
+def tables.common.BusyInterrupt.Insts.CoreCloneClone : core.clone.Clone
+  tables.common.BusyInterrupt := {
+  clone := tables.common.BusyInterrupt.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::marker::Copy for hustle_core::tables::common::BusyInterrupt}]
+    Source: 'src/tables/common.rs', lines 28:16-28:20 -/
+@[reducible]
+def tables.common.BusyInterrupt.Insts.CoreMarkerCopy : core.marker.Copy
+  tables.common.BusyInterrupt := {
+  cloneInst := tables.common.BusyInterrupt.Insts.CoreCloneClone
+}
+
+/-- [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::HitboxType}::clone]:
+    Source: 'src/tables/common.rs', lines 35:9-35:14
+    Visibility: public -/
+def tables.common.HitboxType.Insts.CoreCloneClone.clone
+  (self : tables.common.HitboxType) : Result tables.common.HitboxType := do
+  ok self
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::HitboxType}]
+    Source: 'src/tables/common.rs', lines 35:9-35:14 -/
+@[reducible]
+def tables.common.HitboxType.Insts.CoreCloneClone : core.clone.Clone
+  tables.common.HitboxType := {
+  clone := tables.common.HitboxType.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::marker::Copy for hustle_core::tables::common::HitboxType}]
+    Source: 'src/tables/common.rs', lines 35:16-35:20 -/
+@[reducible]
+def tables.common.HitboxType.Insts.CoreMarkerCopy : core.marker.Copy
+  tables.common.HitboxType := {
+  cloneInst := tables.common.HitboxType.Insts.CoreCloneClone
+}
+
+/-- [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::HitHeight}::clone]:
+    Source: 'src/tables/common.rs', lines 46:9-46:14
+    Visibility: public -/
+def tables.common.HitHeight.Insts.CoreCloneClone.clone
+  (self : tables.common.HitHeight) : Result tables.common.HitHeight := do
+  ok self
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::HitHeight}]
+    Source: 'src/tables/common.rs', lines 46:9-46:14 -/
+@[reducible]
+def tables.common.HitHeight.Insts.CoreCloneClone : core.clone.Clone
+  tables.common.HitHeight := {
+  clone := tables.common.HitHeight.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::marker::Copy for hustle_core::tables::common::HitHeight}]
+    Source: 'src/tables/common.rs', lines 46:16-46:20 -/
+@[reducible]
+def tables.common.HitHeight.Insts.CoreMarkerCopy : core.marker.Copy
+  tables.common.HitHeight := {
+  cloneInst := tables.common.HitHeight.Insts.CoreCloneClone
+}
+
+/-- [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::HitboxKind}::clone]:
+    Source: 'src/tables/common.rs', lines 53:9-53:14
+    Visibility: public -/
+def tables.common.HitboxKind.Insts.CoreCloneClone.clone
+  (self : tables.common.HitboxKind) : Result tables.common.HitboxKind := do
+  ok self
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::HitboxKind}]
+    Source: 'src/tables/common.rs', lines 53:9-53:14 -/
+@[reducible]
+def tables.common.HitboxKind.Insts.CoreCloneClone : core.clone.Clone
+  tables.common.HitboxKind := {
+  clone := tables.common.HitboxKind.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::marker::Copy for hustle_core::tables::common::HitboxKind}]
+    Source: 'src/tables/common.rs', lines 53:16-53:20 -/
+@[reducible]
+def tables.common.HitboxKind.Insts.CoreMarkerCopy : core.marker.Copy
+  tables.common.HitboxKind := {
+  cloneInst := tables.common.HitboxKind.Insts.CoreCloneClone
+}
+
+/-- [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::CancelCategory}::clone]:
+    Source: 'src/tables/common.rs', lines 60:9-60:14
+    Visibility: public -/
+def tables.common.CancelCategory.Insts.CoreCloneClone.clone
+  (self : tables.common.CancelCategory) :
+  Result tables.common.CancelCategory
+  := do
+  ok self
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::CancelCategory}]
+    Source: 'src/tables/common.rs', lines 60:9-60:14 -/
+@[reducible]
+def tables.common.CancelCategory.Insts.CoreCloneClone : core.clone.Clone
+  tables.common.CancelCategory := {
+  clone := tables.common.CancelCategory.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::marker::Copy for hustle_core::tables::common::CancelCategory}]
+    Source: 'src/tables/common.rs', lines 60:16-60:20 -/
+@[reducible]
+def tables.common.CancelCategory.Insts.CoreMarkerCopy : core.marker.Copy
+  tables.common.CancelCategory := {
+  cloneInst := tables.common.CancelCategory.Insts.CoreCloneClone
+}
+
+/-- [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::Stance}::clone]:
+    Source: 'src/tables/common.rs', lines 132:9-132:14
+    Visibility: public -/
+def tables.common.Stance.Insts.CoreCloneClone.clone
+  (self : tables.common.Stance) : Result tables.common.Stance := do
+  ok self
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::Stance}]
+    Source: 'src/tables/common.rs', lines 132:9-132:14 -/
+@[reducible]
+def tables.common.Stance.Insts.CoreCloneClone : core.clone.Clone
+  tables.common.Stance := {
+  clone := tables.common.Stance.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::marker::Copy for hustle_core::tables::common::Stance}]
+    Source: 'src/tables/common.rs', lines 132:16-132:20 -/
+@[reducible]
+def tables.common.Stance.Insts.CoreMarkerCopy : core.marker.Copy
+  tables.common.Stance := {
+  cloneInst := tables.common.Stance.Insts.CoreCloneClone
+}
+
+/-- [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::MiscDataTag}::clone]:
+    Source: 'src/tables/common.rs', lines 142:9-142:14
+    Visibility: public -/
+def tables.common.MiscDataTag.Insts.CoreCloneClone.clone
+  (self : tables.common.MiscDataTag) : Result tables.common.MiscDataTag := do
+  ok self
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::MiscDataTag}]
+    Source: 'src/tables/common.rs', lines 142:9-142:14 -/
+@[reducible]
+def tables.common.MiscDataTag.Insts.CoreCloneClone : core.clone.Clone
+  tables.common.MiscDataTag := {
+  clone := tables.common.MiscDataTag.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::marker::Copy for hustle_core::tables::common::MiscDataTag}]
+    Source: 'src/tables/common.rs', lines 142:16-142:20 -/
+@[reducible]
+def tables.common.MiscDataTag.Insts.CoreMarkerCopy : core.marker.Copy
+  tables.common.MiscDataTag := {
+  cloneInst := tables.common.MiscDataTag.Insts.CoreCloneClone
+}
+
+/-- [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::OrbTriggerType}::clone]:
+    Source: 'src/tables/common.rs', lines 148:9-148:14
+    Visibility: public -/
+def tables.common.OrbTriggerType.Insts.CoreCloneClone.clone
+  (self : tables.common.OrbTriggerType) :
+  Result tables.common.OrbTriggerType
+  := do
+  ok self
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::OrbTriggerType}]
+    Source: 'src/tables/common.rs', lines 148:9-148:14 -/
+@[reducible]
+def tables.common.OrbTriggerType.Insts.CoreCloneClone : core.clone.Clone
+  tables.common.OrbTriggerType := {
+  clone := tables.common.OrbTriggerType.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::marker::Copy for hustle_core::tables::common::OrbTriggerType}]
+    Source: 'src/tables/common.rs', lines 148:16-148:20 -/
+@[reducible]
+def tables.common.OrbTriggerType.Insts.CoreMarkerCopy : core.marker.Copy
+  tables.common.OrbTriggerType := {
+  cloneInst := tables.common.OrbTriggerType.Insts.CoreCloneClone
+}
+
+/-- [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::ProjectileKind}::clone]:
+    Source: 'src/tables/common.rs', lines 156:9-156:14
+    Visibility: public -/
+def tables.common.ProjectileKind.Insts.CoreCloneClone.clone
+  (self : tables.common.ProjectileKind) :
+  Result tables.common.ProjectileKind
+  := do
+  ok self
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::ProjectileKind}]
+    Source: 'src/tables/common.rs', lines 156:9-156:14 -/
+@[reducible]
+def tables.common.ProjectileKind.Insts.CoreCloneClone : core.clone.Clone
+  tables.common.ProjectileKind := {
+  clone := tables.common.ProjectileKind.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::marker::Copy for hustle_core::tables::common::ProjectileKind}]
+    Source: 'src/tables/common.rs', lines 156:16-156:20 -/
+@[reducible]
+def tables.common.ProjectileKind.Insts.CoreMarkerCopy : core.marker.Copy
+  tables.common.ProjectileKind := {
+  cloneInst := tables.common.ProjectileKind.Insts.CoreCloneClone
+}
+
+/-- [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::ThrowAnimation}::clone]:
+    Source: 'src/tables/common.rs', lines 177:9-177:14
+    Visibility: public -/
+def tables.common.ThrowAnimation.Insts.CoreCloneClone.clone
+  (self : tables.common.ThrowAnimation) :
+  Result tables.common.ThrowAnimation
+  := do
+  ok self
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::ThrowAnimation}]
+    Source: 'src/tables/common.rs', lines 177:9-177:14 -/
+@[reducible]
+def tables.common.ThrowAnimation.Insts.CoreCloneClone : core.clone.Clone
+  tables.common.ThrowAnimation := {
+  clone := tables.common.ThrowAnimation.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::marker::Copy for hustle_core::tables::common::ThrowAnimation}]
+    Source: 'src/tables/common.rs', lines 177:16-177:20 -/
+@[reducible]
+def tables.common.ThrowAnimation.Insts.CoreMarkerCopy : core.marker.Copy
+  tables.common.ThrowAnimation := {
+  cloneInst := tables.common.ThrowAnimation.Insts.CoreCloneClone
+}
+
+/-- [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::ThrowPositionEntry}::clone]:
+    Source: 'src/tables/common.rs', lines 198:9-198:14
+    Visibility: public -/
+def tables.common.ThrowPositionEntry.Insts.CoreCloneClone.clone
+  (self : tables.common.ThrowPositionEntry) :
+  Result tables.common.ThrowPositionEntry
+  := do
+  ok self
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::ThrowPositionEntry}]
+    Source: 'src/tables/common.rs', lines 198:9-198:14 -/
+@[reducible]
+def tables.common.ThrowPositionEntry.Insts.CoreCloneClone : core.clone.Clone
+  tables.common.ThrowPositionEntry := {
+  clone := tables.common.ThrowPositionEntry.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::marker::Copy for hustle_core::tables::common::ThrowPositionEntry}]
+    Source: 'src/tables/common.rs', lines 198:16-198:20 -/
+@[reducible]
+def tables.common.ThrowPositionEntry.Insts.CoreMarkerCopy : core.marker.Copy
+  tables.common.ThrowPositionEntry := {
+  cloneInst := tables.common.ThrowPositionEntry.Insts.CoreCloneClone
+}
+
+/-- [hustle_core::tables::common::MAX_HEALTH]
+    Source: 'src/tables/common.rs', lines 209:0-209:33
+    Visibility: public -/
+@[global_simps, irreducible] def tables.common.MAX_HEALTH : Std.I32 := 1500#i32
+
+/-- [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::FighterRootConstants}::clone]:
+    Source: 'src/tables/common.rs', lines 211:9-211:14
+    Visibility: public -/
+def tables.common.FighterRootConstants.Insts.CoreCloneClone.clone
+  (self : tables.common.FighterRootConstants) :
+  Result tables.common.FighterRootConstants
+  := do
+  ok self
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::FighterRootConstants}]
+    Source: 'src/tables/common.rs', lines 211:9-211:14 -/
+@[reducible]
+def tables.common.FighterRootConstants.Insts.CoreCloneClone : core.clone.Clone
+  tables.common.FighterRootConstants := {
+  clone := tables.common.FighterRootConstants.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::marker::Copy for hustle_core::tables::common::FighterRootConstants}]
+    Source: 'src/tables/common.rs', lines 211:16-211:20 -/
+@[reducible]
+def tables.common.FighterRootConstants.Insts.CoreMarkerCopy : core.marker.Copy
+  tables.common.FighterRootConstants := {
+  cloneInst := tables.common.FighterRootConstants.Insts.CoreCloneClone
+}
+
+/-- [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::ProjectileRootConstants}::clone]:
+    Source: 'src/tables/common.rs', lines 233:9-233:14
+    Visibility: public -/
+def tables.common.ProjectileRootConstants.Insts.CoreCloneClone.clone
+  (self : tables.common.ProjectileRootConstants) :
+  Result tables.common.ProjectileRootConstants
+  := do
+  ok self
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::clone::Clone for hustle_core::tables::common::ProjectileRootConstants}]
+    Source: 'src/tables/common.rs', lines 233:9-233:14 -/
+@[reducible]
+def tables.common.ProjectileRootConstants.Insts.CoreCloneClone :
+  core.clone.Clone tables.common.ProjectileRootConstants := {
+  clone := tables.common.ProjectileRootConstants.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::tables::common::{impl core::marker::Copy for hustle_core::tables::common::ProjectileRootConstants}]
+    Source: 'src/tables/common.rs', lines 233:16-233:20 -/
+@[reducible]
+def tables.common.ProjectileRootConstants.Insts.CoreMarkerCopy :
+  core.marker.Copy tables.common.ProjectileRootConstants := {
+  cloneInst := tables.common.ProjectileRootConstants.Insts.CoreCloneClone
+}
 
 end hustle_core

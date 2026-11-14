@@ -62,4 +62,4828 @@ structure rng.Rng where
   state : Std.U64
   inc : Std.U64
 
+/-- [hustle_core::tables::base::State]
+    Source: 'src/tables/base.rs', lines 12:0-71:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.base.State where
+| AirBackThrow : tables.base.State
+| AirDash : tables.base.State
+| AirDownThrow : tables.base.State
+| AirForwardThrow : tables.base.State
+| AirGrab : tables.base.State
+| AirHold : tables.base.State
+| BackThrow : tables.base.State
+| Burst : tables.base.State
+| ChargeDash : tables.base.State
+| ChargeDashForward : tables.base.State
+| CounterAttack : tables.base.State
+| CounterAttackGrab : tables.base.State
+| CounterAttackHi : tables.base.State
+| CounterAttackLow : tables.base.State
+| DashBackward : tables.base.State
+| DashBackwardHold : tables.base.State
+| DashForward : tables.base.State
+| DashStartup : tables.base.State
+| DefensiveBurst : tables.base.State
+| DoubleJump : tables.base.State
+| Fall : tables.base.State
+| ForfeitExplosion : tables.base.State
+| ForwardThrow : tables.base.State
+| Frozen : tables.base.State
+| Getup : tables.base.State
+| Grab : tables.base.State
+| Grabbed : tables.base.State
+| HardKnockdown : tables.base.State
+| Hold : tables.base.State
+| HurtAerial : tables.base.State
+| HurtDizzy : tables.base.State
+| HurtGrounded : tables.base.State
+| InstantCancel : tables.base.State
+| Jump : tables.base.State
+| JumpGrab : tables.base.State
+| Knockdown : tables.base.State
+| Landing : tables.base.State
+| OffensiveBurst : tables.base.State
+| ParryAfterWhiff : tables.base.State
+| ParryAir : tables.base.State
+| ParryAuto : tables.base.State
+| ParryHigh : tables.base.State
+| ParryLow : tables.base.State
+| ParrySuper : tables.base.State
+| Roll : tables.base.State
+| ShieldAir : tables.base.State
+| ShieldHigh : tables.base.State
+| ShieldLow : tables.base.State
+| Start : tables.base.State
+| SuperFall : tables.base.State
+| SuperFallStartup : tables.base.State
+| SuperJump : tables.base.State
+| Taunt : tables.base.State
+| TechRoll : tables.base.State
+| ThrowTech : tables.base.State
+| Wait : tables.base.State
+| WallSlam : tables.base.State
+| WhiffInstantCancel : tables.base.State
+
+/-- [hustle_core::tables::common::MiscDataTag]
+    Source: 'src/tables/common.rs', lines 143:0-146:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.common.MiscDataTag where
+| IgnoreCaltrops : tables.common.MiscDataTag
+| LaunchCaltrops : tables.common.MiscDataTag
+
+/-- [hustle_core::tables::common::HitboxKind]
+    Source: 'src/tables/common.rs', lines 54:0-58:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.common.HitboxKind where
+| Hitbox : tables.common.HitboxKind
+| ThrowBox : tables.common.HitboxKind
+| SweptHitbox : tables.common.HitboxKind
+
+/-- [hustle_core::tables::common::HitHeight]
+    Source: 'src/tables/common.rs', lines 47:0-51:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.common.HitHeight where
+| High : tables.common.HitHeight
+| Mid : tables.common.HitHeight
+| Low : tables.common.HitHeight
+
+/-- [hustle_core::tables::common::HitboxType]
+    Source: 'src/tables/common.rs', lines 36:0-44:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.common.HitboxType where
+| Normal : tables.common.HitboxType
+| Flip : tables.common.HitboxType
+| ThrowHit : tables.common.HitboxType
+| OffensiveBurst : tables.common.HitboxType
+| Burst : tables.common.HitboxType
+| NoHitstun : tables.common.HitboxType
+| Detect : tables.common.HitboxType
+
+/-- [hustle_core::tables::base::HitboxRecord]
+    Source: 'src/tables/base.rs', lines 135:0-215:1
+    Visibility: public -/
+structure tables.base.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.base.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.base.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::common::ThrowAnimation]
+    Source: 'src/tables/common.rs', lines 178:0-196:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.common.ThrowAnimation where
+| BiteThrow : tables.common.ThrowAnimation
+| CornerCarryGrab : tables.common.ThrowAnimation
+| CornerCarryHold : tables.common.ThrowAnimation
+| CornerCarryRelease : tables.common.ThrowAnimation
+| DisembowelGrabFollowup : tables.common.ThrowAnimation
+| DriveWheelieThrow : tables.common.ThrowAnimation
+| EarthquakeThrow : tables.common.ThrowAnimation
+| ForwardThrow : tables.common.ThrowAnimation
+| GroundSlam : tables.common.ThrowAnimation
+| GroundedThrow : tables.common.ThrowAnimation
+| HitGrabFollowup : tables.common.ThrowAnimation
+| Impale : tables.common.ThrowAnimation
+| ImpaleFollowup : tables.common.ThrowAnimation
+| ImpaleTeleport : tables.common.ThrowAnimation
+| KillProcessSpin : tables.common.ThrowAnimation
+| OverflowFollowup : tables.common.ThrowAnimation
+| ZephyrThrow : tables.common.ThrowAnimation
+
+/-- [hustle_core::tables::common::ThrowPositionEntry]
+    Source: 'src/tables/common.rs', lines 199:0-204:1
+    Visibility: public -/
+structure tables.common.ThrowPositionEntry where
+  animation : tables.common.ThrowAnimation
+  frame : Std.I32
+  x : Std.I32
+  y : Std.I32
+
+/-- [hustle_core::tables::common::ProjectileKind]
+    Source: 'src/tables/common.rs', lines 157:0-175:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.common.ProjectileKind where
+| AfterImage : tables.common.ProjectileKind
+| CausticSpike : tables.common.ProjectileKind
+| GasBomb : tables.common.ProjectileKind
+| GrapplingHook : tables.common.ProjectileKind
+| GroundFire : tables.common.ProjectileKind
+| GroundFireLoic : tables.common.ProjectileKind
+| HeavyWhipWave : tables.common.ProjectileKind
+| HeavyWhipWaveHigh : tables.common.ProjectileKind
+| Missile : tables.common.ProjectileKind
+| OrbitalStrike : tables.common.ProjectileKind
+| Poison : tables.common.ProjectileKind
+| RobotGrenade : tables.common.ProjectileKind
+| Shockwave : tables.common.ProjectileKind
+| SparkBomb : tables.common.ProjectileKind
+| TelekinesisBoulder : tables.common.ProjectileKind
+| VileClutch : tables.common.ProjectileKind
+| WhipWave : tables.common.ProjectileKind
+
+/-- [hustle_core::tables::common::Stance]
+    Source: 'src/tables/common.rs', lines 133:0-140:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.common.Stance where
+| All : tables.common.Stance
+| BackSway : tables.common.Stance
+| Drive : tables.common.Stance
+| Normal : tables.common.Stance
+| NunChuk : tables.common.Stance
+| TPStance : tables.common.Stance
+
+/-- [hustle_core::tables::common::CancelCategory]
+    Source: 'src/tables/common.rs', lines 61:0-130:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.common.CancelCategory where
+| N3Combo : tables.common.CancelCategory
+| Aerial : tables.common.CancelCategory
+| AerialAttack : tables.common.CancelCategory
+| AerialDefense : tables.common.CancelCategory
+| AerialGrab : tables.common.CancelCategory
+| AerialMovement : tables.common.CancelCategory
+| AerialSpecial : tables.common.CancelCategory
+| AerialSuper : tables.common.CancelCategory
+| AerialThrow : tables.common.CancelCategory
+| BackSlash : tables.common.CancelCategory
+| Burst : tables.common.CancelCategory
+| BusyHurt : tables.common.CancelCategory
+| BusyNormal : tables.common.CancelCategory
+| ChukJumpFollowup : tables.common.CancelCategory
+| CounterAttack : tables.common.CancelCategory
+| Dash : tables.common.CancelCategory
+| DashBackward : tables.common.CancelCategory
+| DoubleJump : tables.common.CancelCategory
+| DrawMoisture : tables.common.CancelCategory
+| Fall : tables.common.CancelCategory
+| FastHolster : tables.common.CancelCategory
+| FastTeleport : tables.common.CancelCategory
+| ForwardDashAttack : tables.common.CancelCategory
+| Getup : tables.common.CancelCategory
+| Grounded : tables.common.CancelCategory
+| GroundedAttack : tables.common.CancelCategory
+| GroundedDefense : tables.common.CancelCategory
+| GroundedGrab : tables.common.CancelCategory
+| GroundedHeavy : tables.common.CancelCategory
+| GroundedIdle : tables.common.CancelCategory
+| GroundedLight : tables.common.CancelCategory
+| GroundedMovement : tables.common.CancelCategory
+| GroundedSpecial : tables.common.CancelCategory
+| GroundedSuper : tables.common.CancelCategory
+| GroundedThrow : tables.common.CancelCategory
+| Gun : tables.common.CancelCategory
+| Guntrick : tables.common.CancelCategory
+| Hustle : tables.common.CancelCategory
+| InstantCancel : tables.common.CancelCategory
+| Jump : tables.common.CancelCategory
+| Lasso : tables.common.CancelCategory
+| LassoThrow : tables.common.CancelCategory
+| LeapSlash : tables.common.CancelCategory
+| LightningSlice : tables.common.CancelCategory
+| LightningSliceCancel : tables.common.CancelCategory
+| Magnetize : tables.common.CancelCategory
+| OTG : tables.common.CancelCategory
+| OffensiveBurst : tables.common.CancelCategory
+| Parry : tables.common.CancelCategory
+| ReleaseMomentum : tables.common.CancelCategory
+| Return : tables.common.CancelCategory
+| Reversal : tables.common.CancelCategory
+| Shoot : tables.common.CancelCategory
+| ShootDodge2 : tables.common.CancelCategory
+| SideKick : tables.common.CancelCategory
+| SlowHolster : tables.common.CancelCategory
+| SpotDodge : tables.common.CancelCategory
+| StoreMomentum : tables.common.CancelCategory
+| Swipe2 : tables.common.CancelCategory
+| Teleport : tables.common.CancelCategory
+| TimeBullet : tables.common.CancelCategory
+| TimeRift : tables.common.CancelCategory
+| Uppercut : tables.common.CancelCategory
+| VileClutch : tables.common.CancelCategory
+| Wait : tables.common.CancelCategory
+| WhiffCancel : tables.common.CancelCategory
+| WhipWave : tables.common.CancelCategory
+| WhipWaveParriable : tables.common.CancelCategory
+
+/-- [hustle_core::tables::common::BusyInterrupt]
+    Source: 'src/tables/common.rs', lines 29:0-33:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.common.BusyInterrupt where
+| Normal : tables.common.BusyInterrupt
+| Hurt : tables.common.BusyInterrupt
+| NoneKind : tables.common.BusyInterrupt
+
+/-- [hustle_core::tables::common::AirType]
+    Source: 'src/tables/common.rs', lines 22:0-26:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.common.AirType where
+| Grounded : tables.common.AirType
+| Aerial : tables.common.AirType
+| Both : tables.common.AirType
+
+/-- [hustle_core::tables::common::ActionType]
+    Source: 'src/tables/common.rs', lines 12:0-19:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.common.ActionType where
+| Movement : tables.common.ActionType
+| Attack : tables.common.ActionType
+| Special : tables.common.ActionType
+| Super : tables.common.ActionType
+| Defense : tables.common.ActionType
+| Hurt : tables.common.ActionType
+
+/-- [hustle_core::tables::base::StateData]
+    Source: 'src/tables/base.rs', lines 218:0-363:1
+    Visibility: public -/
+structure tables.base.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.base.State
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  uses_air_movement : Bool
+  ignore_air_option_use_in_combos : Bool
+  land_cancel : Bool
+  landing_recovery : Std.I32
+  min_land_cancel_frame : Std.I32
+  land_cancel_state : tables.base.State
+  iasa_at : Std.I32
+  iasa_on_hit : Std.I32
+  iasa_on_hit_on_block : Bool
+  interrupt_frames : Slice Std.I32
+  throw_techable : Bool
+  interruptible_on_opponent_turn : Bool
+  update_facing_on_exit : Bool
+  dynamic_iasa : Bool
+  backdash_iasa : Bool
+  allow_framecheat : Bool
+  next_state_on_hold : Bool
+  next_state_on_hold_on_opponent_turn : Bool
+  combo_only : Bool
+  neutral_only : Bool
+  end_feint : Bool
+  usable_from_whiff_cancel_if_possible : Bool
+  count_projectile_hits : Bool
+  hold_restart : Option tables.base.State
+  busy_interrupt_type : tables.common.BusyInterrupt
+  burst_cancellable : Bool
+  burstable : Bool
+  self_hit_cancellable : Bool
+  self_interruptable : Bool
+  reversible : Bool
+  instant_cancellable : Bool
+  force_feintable : Bool
+  can_feint_if_possible : Bool
+  selectable : Bool
+  interrupt_from_string : Slice tables.common.CancelCategory
+  interrupt_into_string : Slice tables.common.CancelCategory
+  hit_cancel_into_string : Slice tables.common.CancelCategory
+  interrupt_exceptions_string : Slice tables.common.CancelCategory
+  hit_cancel_exceptions_string : Slice tables.common.CancelCategory
+  always_usable : Bool
+  allowed_stances_string : Slice tables.common.Stance
+  change_stance_to : Option tables.common.Stance
+  release_opponent_on_startup : Bool
+  release_opponent_on_exit : Bool
+  initiative_effect : Bool
+  initiative_startup_reduction_amount : Std.I32
+  apply_pushback : Bool
+  beats_backdash : Bool
+  no_collision_start_frame : Std.I32
+  no_collision_end_frame : Std.I32
+  can_be_counterhit : Bool
+  tick_priority : Std.I32
+  velocity_forward_meter_gain_multiplier : Option fixed.Fixed
+  whiff_meter_gain_multiplier : Option fixed.Fixed
+  draw_cancel_on_block : Bool
+  draw_cancel_on_block_min_tick : Std.I32
+  action_type : tables.common.ActionType
+  air_type : tables.common.AirType
+  super_level_ : Std.I32
+  supers_used_ : Std.I32
+  super_freeze_ticks_ : Std.I32
+  super_effect_ : Bool
+  scale_combo_meter_ : Bool
+  force_super_effect : Bool
+  super_level : Std.I32
+  supers_used : Std.I32
+  super_freeze_ticks : Std.I32
+  super_effect : Bool
+  scale_combo_meter : Bool
+  release : Bool
+  release_frame : Std.I32
+  use_start_throw_pos : Bool
+  start_throw_pos_x : Std.I32
+  start_throw_pos_y : Std.I32
+  use_release_throw_pos : Bool
+  release_throw_pos_x : Std.I32
+  release_throw_pos_y : Std.I32
+  hitstun_ticks : Std.I32
+  knockback : Option fixed.Fixed
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  aerial_hit_state : tables.base.State
+  grounded_hit_state : tables.base.State
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  reverse : Bool
+  disable_collision : Bool
+  ground_bounce : Bool
+  hits_otg : Bool
+  increment_combo : Bool
+  hard_knockdown : Bool
+  force_grounded : Bool
+  air_ground_bounce : Bool
+  wall_slam : Bool
+  di_modifier : Option fixed.Fixed
+  minimum_grounded_frames : Std.I32
+  damage_proration : Std.I32
+  hit_height : tables.common.HitHeight
+  misc_data : Option tables.common.MiscDataTag
+  forward_throw_state : tables.base.State
+  back_throw_state : tables.base.State
+  down_throw_state : tables.base.State
+  hitboxes : Slice tables.base.HitboxRecord
+
+/-- [hustle_core::tables::common::FighterRootConstants]
+    Source: 'src/tables/common.rs', lines 212:0-231:1
+    Visibility: public -/
+structure tables.common.FighterRootConstants where
+  gravity : Option fixed.Fixed
+  ground_friction : Option fixed.Fixed
+  air_friction : Option fixed.Fixed
+  max_ground_speed : Option fixed.Fixed
+  max_air_speed : Option fixed.Fixed
+  max_fall_speed : Option fixed.Fixed
+  damages_own_team : Bool
+  has_projectile_parry_window : Bool
+  always_parriable : Bool
+  num_air_movements : Std.I32
+  lose_one_air_option_in_neutral : Bool
+  use_air_option_bar : Bool
+  air_option_bar_max : Std.I32
+  air_option_bar : Std.I32
+  damage_taken_modifier : Option fixed.Fixed
+  knockback_taken_modifier : Option fixed.Fixed
+  di_modifier : Option fixed.Fixed
+  num_feints : Std.I32
+
+/-- [hustle_core::tables::common::OrbTriggerType]
+    Source: 'src/tables/common.rs', lines 149:0-154:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.common.OrbTriggerType where
+| Lightning : tables.common.OrbTriggerType
+| OrbDart : tables.common.OrbTriggerType
+| OrbFire : tables.common.OrbTriggerType
+| Sword : tables.common.OrbTriggerType
+
+/-- [hustle_core::tables::common::ProjectileRootConstants]
+    Source: 'src/tables/common.rs', lines 234:0-257:1
+    Visibility: public -/
+structure tables.common.ProjectileRootConstants where
+  gravity : Option fixed.Fixed
+  ground_friction : Option fixed.Fixed
+  air_friction : Option fixed.Fixed
+  max_ground_speed : Option fixed.Fixed
+  max_air_speed : Option fixed.Fixed
+  max_fall_speed : Option fixed.Fixed
+  damages_own_team : Bool
+  has_projectile_parry_window : Bool
+  always_parriable : Bool
+  immunity_susceptible : Bool
+  roll_immunity_susceptible : Bool
+  deletes_other_projectiles : Bool
+  fizzle_on_ceiling : Bool
+  movable : Bool
+  can_be_hit_by_melee : Bool
+  hit_by_self_projectiles : Bool
+  hit_cancel_on_hit : Bool
+  free_cancel_on_hit : Bool
+  apply_hitlag_when_hit_by_melee : Bool
+  projectile_immune : Bool
+  hitlag_modifier : Option fixed.Fixed
+  hookable : Bool
+
+/-- [hustle_core::tables::cowboy::State]
+    Source: 'src/tables/cowboy.rs', lines 12:0-140:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.cowboy.State where
+| N1000Cuts : tables.cowboy.State
+| N1000CutsEnd : tables.cowboy.State
+| N3Combo : tables.cowboy.State
+| N3ComboDown : tables.cowboy.State
+| AirBackThrow : tables.cowboy.State
+| AirDash : tables.cowboy.State
+| AirDash1k : tables.cowboy.State
+| AirDash1kBack : tables.cowboy.State
+| AirDash2 : tables.cowboy.State
+| AirDash2Back : tables.cowboy.State
+| AirDownThrow : tables.cowboy.State
+| AirForwardThrow : tables.cowboy.State
+| AirGrab : tables.cowboy.State
+| AirHold : tables.cowboy.State
+| AnkleCutter : tables.cowboy.State
+| BackSlash : tables.cowboy.State
+| BackThrow : tables.cowboy.State
+| Brandish : tables.cowboy.State
+| Burst : tables.cowboy.State
+| ChargeDash : tables.cowboy.State
+| ChargeDashForward : tables.cowboy.State
+| CounterAttack : tables.cowboy.State
+| CounterAttackGrab : tables.cowboy.State
+| CounterAttackHi : tables.cowboy.State
+| CounterAttackLow : tables.cowboy.State
+| Dash : tables.cowboy.State
+| Dash1k : tables.cowboy.State
+| DashBackward : tables.cowboy.State
+| DashBackwardHold : tables.cowboy.State
+| DashForward : tables.cowboy.State
+| DashForward1k : tables.cowboy.State
+| DashStartup : tables.cowboy.State
+| DefensiveBurst : tables.cowboy.State
+| DoubleJump : tables.cowboy.State
+| DownwardCleave : tables.cowboy.State
+| DownwardCleaveGround : tables.cowboy.State
+| Fall : tables.cowboy.State
+| FastTeleport : tables.cowboy.State
+| Foresight : tables.cowboy.State
+| ForesightExplosion : tables.cowboy.State
+| ForesightNeutral : tables.cowboy.State
+| ForesightTeleport : tables.cowboy.State
+| ForesightTeleportFromStance : tables.cowboy.State
+| ForfeitExplosion : tables.cowboy.State
+| ForwardThrow : tables.cowboy.State
+| Frozen : tables.cowboy.State
+| Getup : tables.cowboy.State
+| Grab : tables.cowboy.State
+| Grabbed : tables.cowboy.State
+| GunReel : tables.cowboy.State
+| GunThrow : tables.cowboy.State
+| Guntrick : tables.cowboy.State
+| HAirSlash : tables.cowboy.State
+| HSlash : tables.cowboy.State
+| HSlash2 : tables.cowboy.State
+| HSlashUp : tables.cowboy.State
+| HardKnockdown : tables.cowboy.State
+| Hold : tables.cowboy.State
+| Holster : tables.cowboy.State
+| HurtAerial : tables.cowboy.State
+| HurtDizzy : tables.cowboy.State
+| HurtGrounded : tables.cowboy.State
+| Impale : tables.cowboy.State
+| ImpaleFollowup : tables.cowboy.State
+| ImpaleFollowupCombo : tables.cowboy.State
+| ImpaleFollowupHKD : tables.cowboy.State
+| ImpaleTeleport : tables.cowboy.State
+| InstantCancel : tables.cowboy.State
+| IzunaDrop : tables.cowboy.State
+| Jump : tables.cowboy.State
+| JumpGrab : tables.cowboy.State
+| Knockdown : tables.cowboy.State
+| Landing : tables.cowboy.State
+| Lasso : tables.cowboy.State
+| LassoHit : tables.cowboy.State
+| LassoHold : tables.cowboy.State
+| LassoPull : tables.cowboy.State
+| LassoReel : tables.cowboy.State
+| LightningSlice : tables.cowboy.State
+| LightningSliceCancel : tables.cowboy.State
+| LightningSliceNeutral : tables.cowboy.State
+| OffensiveBurst : tables.cowboy.State
+| ParryAfterWhiff : tables.cowboy.State
+| ParryAir : tables.cowboy.State
+| ParryAuto : tables.cowboy.State
+| ParryHigh : tables.cowboy.State
+| ParryLow : tables.cowboy.State
+| ParrySuper : tables.cowboy.State
+| PistolWhip : tables.cowboy.State
+| PistolWhipCombo : tables.cowboy.State
+| PistolWhipGround : tables.cowboy.State
+| PistolWhipGroundCombo : tables.cowboy.State
+| PointBlank : tables.cowboy.State
+| Pommel : tables.cowboy.State
+| QuickerDraw : tables.cowboy.State
+| Roll : tables.cowboy.State
+| ShieldAir : tables.cowboy.State
+| ShieldHigh : tables.cowboy.State
+| ShieldLow : tables.cowboy.State
+| Shift : tables.cowboy.State
+| Shoot : tables.cowboy.State
+| Shoot2 : tables.cowboy.State
+| ShootDodge : tables.cowboy.State
+| ShootDodge2 : tables.cowboy.State
+| SlowHolster : tables.cowboy.State
+| SpotDodge : tables.cowboy.State
+| StanceTeleport : tables.cowboy.State
+| Start : tables.cowboy.State
+| Stinger : tables.cowboy.State
+| SuperDash : tables.cowboy.State
+| SuperFall : tables.cowboy.State
+| SuperFallStartup : tables.cowboy.State
+| SuperJump : tables.cowboy.State
+| TPStance : tables.cowboy.State
+| Taunt : tables.cowboy.State
+| TechRoll : tables.cowboy.State
+| Teleport : tables.cowboy.State
+| ThrowTech : tables.cowboy.State
+| TimeBullet : tables.cowboy.State
+| TimeSplitter : tables.cowboy.State
+| UpwardSwipe : tables.cowboy.State
+| UpwardSwipeAir : tables.cowboy.State
+| VAirSlash : tables.cowboy.State
+| VSlash : tables.cowboy.State
+| Wait : tables.cowboy.State
+| WallSlam : tables.cowboy.State
+| WhiffInstantCancel : tables.cowboy.State
+
+/-- [hustle_core::tables::cowboy::HitboxRecord]
+    Source: 'src/tables/cowboy.rs', lines 273:0-353:1
+    Visibility: public -/
+structure tables.cowboy.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.cowboy.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.cowboy.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::cowboy::StateData]
+    Source: 'src/tables/cowboy.rs', lines 356:0-501:1
+    Visibility: public -/
+structure tables.cowboy.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.cowboy.State
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  uses_air_movement : Bool
+  ignore_air_option_use_in_combos : Bool
+  land_cancel : Bool
+  landing_recovery : Std.I32
+  min_land_cancel_frame : Std.I32
+  land_cancel_state : tables.cowboy.State
+  iasa_at : Std.I32
+  iasa_on_hit : Std.I32
+  iasa_on_hit_on_block : Bool
+  interrupt_frames : Slice Std.I32
+  throw_techable : Bool
+  interruptible_on_opponent_turn : Bool
+  update_facing_on_exit : Bool
+  dynamic_iasa : Bool
+  backdash_iasa : Bool
+  allow_framecheat : Bool
+  next_state_on_hold : Bool
+  next_state_on_hold_on_opponent_turn : Bool
+  combo_only : Bool
+  neutral_only : Bool
+  end_feint : Bool
+  usable_from_whiff_cancel_if_possible : Bool
+  count_projectile_hits : Bool
+  hold_restart : Option tables.cowboy.State
+  busy_interrupt_type : tables.common.BusyInterrupt
+  burst_cancellable : Bool
+  burstable : Bool
+  self_hit_cancellable : Bool
+  self_interruptable : Bool
+  reversible : Bool
+  instant_cancellable : Bool
+  force_feintable : Bool
+  can_feint_if_possible : Bool
+  selectable : Bool
+  interrupt_from_string : Slice tables.common.CancelCategory
+  interrupt_into_string : Slice tables.common.CancelCategory
+  hit_cancel_into_string : Slice tables.common.CancelCategory
+  interrupt_exceptions_string : Slice tables.common.CancelCategory
+  hit_cancel_exceptions_string : Slice tables.common.CancelCategory
+  always_usable : Bool
+  allowed_stances_string : Slice tables.common.Stance
+  change_stance_to : Option tables.common.Stance
+  release_opponent_on_startup : Bool
+  release_opponent_on_exit : Bool
+  initiative_effect : Bool
+  initiative_startup_reduction_amount : Std.I32
+  apply_pushback : Bool
+  beats_backdash : Bool
+  no_collision_start_frame : Std.I32
+  no_collision_end_frame : Std.I32
+  can_be_counterhit : Bool
+  tick_priority : Std.I32
+  velocity_forward_meter_gain_multiplier : Option fixed.Fixed
+  whiff_meter_gain_multiplier : Option fixed.Fixed
+  draw_cancel_on_block : Bool
+  draw_cancel_on_block_min_tick : Std.I32
+  action_type : tables.common.ActionType
+  air_type : tables.common.AirType
+  super_level_ : Std.I32
+  supers_used_ : Std.I32
+  super_freeze_ticks_ : Std.I32
+  super_effect_ : Bool
+  scale_combo_meter_ : Bool
+  force_super_effect : Bool
+  super_level : Std.I32
+  supers_used : Std.I32
+  super_freeze_ticks : Std.I32
+  super_effect : Bool
+  scale_combo_meter : Bool
+  release : Bool
+  release_frame : Std.I32
+  use_start_throw_pos : Bool
+  start_throw_pos_x : Std.I32
+  start_throw_pos_y : Std.I32
+  use_release_throw_pos : Bool
+  release_throw_pos_x : Std.I32
+  release_throw_pos_y : Std.I32
+  hitstun_ticks : Std.I32
+  knockback : Option fixed.Fixed
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  aerial_hit_state : tables.base.State
+  grounded_hit_state : tables.base.State
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  reverse : Bool
+  disable_collision : Bool
+  ground_bounce : Bool
+  hits_otg : Bool
+  increment_combo : Bool
+  hard_knockdown : Bool
+  force_grounded : Bool
+  air_ground_bounce : Bool
+  wall_slam : Bool
+  di_modifier : Option fixed.Fixed
+  minimum_grounded_frames : Std.I32
+  damage_proration : Std.I32
+  hit_height : tables.common.HitHeight
+  misc_data : Option tables.common.MiscDataTag
+  forward_throw_state : tables.cowboy.State
+  back_throw_state : tables.cowboy.State
+  down_throw_state : tables.cowboy.State
+  hitboxes : Slice tables.cowboy.HitboxRecord
+
+/-- [hustle_core::tables::mutant::State]
+    Source: 'src/tables/mutant.rs', lines 12:0-111:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.mutant.State where
+| AcidSlashH : tables.mutant.State
+| AcidSlashJ : tables.mutant.State
+| AcidSlashJUp : tables.mutant.State
+| AcidSlashV : tables.mutant.State
+| AirBackThrow : tables.mutant.State
+| AirDash : tables.mutant.State
+| AirDashForward : tables.mutant.State
+| AirDownThrow : tables.mutant.State
+| AirForwardThrow : tables.mutant.State
+| AirGrab : tables.mutant.State
+| AirHold : tables.mutant.State
+| AirKick : tables.mutant.State
+| AirSpin : tables.mutant.State
+| AirSwipe : tables.mutant.State
+| BackThrow : tables.mutant.State
+| BiteGrab : tables.mutant.State
+| BiteThrow : tables.mutant.State
+| Burst : tables.mutant.State
+| CausticBarrage : tables.mutant.State
+| CausticBarrageAir : tables.mutant.State
+| CausticSpike : tables.mutant.State
+| ChargeDash : tables.mutant.State
+| ChargeDashForward : tables.mutant.State
+| CounterAttack : tables.mutant.State
+| CounterAttackGrab : tables.mutant.State
+| CounterAttackHi : tables.mutant.State
+| CounterAttackLow : tables.mutant.State
+| DashBackward : tables.mutant.State
+| DashBackwardHold : tables.mutant.State
+| DashForward : tables.mutant.State
+| DashStartup : tables.mutant.State
+| DashThroughAttack : tables.mutant.State
+| DefensiveBurst : tables.mutant.State
+| DoubleJump : tables.mutant.State
+| Fall : tables.mutant.State
+| ForfeitExplosion : tables.mutant.State
+| ForwardDashBackFollowup : tables.mutant.State
+| ForwardDashFollowup : tables.mutant.State
+| ForwardThrow : tables.mutant.State
+| Frozen : tables.mutant.State
+| GasBomb : tables.mutant.State
+| Getup : tables.mutant.State
+| Grab : tables.mutant.State
+| Grabbed : tables.mutant.State
+| GroundSpike : tables.mutant.State
+| GroundToAirSpin : tables.mutant.State
+| HardKnockdown : tables.mutant.State
+| Hold : tables.mutant.State
+| HurtAerial : tables.mutant.State
+| HurtDizzy : tables.mutant.State
+| HurtGrounded : tables.mutant.State
+| InstantCancel : tables.mutant.State
+| JukeCharge : tables.mutant.State
+| Jump : tables.mutant.State
+| JumpGrab : tables.mutant.State
+| Kick : tables.mutant.State
+| Knockdown : tables.mutant.State
+| Landing : tables.mutant.State
+| OffensiveBurst : tables.mutant.State
+| OverheadClaw : tables.mutant.State
+| ParryAfterWhiff : tables.mutant.State
+| ParryAir : tables.mutant.State
+| ParryAuto : tables.mutant.State
+| ParryHigh : tables.mutant.State
+| ParryLow : tables.mutant.State
+| ParrySuper : tables.mutant.State
+| PounceFailRoll : tables.mutant.State
+| ProjectileGrab : tables.mutant.State
+| ProjectileGrabGround : tables.mutant.State
+| ProjectileGrabJump : tables.mutant.State
+| Rebirth : tables.mutant.State
+| Roll : tables.mutant.State
+| ShieldAir : tables.mutant.State
+| ShieldHigh : tables.mutant.State
+| ShieldLow : tables.mutant.State
+| Shockwave : tables.mutant.State
+| ShredLandCancel : tables.mutant.State
+| Slash : tables.mutant.State
+| Start : tables.mutant.State
+| SuperFall : tables.mutant.State
+| SuperFallStartup : tables.mutant.State
+| SuperJump : tables.mutant.State
+| Sweep : tables.mutant.State
+| Swipe : tables.mutant.State
+| Swipe2 : tables.mutant.State
+| SwipeDown : tables.mutant.State
+| SwipeUp : tables.mutant.State
+| Taunt : tables.mutant.State
+| TechRoll : tables.mutant.State
+| ThrowTech : tables.mutant.State
+| TwistAttack : tables.mutant.State
+| Wait : tables.mutant.State
+| WallSlam : tables.mutant.State
+| WallTrick : tables.mutant.State
+| WallTrickFollowup : tables.mutant.State
+| WallTrickFollowup2 : tables.mutant.State
+| WallTrickFollowup3 : tables.mutant.State
+| WhiffInstantCancel : tables.mutant.State
+
+/-- [hustle_core::tables::mutant::HitboxRecord]
+    Source: 'src/tables/mutant.rs', lines 215:0-295:1
+    Visibility: public -/
+structure tables.mutant.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.mutant.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.mutant.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::mutant::StateData]
+    Source: 'src/tables/mutant.rs', lines 298:0-449:1
+    Visibility: public -/
+structure tables.mutant.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.mutant.State
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  uses_air_movement : Bool
+  ignore_air_option_use_in_combos : Bool
+  land_cancel : Bool
+  landing_recovery : Std.I32
+  min_land_cancel_frame : Std.I32
+  land_cancel_state : tables.mutant.State
+  iasa_at : Std.I32
+  iasa_on_hit : Std.I32
+  iasa_on_hit_on_block : Bool
+  interrupt_frames : Slice Std.I32
+  throw_techable : Bool
+  interruptible_on_opponent_turn : Bool
+  update_facing_on_exit : Bool
+  dynamic_iasa : Bool
+  backdash_iasa : Bool
+  allow_framecheat : Bool
+  next_state_on_hold : Bool
+  next_state_on_hold_on_opponent_turn : Bool
+  combo_only : Bool
+  neutral_only : Bool
+  end_feint : Bool
+  usable_from_whiff_cancel_if_possible : Bool
+  count_projectile_hits : Bool
+  hold_restart : Option tables.mutant.State
+  busy_interrupt_type : tables.common.BusyInterrupt
+  burst_cancellable : Bool
+  burstable : Bool
+  self_hit_cancellable : Bool
+  self_interruptable : Bool
+  reversible : Bool
+  instant_cancellable : Bool
+  force_feintable : Bool
+  can_feint_if_possible : Bool
+  selectable : Bool
+  interrupt_from_string : Slice tables.common.CancelCategory
+  interrupt_into_string : Slice tables.common.CancelCategory
+  hit_cancel_into_string : Slice tables.common.CancelCategory
+  interrupt_exceptions_string : Slice tables.common.CancelCategory
+  hit_cancel_exceptions_string : Slice tables.common.CancelCategory
+  always_usable : Bool
+  allowed_stances_string : Slice tables.common.Stance
+  change_stance_to : Option tables.common.Stance
+  release_opponent_on_startup : Bool
+  release_opponent_on_exit : Bool
+  initiative_effect : Bool
+  initiative_startup_reduction_amount : Std.I32
+  apply_pushback : Bool
+  beats_backdash : Bool
+  no_collision_start_frame : Std.I32
+  no_collision_end_frame : Std.I32
+  can_be_counterhit : Bool
+  tick_priority : Std.I32
+  velocity_forward_meter_gain_multiplier : Option fixed.Fixed
+  whiff_meter_gain_multiplier : Option fixed.Fixed
+  draw_cancel_on_block : Bool
+  draw_cancel_on_block_min_tick : Std.I32
+  action_type : tables.common.ActionType
+  air_type : tables.common.AirType
+  super_level_ : Std.I32
+  supers_used_ : Std.I32
+  super_freeze_ticks_ : Std.I32
+  super_effect_ : Bool
+  scale_combo_meter_ : Bool
+  force_super_effect : Bool
+  super_level : Std.I32
+  supers_used : Std.I32
+  super_freeze_ticks : Std.I32
+  super_effect : Bool
+  scale_combo_meter : Bool
+  release : Bool
+  release_frame : Std.I32
+  use_start_throw_pos : Bool
+  start_throw_pos_x : Std.I32
+  start_throw_pos_y : Std.I32
+  use_release_throw_pos : Bool
+  release_throw_pos_x : Std.I32
+  release_throw_pos_y : Std.I32
+  hitstun_ticks : Std.I32
+  knockback : Option fixed.Fixed
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  aerial_hit_state : tables.base.State
+  grounded_hit_state : tables.base.State
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  reverse : Bool
+  disable_collision : Bool
+  ground_bounce : Bool
+  hits_otg : Bool
+  increment_combo : Bool
+  hard_knockdown : Bool
+  force_grounded : Bool
+  air_ground_bounce : Bool
+  wall_slam : Bool
+  di_modifier : Option fixed.Fixed
+  minimum_grounded_frames : Std.I32
+  damage_proration : Std.I32
+  hit_height : tables.common.HitHeight
+  misc_data : Option tables.common.MiscDataTag
+  forward_throw_state : tables.mutant.State
+  back_throw_state : tables.mutant.State
+  down_throw_state : tables.mutant.State
+  moving_up_only : Bool
+  moving_down_only : Bool
+  force_air_juke : Bool
+  force_air_juke_allow_down : Bool
+  juke_on_block : Bool
+  juke_pip_max_blocks : Std.I32
+  hitboxes : Slice tables.mutant.HitboxRecord
+
+/-- [hustle_core::tables::ninja::State]
+    Source: 'src/tables/ninja.rs', lines 12:0-125:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.ninja.State where
+| AirAttack : tables.ninja.State
+| AirAttackQS : tables.ninja.State
+| AirBackThrow : tables.ninja.State
+| AirDash : tables.ninja.State
+| AirDownThrow : tables.ninja.State
+| AirFireball : tables.ninja.State
+| AirForwardThrow : tables.ninja.State
+| AirGrab : tables.ninja.State
+| AirHold : tables.ninja.State
+| AirUpwardPunch : tables.ninja.State
+| AirUpwardPunchQS : tables.ninja.State
+| BackSway : tables.ninja.State
+| BackThrow : tables.ninja.State
+| Burst : tables.ninja.State
+| Caltrops : tables.ninja.State
+| ChargeDash : tables.ninja.State
+| ChargeDashForward : tables.ninja.State
+| CounterAttack : tables.ninja.State
+| CounterAttackGrab : tables.ninja.State
+| CounterAttackHi : tables.ninja.State
+| CounterAttackLow : tables.ninja.State
+| DashBackward : tables.ninja.State
+| DashBackwardHold : tables.ninja.State
+| DashForward : tables.ninja.State
+| DashStartup : tables.ninja.State
+| DefensiveBurst : tables.ninja.State
+| DiveKick : tables.ninja.State
+| DiveKick2 : tables.ninja.State
+| DiveKickHop : tables.ninja.State
+| DiveKickHopLong : tables.ninja.State
+| DoubleJump : tables.ninja.State
+| DropKick : tables.ninja.State
+| Fall : tables.ninja.State
+| Fireball : tables.ninja.State
+| ForfeitExplosion : tables.ninja.State
+| ForwardThrow : tables.ninja.State
+| Frozen : tables.ninja.State
+| Getup : tables.ninja.State
+| Grab : tables.ninja.State
+| Grabbed : tables.ninja.State
+| GrapplingHook : tables.ninja.State
+| GroundedKick : tables.ninja.State
+| GroundedPunch : tables.ninja.State
+| GroundedPunchQS : tables.ninja.State
+| GroundedSweep : tables.ninja.State
+| GroundedSweepQS : tables.ninja.State
+| HardKnockdown : tables.ninja.State
+| HitGrab : tables.ninja.State
+| HitGrab2 : tables.ninja.State
+| HitGrabFollowup : tables.ninja.State
+| Hold : tables.ninja.State
+| HurtAerial : tables.ninja.State
+| HurtDizzy : tables.ninja.State
+| HurtGrounded : tables.ninja.State
+| InstantCancel : tables.ninja.State
+| IzunaDrop : tables.ninja.State
+| Jump : tables.ninja.State
+| JumpGrab : tables.ninja.State
+| JumpKick : tables.ninja.State
+| JumpKickLanding : tables.ninja.State
+| Knockdown : tables.ninja.State
+| Landing : tables.ninja.State
+| NunChukHeavy : tables.ninja.State
+| NunChukHeavyQS : tables.ninja.State
+| NunChukJump : tables.ninja.State
+| NunChukJumpFollowup : tables.ninja.State
+| NunChukLight : tables.ninja.State
+| NunChukLightHigh : tables.ninja.State
+| NunChukSpin : tables.ninja.State
+| NunChukSpinQS : tables.ninja.State
+| OffensiveBurst : tables.ninja.State
+| PalmStrike : tables.ninja.State
+| ParryAfterWhiff : tables.ninja.State
+| ParryAir : tables.ninja.State
+| ParryAuto : tables.ninja.State
+| ParryHigh : tables.ninja.State
+| ParryLow : tables.ninja.State
+| ParrySuper : tables.ninja.State
+| QuickSlash : tables.ninja.State
+| QuickSlashAir : tables.ninja.State
+| QuickSlashAirNeutral : tables.ninja.State
+| QuickSlashNeutral : tables.ninja.State
+| ReleaseMomentum : tables.ninja.State
+| Roll : tables.ninja.State
+| ShieldAir : tables.ninja.State
+| ShieldHigh : tables.ninja.State
+| ShieldLow : tables.ninja.State
+| SlideKick : tables.ninja.State
+| SlideKick2 : tables.ninja.State
+| SlideKickAir : tables.ninja.State
+| SlideKickOld : tables.ninja.State
+| Start : tables.ninja.State
+| StickyBomb : tables.ninja.State
+| StickyBombThrow : tables.ninja.State
+| Stomp : tables.ninja.State
+| StoreMomentum : tables.ninja.State
+| Substitution : tables.ninja.State
+| Summon : tables.ninja.State
+| SuperFall : tables.ninja.State
+| SuperFallStartup : tables.ninja.State
+| SuperJump : tables.ninja.State
+| Taunt : tables.ninja.State
+| TechRoll : tables.ninja.State
+| ThrowTech : tables.ninja.State
+| Uppercut : tables.ninja.State
+| UppercutAir : tables.ninja.State
+| UppercutLanding : tables.ninja.State
+| Wait : tables.ninja.State
+| WallSlam : tables.ninja.State
+| WhiffInstantCancel : tables.ninja.State
+| WhipWave : tables.ninja.State
+| WhipWaveParriable : tables.ninja.State
+
+/-- [hustle_core::tables::ninja::HitboxRecord]
+    Source: 'src/tables/ninja.rs', lines 243:0-323:1
+    Visibility: public -/
+structure tables.ninja.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.ninja.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.ninja.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::ninja::StateData]
+    Source: 'src/tables/ninja.rs', lines 326:0-471:1
+    Visibility: public -/
+structure tables.ninja.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.ninja.State
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  uses_air_movement : Bool
+  ignore_air_option_use_in_combos : Bool
+  land_cancel : Bool
+  landing_recovery : Std.I32
+  min_land_cancel_frame : Std.I32
+  land_cancel_state : tables.ninja.State
+  iasa_at : Std.I32
+  iasa_on_hit : Std.I32
+  iasa_on_hit_on_block : Bool
+  interrupt_frames : Slice Std.I32
+  throw_techable : Bool
+  interruptible_on_opponent_turn : Bool
+  update_facing_on_exit : Bool
+  dynamic_iasa : Bool
+  backdash_iasa : Bool
+  allow_framecheat : Bool
+  next_state_on_hold : Bool
+  next_state_on_hold_on_opponent_turn : Bool
+  combo_only : Bool
+  neutral_only : Bool
+  end_feint : Bool
+  usable_from_whiff_cancel_if_possible : Bool
+  count_projectile_hits : Bool
+  hold_restart : Option tables.ninja.State
+  busy_interrupt_type : tables.common.BusyInterrupt
+  burst_cancellable : Bool
+  burstable : Bool
+  self_hit_cancellable : Bool
+  self_interruptable : Bool
+  reversible : Bool
+  instant_cancellable : Bool
+  force_feintable : Bool
+  can_feint_if_possible : Bool
+  selectable : Bool
+  interrupt_from_string : Slice tables.common.CancelCategory
+  interrupt_into_string : Slice tables.common.CancelCategory
+  hit_cancel_into_string : Slice tables.common.CancelCategory
+  interrupt_exceptions_string : Slice tables.common.CancelCategory
+  hit_cancel_exceptions_string : Slice tables.common.CancelCategory
+  always_usable : Bool
+  allowed_stances_string : Slice tables.common.Stance
+  change_stance_to : Option tables.common.Stance
+  release_opponent_on_startup : Bool
+  release_opponent_on_exit : Bool
+  initiative_effect : Bool
+  initiative_startup_reduction_amount : Std.I32
+  apply_pushback : Bool
+  beats_backdash : Bool
+  no_collision_start_frame : Std.I32
+  no_collision_end_frame : Std.I32
+  can_be_counterhit : Bool
+  tick_priority : Std.I32
+  velocity_forward_meter_gain_multiplier : Option fixed.Fixed
+  whiff_meter_gain_multiplier : Option fixed.Fixed
+  draw_cancel_on_block : Bool
+  draw_cancel_on_block_min_tick : Std.I32
+  action_type : tables.common.ActionType
+  air_type : tables.common.AirType
+  super_level_ : Std.I32
+  supers_used_ : Std.I32
+  super_freeze_ticks_ : Std.I32
+  super_effect_ : Bool
+  scale_combo_meter_ : Bool
+  force_super_effect : Bool
+  super_level : Std.I32
+  supers_used : Std.I32
+  super_freeze_ticks : Std.I32
+  super_effect : Bool
+  scale_combo_meter : Bool
+  release : Bool
+  release_frame : Std.I32
+  use_start_throw_pos : Bool
+  start_throw_pos_x : Std.I32
+  start_throw_pos_y : Std.I32
+  use_release_throw_pos : Bool
+  release_throw_pos_x : Std.I32
+  release_throw_pos_y : Std.I32
+  hitstun_ticks : Std.I32
+  knockback : Option fixed.Fixed
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  aerial_hit_state : tables.base.State
+  grounded_hit_state : tables.base.State
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  reverse : Bool
+  disable_collision : Bool
+  ground_bounce : Bool
+  hits_otg : Bool
+  increment_combo : Bool
+  hard_knockdown : Bool
+  force_grounded : Bool
+  air_ground_bounce : Bool
+  wall_slam : Bool
+  di_modifier : Option fixed.Fixed
+  minimum_grounded_frames : Std.I32
+  damage_proration : Std.I32
+  hit_height : tables.common.HitHeight
+  misc_data : Option tables.common.MiscDataTag
+  forward_throw_state : tables.ninja.State
+  back_throw_state : tables.ninja.State
+  down_throw_state : tables.ninja.State
+  hitboxes : Slice tables.ninja.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::after_image::State]
+    Source: 'src/tables/projectiles/after_image.rs', lines 12:0-14:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.after_image.State where
+| Default : tables.projectiles.after_image.State
+
+/-- [hustle_core::tables::projectiles::after_image::FallbackState]
+    Source: 'src/tables/projectiles/after_image.rs', lines 21:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.after_image.FallbackState where
+| Own :
+  tables.projectiles.after_image.State →
+  tables.projectiles.after_image.FallbackState
+| Base : tables.base.State → tables.projectiles.after_image.FallbackState
+
+/-- [hustle_core::tables::projectiles::after_image::HitboxRecord]
+    Source: 'src/tables/projectiles/after_image.rs', lines 27:0-107:1
+    Visibility: public -/
+structure tables.projectiles.after_image.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.after_image.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.after_image.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::after_image::StateData]
+    Source: 'src/tables/projectiles/after_image.rs', lines 110:0-151:1
+    Visibility: public -/
+structure tables.projectiles.after_image.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.after_image.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.after_image.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::caustic_spike::State]
+    Source: 'src/tables/projectiles/caustic_spike.rs', lines 12:0-14:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.caustic_spike.State where
+| Default : tables.projectiles.caustic_spike.State
+
+/-- [hustle_core::tables::projectiles::caustic_spike::FallbackState]
+    Source: 'src/tables/projectiles/caustic_spike.rs', lines 21:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.caustic_spike.FallbackState where
+| Own :
+  tables.projectiles.caustic_spike.State →
+  tables.projectiles.caustic_spike.FallbackState
+| Base : tables.base.State → tables.projectiles.caustic_spike.FallbackState
+
+/-- [hustle_core::tables::projectiles::caustic_spike::HitboxRecord]
+    Source: 'src/tables/projectiles/caustic_spike.rs', lines 27:0-107:1
+    Visibility: public -/
+structure tables.projectiles.caustic_spike.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.caustic_spike.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.caustic_spike.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::caustic_spike::StateData]
+    Source: 'src/tables/projectiles/caustic_spike.rs', lines 110:0-151:1
+    Visibility: public -/
+structure tables.projectiles.caustic_spike.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.caustic_spike.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.caustic_spike.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::gas_bomb::State]
+    Source: 'src/tables/projectiles/gas_bomb.rs', lines 12:0-14:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.gas_bomb.State where
+| Default : tables.projectiles.gas_bomb.State
+
+/-- [hustle_core::tables::projectiles::gas_bomb::FallbackState]
+    Source: 'src/tables/projectiles/gas_bomb.rs', lines 21:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.gas_bomb.FallbackState where
+| Own :
+  tables.projectiles.gas_bomb.State →
+  tables.projectiles.gas_bomb.FallbackState
+| Base : tables.base.State → tables.projectiles.gas_bomb.FallbackState
+
+/-- [hustle_core::tables::projectiles::gas_bomb::HitboxRecord]
+    Source: 'src/tables/projectiles/gas_bomb.rs', lines 27:0-107:1
+    Visibility: public -/
+structure tables.projectiles.gas_bomb.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.gas_bomb.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.gas_bomb.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::gas_bomb::StateData]
+    Source: 'src/tables/projectiles/gas_bomb.rs', lines 110:0-151:1
+    Visibility: public -/
+structure tables.projectiles.gas_bomb.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.gas_bomb.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.gas_bomb.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::grappling_hook::State]
+    Source: 'src/tables/projectiles/grappling_hook.rs', lines 12:0-15:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.grappling_hook.State where
+| Default : tables.projectiles.grappling_hook.State
+| Locked : tables.projectiles.grappling_hook.State
+
+/-- [hustle_core::tables::projectiles::grappling_hook::FallbackState]
+    Source: 'src/tables/projectiles/grappling_hook.rs', lines 23:0-26:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.grappling_hook.FallbackState where
+| Own :
+  tables.projectiles.grappling_hook.State →
+  tables.projectiles.grappling_hook.FallbackState
+| Base : tables.base.State → tables.projectiles.grappling_hook.FallbackState
+
+/-- [hustle_core::tables::projectiles::grappling_hook::HitboxRecord]
+    Source: 'src/tables/projectiles/grappling_hook.rs', lines 29:0-109:1
+    Visibility: public -/
+structure tables.projectiles.grappling_hook.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.grappling_hook.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.grappling_hook.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::grappling_hook::StateData]
+    Source: 'src/tables/projectiles/grappling_hook.rs', lines 112:0-153:1
+    Visibility: public -/
+structure tables.projectiles.grappling_hook.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.grappling_hook.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.grappling_hook.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::ground_fire::State]
+    Source: 'src/tables/projectiles/ground_fire.rs', lines 12:0-14:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.ground_fire.State where
+| Default : tables.projectiles.ground_fire.State
+
+/-- [hustle_core::tables::projectiles::ground_fire::FallbackState]
+    Source: 'src/tables/projectiles/ground_fire.rs', lines 21:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.ground_fire.FallbackState where
+| Own :
+  tables.projectiles.ground_fire.State →
+  tables.projectiles.ground_fire.FallbackState
+| Base : tables.base.State → tables.projectiles.ground_fire.FallbackState
+
+/-- [hustle_core::tables::projectiles::ground_fire::HitboxRecord]
+    Source: 'src/tables/projectiles/ground_fire.rs', lines 27:0-107:1
+    Visibility: public -/
+structure tables.projectiles.ground_fire.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.ground_fire.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.ground_fire.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::ground_fire::StateData]
+    Source: 'src/tables/projectiles/ground_fire.rs', lines 110:0-151:1
+    Visibility: public -/
+structure tables.projectiles.ground_fire.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.ground_fire.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.ground_fire.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::ground_fire_loic::State]
+    Source: 'src/tables/projectiles/ground_fire_loic.rs', lines 12:0-14:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.ground_fire_loic.State where
+| Default : tables.projectiles.ground_fire_loic.State
+
+/-- [hustle_core::tables::projectiles::ground_fire_loic::FallbackState]
+    Source: 'src/tables/projectiles/ground_fire_loic.rs', lines 21:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.ground_fire_loic.FallbackState where
+| Own :
+  tables.projectiles.ground_fire_loic.State →
+  tables.projectiles.ground_fire_loic.FallbackState
+| Base :
+  tables.base.State →
+  tables.projectiles.ground_fire_loic.FallbackState
+
+/-- [hustle_core::tables::projectiles::ground_fire_loic::HitboxRecord]
+    Source: 'src/tables/projectiles/ground_fire_loic.rs', lines 27:0-107:1
+    Visibility: public -/
+structure tables.projectiles.ground_fire_loic.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.ground_fire_loic.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.ground_fire_loic.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::ground_fire_loic::StateData]
+    Source: 'src/tables/projectiles/ground_fire_loic.rs', lines 110:0-151:1
+    Visibility: public -/
+structure tables.projectiles.ground_fire_loic.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.ground_fire_loic.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.ground_fire_loic.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::heavy_whip_wave::State]
+    Source: 'src/tables/projectiles/heavy_whip_wave.rs', lines 12:0-14:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.heavy_whip_wave.State where
+| Default : tables.projectiles.heavy_whip_wave.State
+
+/-- [hustle_core::tables::projectiles::heavy_whip_wave::FallbackState]
+    Source: 'src/tables/projectiles/heavy_whip_wave.rs', lines 21:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.heavy_whip_wave.FallbackState where
+| Own :
+  tables.projectiles.heavy_whip_wave.State →
+  tables.projectiles.heavy_whip_wave.FallbackState
+| Base : tables.base.State → tables.projectiles.heavy_whip_wave.FallbackState
+
+/-- [hustle_core::tables::projectiles::heavy_whip_wave::HitboxRecord]
+    Source: 'src/tables/projectiles/heavy_whip_wave.rs', lines 27:0-107:1
+    Visibility: public -/
+structure tables.projectiles.heavy_whip_wave.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.heavy_whip_wave.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.heavy_whip_wave.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::heavy_whip_wave::StateData]
+    Source: 'src/tables/projectiles/heavy_whip_wave.rs', lines 110:0-151:1
+    Visibility: public -/
+structure tables.projectiles.heavy_whip_wave.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.heavy_whip_wave.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.heavy_whip_wave.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::heavy_whip_wave_high::State]
+    Source: 'src/tables/projectiles/heavy_whip_wave_high.rs', lines 12:0-14:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.heavy_whip_wave_high.State where
+| Default : tables.projectiles.heavy_whip_wave_high.State
+
+/-- [hustle_core::tables::projectiles::heavy_whip_wave_high::FallbackState]
+    Source: 'src/tables/projectiles/heavy_whip_wave_high.rs', lines 21:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.heavy_whip_wave_high.FallbackState where
+| Own :
+  tables.projectiles.heavy_whip_wave_high.State →
+  tables.projectiles.heavy_whip_wave_high.FallbackState
+| Base :
+  tables.base.State →
+  tables.projectiles.heavy_whip_wave_high.FallbackState
+
+/-- [hustle_core::tables::projectiles::heavy_whip_wave_high::HitboxRecord]
+    Source: 'src/tables/projectiles/heavy_whip_wave_high.rs', lines 27:0-107:1
+    Visibility: public -/
+structure tables.projectiles.heavy_whip_wave_high.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.heavy_whip_wave_high.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.heavy_whip_wave_high.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::heavy_whip_wave_high::StateData]
+    Source: 'src/tables/projectiles/heavy_whip_wave_high.rs', lines 110:0-151:1
+    Visibility: public -/
+structure tables.projectiles.heavy_whip_wave_high.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.heavy_whip_wave_high.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.heavy_whip_wave_high.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::missile::State]
+    Source: 'src/tables/projectiles/missile.rs', lines 12:0-15:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.missile.State where
+| Default : tables.projectiles.missile.State
+| Flying : tables.projectiles.missile.State
+
+/-- [hustle_core::tables::projectiles::missile::FallbackState]
+    Source: 'src/tables/projectiles/missile.rs', lines 23:0-26:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.missile.FallbackState where
+| Own :
+  tables.projectiles.missile.State →
+  tables.projectiles.missile.FallbackState
+| Base : tables.base.State → tables.projectiles.missile.FallbackState
+
+/-- [hustle_core::tables::projectiles::missile::HitboxRecord]
+    Source: 'src/tables/projectiles/missile.rs', lines 29:0-109:1
+    Visibility: public -/
+structure tables.projectiles.missile.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.missile.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.missile.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::missile::StateData]
+    Source: 'src/tables/projectiles/missile.rs', lines 112:0-153:1
+    Visibility: public -/
+structure tables.projectiles.missile.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.missile.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.missile.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::orbital_strike::State]
+    Source: 'src/tables/projectiles/orbital_strike.rs', lines 12:0-15:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.orbital_strike.State where
+| Default : tables.projectiles.orbital_strike.State
+| Fire : tables.projectiles.orbital_strike.State
+
+/-- [hustle_core::tables::projectiles::orbital_strike::FallbackState]
+    Source: 'src/tables/projectiles/orbital_strike.rs', lines 23:0-26:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.orbital_strike.FallbackState where
+| Own :
+  tables.projectiles.orbital_strike.State →
+  tables.projectiles.orbital_strike.FallbackState
+| Base : tables.base.State → tables.projectiles.orbital_strike.FallbackState
+
+/-- [hustle_core::tables::projectiles::orbital_strike::HitboxRecord]
+    Source: 'src/tables/projectiles/orbital_strike.rs', lines 29:0-109:1
+    Visibility: public -/
+structure tables.projectiles.orbital_strike.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.orbital_strike.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.orbital_strike.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::orbital_strike::StateData]
+    Source: 'src/tables/projectiles/orbital_strike.rs', lines 112:0-153:1
+    Visibility: public -/
+structure tables.projectiles.orbital_strike.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.orbital_strike.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.orbital_strike.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::poison::State]
+    Source: 'src/tables/projectiles/poison.rs', lines 12:0-14:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.poison.State where
+| Default : tables.projectiles.poison.State
+
+/-- [hustle_core::tables::projectiles::poison::FallbackState]
+    Source: 'src/tables/projectiles/poison.rs', lines 21:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.poison.FallbackState where
+| Own :
+  tables.projectiles.poison.State →
+  tables.projectiles.poison.FallbackState
+| Base : tables.base.State → tables.projectiles.poison.FallbackState
+
+/-- [hustle_core::tables::projectiles::poison::HitboxRecord]
+    Source: 'src/tables/projectiles/poison.rs', lines 27:0-107:1
+    Visibility: public -/
+structure tables.projectiles.poison.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.poison.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.poison.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::poison::StateData]
+    Source: 'src/tables/projectiles/poison.rs', lines 110:0-151:1
+    Visibility: public -/
+structure tables.projectiles.poison.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.poison.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.poison.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::robot_grenade::State]
+    Source: 'src/tables/projectiles/robot_grenade.rs', lines 12:0-15:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.robot_grenade.State where
+| Active : tables.projectiles.robot_grenade.State
+| Default : tables.projectiles.robot_grenade.State
+
+/-- [hustle_core::tables::projectiles::robot_grenade::FallbackState]
+    Source: 'src/tables/projectiles/robot_grenade.rs', lines 23:0-26:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.robot_grenade.FallbackState where
+| Own :
+  tables.projectiles.robot_grenade.State →
+  tables.projectiles.robot_grenade.FallbackState
+| Base : tables.base.State → tables.projectiles.robot_grenade.FallbackState
+
+/-- [hustle_core::tables::projectiles::robot_grenade::HitboxRecord]
+    Source: 'src/tables/projectiles/robot_grenade.rs', lines 29:0-109:1
+    Visibility: public -/
+structure tables.projectiles.robot_grenade.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.robot_grenade.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.robot_grenade.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::robot_grenade::StateData]
+    Source: 'src/tables/projectiles/robot_grenade.rs', lines 112:0-153:1
+    Visibility: public -/
+structure tables.projectiles.robot_grenade.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.robot_grenade.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.robot_grenade.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::shockwave::State]
+    Source: 'src/tables/projectiles/shockwave.rs', lines 12:0-15:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.shockwave.State where
+| Default : tables.projectiles.shockwave.State
+| FizzleOut : tables.projectiles.shockwave.State
+
+/-- [hustle_core::tables::projectiles::shockwave::FallbackState]
+    Source: 'src/tables/projectiles/shockwave.rs', lines 23:0-26:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.shockwave.FallbackState where
+| Own :
+  tables.projectiles.shockwave.State →
+  tables.projectiles.shockwave.FallbackState
+| Base : tables.base.State → tables.projectiles.shockwave.FallbackState
+
+/-- [hustle_core::tables::projectiles::shockwave::HitboxRecord]
+    Source: 'src/tables/projectiles/shockwave.rs', lines 29:0-109:1
+    Visibility: public -/
+structure tables.projectiles.shockwave.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.shockwave.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.shockwave.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::shockwave::StateData]
+    Source: 'src/tables/projectiles/shockwave.rs', lines 112:0-153:1
+    Visibility: public -/
+structure tables.projectiles.shockwave.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.shockwave.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.shockwave.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::spark_bomb::State]
+    Source: 'src/tables/projectiles/spark_bomb.rs', lines 12:0-16:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.spark_bomb.State where
+| Armed : tables.projectiles.spark_bomb.State
+| Default : tables.projectiles.spark_bomb.State
+| Explode : tables.projectiles.spark_bomb.State
+
+/-- [hustle_core::tables::projectiles::spark_bomb::FallbackState]
+    Source: 'src/tables/projectiles/spark_bomb.rs', lines 25:0-28:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.spark_bomb.FallbackState where
+| Own :
+  tables.projectiles.spark_bomb.State →
+  tables.projectiles.spark_bomb.FallbackState
+| Base : tables.base.State → tables.projectiles.spark_bomb.FallbackState
+
+/-- [hustle_core::tables::projectiles::spark_bomb::HitboxRecord]
+    Source: 'src/tables/projectiles/spark_bomb.rs', lines 31:0-111:1
+    Visibility: public -/
+structure tables.projectiles.spark_bomb.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.spark_bomb.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.spark_bomb.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::spark_bomb::StateData]
+    Source: 'src/tables/projectiles/spark_bomb.rs', lines 114:0-155:1
+    Visibility: public -/
+structure tables.projectiles.spark_bomb.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.spark_bomb.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.spark_bomb.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::telekinesis_boulder::State]
+    Source: 'src/tables/projectiles/telekinesis_boulder.rs', lines 12:0-17:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.telekinesis_boulder.State where
+| Default : tables.projectiles.telekinesis_boulder.State
+| Drop : tables.projectiles.telekinesis_boulder.State
+| Launch : tables.projectiles.telekinesis_boulder.State
+| LaunchRedirect : tables.projectiles.telekinesis_boulder.State
+
+/-- [hustle_core::tables::projectiles::telekinesis_boulder::FallbackState]
+    Source: 'src/tables/projectiles/telekinesis_boulder.rs', lines 27:0-30:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.telekinesis_boulder.FallbackState where
+| Own :
+  tables.projectiles.telekinesis_boulder.State →
+  tables.projectiles.telekinesis_boulder.FallbackState
+| Base :
+  tables.base.State →
+  tables.projectiles.telekinesis_boulder.FallbackState
+
+/-- [hustle_core::tables::projectiles::telekinesis_boulder::HitboxRecord]
+    Source: 'src/tables/projectiles/telekinesis_boulder.rs', lines 33:0-113:1
+    Visibility: public -/
+structure tables.projectiles.telekinesis_boulder.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.telekinesis_boulder.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.telekinesis_boulder.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::telekinesis_boulder::StateData]
+    Source: 'src/tables/projectiles/telekinesis_boulder.rs', lines 116:0-157:1
+    Visibility: public -/
+structure tables.projectiles.telekinesis_boulder.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.telekinesis_boulder.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.telekinesis_boulder.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::vile_clutch::State]
+    Source: 'src/tables/projectiles/vile_clutch.rs', lines 12:0-14:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.vile_clutch.State where
+| Default : tables.projectiles.vile_clutch.State
+
+/-- [hustle_core::tables::projectiles::vile_clutch::FallbackState]
+    Source: 'src/tables/projectiles/vile_clutch.rs', lines 21:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.vile_clutch.FallbackState where
+| Own :
+  tables.projectiles.vile_clutch.State →
+  tables.projectiles.vile_clutch.FallbackState
+| Base : tables.base.State → tables.projectiles.vile_clutch.FallbackState
+
+/-- [hustle_core::tables::projectiles::vile_clutch::HitboxRecord]
+    Source: 'src/tables/projectiles/vile_clutch.rs', lines 27:0-107:1
+    Visibility: public -/
+structure tables.projectiles.vile_clutch.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.vile_clutch.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.vile_clutch.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::vile_clutch::StateData]
+    Source: 'src/tables/projectiles/vile_clutch.rs', lines 110:0-151:1
+    Visibility: public -/
+structure tables.projectiles.vile_clutch.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.vile_clutch.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.vile_clutch.HitboxRecord
+
+/-- [hustle_core::tables::projectiles::whip_wave::State]
+    Source: 'src/tables/projectiles/whip_wave.rs', lines 12:0-14:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.whip_wave.State where
+| Default : tables.projectiles.whip_wave.State
+
+/-- [hustle_core::tables::projectiles::whip_wave::FallbackState]
+    Source: 'src/tables/projectiles/whip_wave.rs', lines 21:0-24:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.projectiles.whip_wave.FallbackState where
+| Own :
+  tables.projectiles.whip_wave.State →
+  tables.projectiles.whip_wave.FallbackState
+| Base : tables.base.State → tables.projectiles.whip_wave.FallbackState
+
+/-- [hustle_core::tables::projectiles::whip_wave::HitboxRecord]
+    Source: 'src/tables/projectiles/whip_wave.rs', lines 27:0-107:1
+    Visibility: public -/
+structure tables.projectiles.whip_wave.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.projectiles.whip_wave.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.projectiles.whip_wave.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::projectiles::whip_wave::StateData]
+    Source: 'src/tables/projectiles/whip_wave.rs', lines 110:0-151:1
+    Visibility: public -/
+structure tables.projectiles.whip_wave.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.projectiles.whip_wave.FallbackState
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  hitboxes : Slice tables.projectiles.whip_wave.HitboxRecord
+
+/-- [hustle_core::tables::robot::State]
+    Source: 'src/tables/robot.rs', lines 12:0-132:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.robot.State where
+| AirBackThrow : tables.robot.State
+| AirDash : tables.robot.State
+| AirDownThrow : tables.robot.State
+| AirForwardThrow : tables.robot.State
+| AirGrab : tables.robot.State
+| AirHold : tables.robot.State
+| AirKick : tables.robot.State
+| BackThrow : tables.robot.State
+| Blast : tables.robot.State
+| Burst : tables.robot.State
+| Chainsaw : tables.robot.State
+| ChargeDash : tables.robot.State
+| ChargeDashForward : tables.robot.State
+| ChargedStep : tables.robot.State
+| ClapJump : tables.robot.State
+| ClapLand : tables.robot.State
+| CommandGrab : tables.robot.State
+| CornerCarryGrab : tables.robot.State
+| CornerCarryGrabAir : tables.robot.State
+| CornerCarryHitGrab : tables.robot.State
+| CornerCarryHitGrabAir : tables.robot.State
+| CornerCarryHold : tables.robot.State
+| CornerCarryRelease : tables.robot.State
+| CounterAttack : tables.robot.State
+| CounterAttackGrab : tables.robot.State
+| CounterAttackHi : tables.robot.State
+| CounterAttackLow : tables.robot.State
+| DashBackward : tables.robot.State
+| DashBackwardHold : tables.robot.State
+| DashForward : tables.robot.State
+| DashStartup : tables.robot.State
+| DefensiveBurst : tables.robot.State
+| DisableLoic : tables.robot.State
+| DisembowelGrab : tables.robot.State
+| DisembowelGrabFollowup : tables.robot.State
+| DisembowelHitGrab : tables.robot.State
+| DisembowelHitGrabNeutral : tables.robot.State
+| DoubleJump : tables.robot.State
+| Drive : tables.robot.State
+| DriveBackward : tables.robot.State
+| DriveBoost : tables.robot.State
+| DriveCancel : tables.robot.State
+| DriveDrift : tables.robot.State
+| DriveForward : tables.robot.State
+| DriveIdle : tables.robot.State
+| DriveJump : tables.robot.State
+| DriveWheelie : tables.robot.State
+| DriveWheelieGrab : tables.robot.State
+| DriveWheelieThrow : tables.robot.State
+| EarthquakeThrow : tables.robot.State
+| EyeBeam : tables.robot.State
+| EyeBeamAir : tables.robot.State
+| Fall : tables.robot.State
+| FastDriveCancel : tables.robot.State
+| Flamethrower : tables.robot.State
+| Flamethrower2 : tables.robot.State
+| ForfeitExplosion : tables.robot.State
+| ForwardThrow : tables.robot.State
+| Frozen : tables.robot.State
+| Galvanize : tables.robot.State
+| Getup : tables.robot.State
+| Grab : tables.robot.State
+| Grabbed : tables.robot.State
+| Grenade : tables.robot.State
+| GroundPound : tables.robot.State
+| GroundSlam : tables.robot.State
+| HardKnockdown : tables.robot.State
+| Hold : tables.robot.State
+| HurtAerial : tables.robot.State
+| HurtDizzy : tables.robot.State
+| HurtGrounded : tables.robot.State
+| InstantCancel : tables.robot.State
+| Jump : tables.robot.State
+| JumpGrab : tables.robot.State
+| KillProcess : tables.robot.State
+| KillProcessLanding : tables.robot.State
+| KillProcessSpin : tables.robot.State
+| Knockdown : tables.robot.State
+| LOIC : tables.robot.State
+| Landing : tables.robot.State
+| Lariat : tables.robot.State
+| Magnetize : tables.robot.State
+| Missile : tables.robot.State
+| OffensiveBurst : tables.robot.State
+| OverflowFollowup : tables.robot.State
+| OverflowGrab : tables.robot.State
+| OverflowGrabOld : tables.robot.State
+| ParryAfterWhiff : tables.robot.State
+| ParryAir : tables.robot.State
+| ParryAuto : tables.robot.State
+| ParryHigh : tables.robot.State
+| ParryLow : tables.robot.State
+| ParrySuper : tables.robot.State
+| Plummet : tables.robot.State
+| Propel : tables.robot.State
+| Punch : tables.robot.State
+| Return : tables.robot.State
+| Roll : tables.robot.State
+| SawBlade : tables.robot.State
+| ShieldAir : tables.robot.State
+| ShieldHigh : tables.robot.State
+| ShieldLow : tables.robot.State
+| SideKick : tables.robot.State
+| SideKickAir : tables.robot.State
+| Slap : tables.robot.State
+| Start : tables.robot.State
+| Step : tables.robot.State
+| SuperFall : tables.robot.State
+| SuperFallStartup : tables.robot.State
+| SuperJump : tables.robot.State
+| Taunt : tables.robot.State
+| TechRoll : tables.robot.State
+| ThrowTech : tables.robot.State
+| TryCatchGroundSlam : tables.robot.State
+| UnDriveCancel : tables.robot.State
+| Vacuum : tables.robot.State
+| Wait : tables.robot.State
+| WallSlam : tables.robot.State
+| WhiffInstantCancel : tables.robot.State
+
+/-- [hustle_core::tables::robot::HitboxRecord]
+    Source: 'src/tables/robot.rs', lines 257:0-337:1
+    Visibility: public -/
+structure tables.robot.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.robot.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.robot.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::robot::StateData]
+    Source: 'src/tables/robot.rs', lines 340:0-489:1
+    Visibility: public -/
+structure tables.robot.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.robot.State
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  uses_air_movement : Bool
+  ignore_air_option_use_in_combos : Bool
+  land_cancel : Bool
+  landing_recovery : Std.I32
+  min_land_cancel_frame : Std.I32
+  land_cancel_state : tables.robot.State
+  iasa_at : Std.I32
+  iasa_on_hit : Std.I32
+  iasa_on_hit_on_block : Bool
+  interrupt_frames : Slice Std.I32
+  throw_techable : Bool
+  interruptible_on_opponent_turn : Bool
+  update_facing_on_exit : Bool
+  dynamic_iasa : Bool
+  backdash_iasa : Bool
+  allow_framecheat : Bool
+  next_state_on_hold : Bool
+  next_state_on_hold_on_opponent_turn : Bool
+  combo_only : Bool
+  neutral_only : Bool
+  end_feint : Bool
+  usable_from_whiff_cancel_if_possible : Bool
+  count_projectile_hits : Bool
+  hold_restart : Option tables.robot.State
+  busy_interrupt_type : tables.common.BusyInterrupt
+  burst_cancellable : Bool
+  burstable : Bool
+  self_hit_cancellable : Bool
+  self_interruptable : Bool
+  reversible : Bool
+  instant_cancellable : Bool
+  force_feintable : Bool
+  can_feint_if_possible : Bool
+  selectable : Bool
+  interrupt_from_string : Slice tables.common.CancelCategory
+  interrupt_into_string : Slice tables.common.CancelCategory
+  hit_cancel_into_string : Slice tables.common.CancelCategory
+  interrupt_exceptions_string : Slice tables.common.CancelCategory
+  hit_cancel_exceptions_string : Slice tables.common.CancelCategory
+  always_usable : Bool
+  allowed_stances_string : Slice tables.common.Stance
+  change_stance_to : Option tables.common.Stance
+  release_opponent_on_startup : Bool
+  release_opponent_on_exit : Bool
+  initiative_effect : Bool
+  initiative_startup_reduction_amount : Std.I32
+  apply_pushback : Bool
+  beats_backdash : Bool
+  no_collision_start_frame : Std.I32
+  no_collision_end_frame : Std.I32
+  can_be_counterhit : Bool
+  tick_priority : Std.I32
+  velocity_forward_meter_gain_multiplier : Option fixed.Fixed
+  whiff_meter_gain_multiplier : Option fixed.Fixed
+  draw_cancel_on_block : Bool
+  draw_cancel_on_block_min_tick : Std.I32
+  action_type : tables.common.ActionType
+  air_type : tables.common.AirType
+  super_level_ : Std.I32
+  supers_used_ : Std.I32
+  super_freeze_ticks_ : Std.I32
+  super_effect_ : Bool
+  scale_combo_meter_ : Bool
+  force_super_effect : Bool
+  super_level : Std.I32
+  supers_used : Std.I32
+  super_freeze_ticks : Std.I32
+  super_effect : Bool
+  scale_combo_meter : Bool
+  release : Bool
+  release_frame : Std.I32
+  use_start_throw_pos : Bool
+  start_throw_pos_x : Std.I32
+  start_throw_pos_y : Std.I32
+  use_release_throw_pos : Bool
+  release_throw_pos_x : Std.I32
+  release_throw_pos_y : Std.I32
+  hitstun_ticks : Std.I32
+  knockback : Option fixed.Fixed
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  aerial_hit_state : tables.base.State
+  grounded_hit_state : tables.base.State
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  reverse : Bool
+  disable_collision : Bool
+  ground_bounce : Bool
+  hits_otg : Bool
+  increment_combo : Bool
+  hard_knockdown : Bool
+  force_grounded : Bool
+  air_ground_bounce : Bool
+  wall_slam : Bool
+  di_modifier : Option fixed.Fixed
+  minimum_grounded_frames : Std.I32
+  damage_proration : Std.I32
+  hit_height : tables.common.HitHeight
+  misc_data : Option tables.common.MiscDataTag
+  forward_throw_state : tables.robot.State
+  back_throw_state : tables.robot.State
+  down_throw_state : tables.robot.State
+  is_super : Bool
+  can_fly : Bool
+  throw_invuln_frames : Std.I32
+  super_scale_combo_meter : Bool
+  hitboxes : Slice tables.robot.HitboxRecord
+
+/-- [hustle_core::tables::wizard::State]
+    Source: 'src/tables/wizard.rs', lines 12:0-108:1
+    Visibility: public -/
+@[discriminant isize]
+inductive tables.wizard.State where
+| AirBackThrow : tables.wizard.State
+| AirDash : tables.wizard.State
+| AirDownThrow : tables.wizard.State
+| AirForwardThrow : tables.wizard.State
+| AirGrab : tables.wizard.State
+| AirHold : tables.wizard.State
+| AirKick : tables.wizard.State
+| BackThrow : tables.wizard.State
+| BoltOfMagma : tables.wizard.State
+| Burst : tables.wizard.State
+| ChargeDash : tables.wizard.State
+| ChargeDashForward : tables.wizard.State
+| Combust : tables.wizard.State
+| ConfusingTouch : tables.wizard.State
+| ConfusingTouch2 : tables.wizard.State
+| ConjureStorm : tables.wizard.State
+| ConjureWeapon : tables.wizard.State
+| CounterAttack : tables.wizard.State
+| CounterAttackGrab : tables.wizard.State
+| CounterAttackHi : tables.wizard.State
+| CounterAttackLow : tables.wizard.State
+| DashBackward : tables.wizard.State
+| DashBackwardHold : tables.wizard.State
+| DashForward : tables.wizard.State
+| DashStartup : tables.wizard.State
+| DefensiveBurst : tables.wizard.State
+| DoubleJump : tables.wizard.State
+| DrawMoisture : tables.wizard.State
+| Fall : tables.wizard.State
+| FlameWave : tables.wizard.State
+| ForfeitExplosion : tables.wizard.State
+| ForwardThrow : tables.wizard.State
+| Frozen : tables.wizard.State
+| Getup : tables.wizard.State
+| Geyser : tables.wizard.State
+| Grab : tables.wizard.State
+| Grabbed : tables.wizard.State
+| Gust : tables.wizard.State
+| HardKnockdown : tables.wizard.State
+| Hold : tables.wizard.State
+| HurtAerial : tables.wizard.State
+| HurtDizzy : tables.wizard.State
+| HurtGrounded : tables.wizard.State
+| IceSpikeAir : tables.wizard.State
+| IceSpikeAir2 : tables.wizard.State
+| IceSpikeGround : tables.wizard.State
+| InstantCancel : tables.wizard.State
+| Jump : tables.wizard.State
+| JumpGrab : tables.wizard.State
+| Kick : tables.wizard.State
+| Knockdown : tables.wizard.State
+| Landing : tables.wizard.State
+| Launch : tables.wizard.State
+| Liftoff : tables.wizard.State
+| LiftoffSpark : tables.wizard.State
+| LockOrb : tables.wizard.State
+| MagicMissile : tables.wizard.State
+| ManaStrike : tables.wizard.State
+| OffensiveBurst : tables.wizard.State
+| Orb : tables.wizard.State
+| OrbPush : tables.wizard.State
+| OrbTeleport : tables.wizard.State
+| OrbTeleportCombo : tables.wizard.State
+| OrbTether : tables.wizard.State
+| OrbTetherAir : tables.wizard.State
+| OrbUntether : tables.wizard.State
+| ParryAfterWhiff : tables.wizard.State
+| ParryAir : tables.wizard.State
+| ParryAuto : tables.wizard.State
+| ParryHigh : tables.wizard.State
+| ParryLow : tables.wizard.State
+| ParrySuper : tables.wizard.State
+| Roll : tables.wizard.State
+| Sandstorm : tables.wizard.State
+| ShieldAir : tables.wizard.State
+| ShieldHigh : tables.wizard.State
+| ShieldLow : tables.wizard.State
+| SparkBomb : tables.wizard.State
+| Start : tables.wizard.State
+| SuperFall : tables.wizard.State
+| SuperFallStartup : tables.wizard.State
+| SuperJump : tables.wizard.State
+| SuperLaunch : tables.wizard.State
+| Taunt : tables.wizard.State
+| TechRoll : tables.wizard.State
+| Telekinesis : tables.wizard.State
+| ThrowTech : tables.wizard.State
+| TomeSlap : tables.wizard.State
+| UnlockOrb : tables.wizard.State
+| VileClutch : tables.wizard.State
+| Wait : tables.wizard.State
+| WallSlam : tables.wizard.State
+| WhiffInstantCancel : tables.wizard.State
+| WindForce : tables.wizard.State
+| ZephyrThrow : tables.wizard.State
+
+/-- [hustle_core::tables::wizard::HitboxRecord]
+    Source: 'src/tables/wizard.rs', lines 209:0-289:1
+    Visibility: public -/
+structure tables.wizard.HitboxRecord where
+  kind : tables.common.HitboxKind
+  activated : Bool
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  minimum_damage : Std.I32
+  chip_damage_modifier : Option fixed.Fixed
+  hitbox_type : tables.common.HitboxType
+  hitstun_ticks : Std.I32
+  combo_hitstun_ticks : Std.I32
+  hitlag_ticks : Std.I32
+  victim_hitlag : Std.I32
+  combo_victim_hitlag : Std.I32
+  damage_proration : Std.I32
+  scale_combo : Bool
+  combo_scaling_amount : Std.I32
+  cancellable : Bool
+  increment_combo : Bool
+  hits_otg : Bool
+  hits_vs_standing : Bool
+  hits_vs_grounded : Bool
+  hits_vs_aerial : Bool
+  can_counter_hit : Bool
+  di_modifier : Option fixed.Fixed
+  sdi_modifier : Option fixed.Fixed
+  meter_gain_modifier : Option fixed.Fixed
+  parry_meter_gain : Std.I32
+  ignore_armor : Bool
+  followup_state : Option tables.wizard.State
+  force_grounded : Bool
+  can_clash : Bool
+  hits_vs_dizzy : Bool
+  beats_grab : Bool
+  hits_projectiles : Bool
+  ignore_projectile_armor : Bool
+  allowed_to_hit_own_team : Bool
+  guard_break : Bool
+  guard_break_proration : Std.I32
+  block_punishable : Bool
+  parriable : Bool
+  block_cancel_allowed : Bool
+  plus_frames : Std.I32
+  hit_height : tables.common.HitHeight
+  priority : Std.I32
+  group : Std.I32
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockback : Option fixed.Fixed
+  launch_reversible : Bool
+  vacuum : Bool
+  send_away_from_center : Bool
+  block_pushback_modifier : Option fixed.Fixed
+  block_pushback_reversible : Bool
+  block_reverse_pushback_modifier : Option fixed.Fixed
+  pushback_x : Option fixed.Fixed
+  grounded_hit_state : tables.base.State
+  aerial_hit_state : tables.base.State
+  minimum_grounded_frames : Std.I32
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  hard_knockdown : Bool
+  disable_collision : Bool
+  air_ground_bounce : Bool
+  ground_bounce : Bool
+  ground_bounce_knockback_modifier : Option fixed.Fixed
+  wall_slam : Bool
+  x : Std.I32
+  y : Std.I32
+  width : Std.I32
+  height : Std.I32
+  start_tick : Std.I32
+  active_ticks : Std.I32
+  always_on : Bool
+  looping : Bool
+  loop_active_ticks : Std.I32
+  loop_inactive_ticks : Std.I32
+  misc_data : Option tables.common.MiscDataTag
+  throw_state : Option tables.wizard.State
+  to_x : Std.I32
+  to_y : Std.I32
+
+/-- [hustle_core::tables::wizard::StateData]
+    Source: 'src/tables/wizard.rs', lines 292:0-440:1
+    Visibility: public -/
+structure tables.wizard.StateData where
+  apply_forces : Bool
+  apply_fric : Bool
+  apply_grav : Bool
+  reset_momentum : Bool
+  reset_x_momentum : Bool
+  reset_y_momentum : Bool
+  apply_custom_x_fric : Bool
+  apply_custom_y_fric : Bool
+  apply_custom_grav : Bool
+  apply_forces_no_limit : Bool
+  custom_x_fric : Option fixed.Fixed
+  custom_y_fric : Option fixed.Fixed
+  custom_grav : Option fixed.Fixed
+  custom_grav_max_fall_speed : Option fixed.Fixed
+  apply_custom_limits : Bool
+  custom_max_air_speed : Option fixed.Fixed
+  custom_max_ground_speed : Option fixed.Fixed
+  anim_length : Std.I32
+  endless : Bool
+  disable_at_end : Bool
+  force_dir_x : Option fixed.Fixed
+  force_dir_y : Option fixed.Fixed
+  force_speed : Option fixed.Fixed
+  force_tick : Std.I32
+  enter_force_dir_x : Option fixed.Fixed
+  enter_force_dir_y : Option fixed.Fixed
+  enter_force_speed : Option fixed.Fixed
+  projectile_scene : Option tables.common.ProjectileKind
+  projectile_tick : Std.I32
+  projectile_pos_x : Std.I32
+  projectile_pos_y : Std.I32
+  projectile_local_pos : Bool
+  projectile_match_facing : Bool
+  extra_parry_hitlag : Std.I32
+  flip_frame : Std.I32
+  force_same_direction_as_previous_state : Bool
+  earliest_hitbox : Std.I32
+  fallback_state : Option tables.wizard.State
+  throw_positions : Slice tables.common.ThrowPositionEntry
+  uses_air_movement : Bool
+  ignore_air_option_use_in_combos : Bool
+  land_cancel : Bool
+  landing_recovery : Std.I32
+  min_land_cancel_frame : Std.I32
+  land_cancel_state : tables.wizard.State
+  iasa_at : Std.I32
+  iasa_on_hit : Std.I32
+  iasa_on_hit_on_block : Bool
+  interrupt_frames : Slice Std.I32
+  throw_techable : Bool
+  interruptible_on_opponent_turn : Bool
+  update_facing_on_exit : Bool
+  dynamic_iasa : Bool
+  backdash_iasa : Bool
+  allow_framecheat : Bool
+  next_state_on_hold : Bool
+  next_state_on_hold_on_opponent_turn : Bool
+  combo_only : Bool
+  neutral_only : Bool
+  end_feint : Bool
+  usable_from_whiff_cancel_if_possible : Bool
+  count_projectile_hits : Bool
+  hold_restart : Option tables.wizard.State
+  busy_interrupt_type : tables.common.BusyInterrupt
+  burst_cancellable : Bool
+  burstable : Bool
+  self_hit_cancellable : Bool
+  self_interruptable : Bool
+  reversible : Bool
+  instant_cancellable : Bool
+  force_feintable : Bool
+  can_feint_if_possible : Bool
+  selectable : Bool
+  interrupt_from_string : Slice tables.common.CancelCategory
+  interrupt_into_string : Slice tables.common.CancelCategory
+  hit_cancel_into_string : Slice tables.common.CancelCategory
+  interrupt_exceptions_string : Slice tables.common.CancelCategory
+  hit_cancel_exceptions_string : Slice tables.common.CancelCategory
+  always_usable : Bool
+  allowed_stances_string : Slice tables.common.Stance
+  change_stance_to : Option tables.common.Stance
+  release_opponent_on_startup : Bool
+  release_opponent_on_exit : Bool
+  initiative_effect : Bool
+  initiative_startup_reduction_amount : Std.I32
+  apply_pushback : Bool
+  beats_backdash : Bool
+  no_collision_start_frame : Std.I32
+  no_collision_end_frame : Std.I32
+  can_be_counterhit : Bool
+  tick_priority : Std.I32
+  velocity_forward_meter_gain_multiplier : Option fixed.Fixed
+  whiff_meter_gain_multiplier : Option fixed.Fixed
+  draw_cancel_on_block : Bool
+  draw_cancel_on_block_min_tick : Std.I32
+  action_type : tables.common.ActionType
+  air_type : tables.common.AirType
+  super_level_ : Std.I32
+  supers_used_ : Std.I32
+  super_freeze_ticks_ : Std.I32
+  super_effect_ : Bool
+  scale_combo_meter_ : Bool
+  force_super_effect : Bool
+  super_level : Std.I32
+  supers_used : Std.I32
+  super_freeze_ticks : Std.I32
+  super_effect : Bool
+  scale_combo_meter : Bool
+  release : Bool
+  release_frame : Std.I32
+  use_start_throw_pos : Bool
+  start_throw_pos_x : Std.I32
+  start_throw_pos_y : Std.I32
+  use_release_throw_pos : Bool
+  release_throw_pos_x : Std.I32
+  release_throw_pos_y : Std.I32
+  hitstun_ticks : Std.I32
+  knockback : Option fixed.Fixed
+  dir_x : Option fixed.Fixed
+  dir_y : Option fixed.Fixed
+  knockdown : Bool
+  knockdown_extends_hitstun : Bool
+  aerial_hit_state : tables.base.State
+  grounded_hit_state : tables.base.State
+  damage : Std.I32
+  damage_in_combo : Std.I32
+  reverse : Bool
+  disable_collision : Bool
+  ground_bounce : Bool
+  hits_otg : Bool
+  increment_combo : Bool
+  hard_knockdown : Bool
+  force_grounded : Bool
+  air_ground_bounce : Bool
+  wall_slam : Bool
+  di_modifier : Option fixed.Fixed
+  minimum_grounded_frames : Std.I32
+  damage_proration : Std.I32
+  hit_height : tables.common.HitHeight
+  misc_data : Option tables.common.MiscDataTag
+  forward_throw_state : tables.wizard.State
+  back_throw_state : tables.wizard.State
+  down_throw_state : tables.wizard.State
+  trigger_orb_attack : Bool
+  trigger_orb_type : Option tables.common.OrbTriggerType
+  trigger_orb_delay : Std.I32
+  hitboxes : Slice tables.wizard.HitboxRecord
+
 end hustle_core
