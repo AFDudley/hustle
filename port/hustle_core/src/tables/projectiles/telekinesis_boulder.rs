@@ -8,7 +8,7 @@ use crate::fixed::Fixed;
 use crate::tables::common::*;
 use crate::tables::base;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy)]
 pub enum State {
     Default,
     Drop,
@@ -23,13 +23,13 @@ pub const ALL_STATES: [State; 4] = [
     State::LaunchRedirect,
 ];
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy)]
 pub enum FallbackState {
     Own(State),
     Base(base::State),
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct HitboxRecord {
     pub kind: HitboxKind,
     pub activated: bool,
@@ -112,7 +112,7 @@ pub struct HitboxRecord {
     pub to_y: i32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct StateData {
     pub apply_forces: bool,
     pub apply_fric: bool,

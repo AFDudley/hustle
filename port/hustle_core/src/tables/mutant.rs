@@ -8,7 +8,7 @@ use crate::fixed::Fixed;
 use crate::tables::common::*;
 use crate::tables::base;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy)]
 pub enum State {
     AcidSlashH,
     AcidSlashJ,
@@ -211,7 +211,7 @@ pub const ALL_STATES: [State; 98] = [
     State::WhiffInstantCancel,
 ];
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct HitboxRecord {
     pub kind: HitboxKind,
     pub activated: bool,
@@ -294,7 +294,7 @@ pub struct HitboxRecord {
     pub to_y: i32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct StateData {
     pub apply_forces: bool,
     pub apply_fric: bool,

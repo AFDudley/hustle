@@ -10,7 +10,7 @@
 See `tools/tablegen/README.md` for the schema and the kept/dropped field
 lists. See `schema.py` for the field manifests this module renders.
 
-Usage: gen.py REPO_ROOT OUT_TABLES_DIR OUT_DUMP_MAIN OUT_MANIFEST
+Usage: gen.py REPO_ROOT OUT_TABLES_DIR OUT_DUMP_MAIN OUT_MANIFEST OUT_OPAQUE_PATTERNS
 """
 from __future__ import annotations
 
@@ -724,7 +724,7 @@ def emit_scope_rs(scope: Scope) -> str:
     base_import = "" if scope.key == "base" else "use crate::tables::base;"
     out = [HEADER, "", "use crate::fixed::Fixed;", "use crate::tables::common::*;", base_import, ""]
 
-    out.append("#[derive(Clone, Copy, PartialEq, Eq, Debug)]")
+    out.append("#[derive(Clone, Copy)]")
     out.append("pub enum State {")
     for e in scope.states:
         out.append(f"    {rust_variant(e.name)},")
@@ -743,20 +743,20 @@ def emit_scope_rs(scope: Scope) -> str:
         # names (checked against every `.tscn` occurrence). The real
         # value can be either, so this wraps both instead of guessing
         # one.
-        out.append("#[derive(Clone, Copy, PartialEq, Eq, Debug)]")
+        out.append("#[derive(Clone, Copy)]")
         out.append("pub enum FallbackState {")
         out.append("    Own(State),")
         out.append("    Base(base::State),")
         out.append("}")
         out.append("")
-    out.append("#[derive(Clone, Copy, Debug)]")
+    out.append("#[derive(Clone, Copy)]")
     out.append("pub struct HitboxRecord {")
     out.append("    pub kind: HitboxKind,")
     for name, tag in HITBOX_RECORD_FIELDS:
         out.append(f"    pub {rust_field(name)}: {rust_type(tag, scope.key == 'base')},")
     out.append("}")
     out.append("")
-    out.append("#[derive(Clone, Copy, Debug)]")
+    out.append("#[derive(Clone, Copy)]")
     out.append("pub struct StateData {")
     for name, tag in field_list:
         field_type = "Option<FallbackState>" if name == "fallback_state" and scope.kind == "projectile" else rust_type(tag, scope.key == 'base')
@@ -813,7 +813,7 @@ def emit_common_rs(cancel_order, stance_order, misc_order, orb_order, projectile
     out = [HEADER, "", "#![allow(dead_code)]", "", "use crate::fixed::Fixed;", ""]
 
     def emit_enum(name, variants):
-        out.append("#[derive(Clone, Copy, PartialEq, Eq, Debug)]")
+        out.append("#[derive(Clone, Copy)]")
         out.append(f"pub enum {name} {{")
         for v in variants:
             out.append(f"    {v},")
@@ -849,7 +849,7 @@ def emit_common_rs(cancel_order, stance_order, misc_order, orb_order, projectile
     assert len(set(throw_anim_variants)) == len(throw_anim_variants), throw_anim_variants
     emit_enum("ThrowAnimation", throw_anim_variants)
 
-    out.append("#[derive(Clone, Copy, Debug)]")
+    out.append("#[derive(Clone, Copy)]")
     out.append("pub struct ThrowPositionEntry {")
     out.append("    pub animation: ThrowAnimation,")
     out.append("    pub frame: i32,")
@@ -862,13 +862,13 @@ def emit_common_rs(cancel_order, stance_order, misc_order, orb_order, projectile
     out.append("/// none of the five characters' own root scripts assigns `MAX_HEALTH`.")
     out.append("pub const MAX_HEALTH: i32 = 1500;")
     out.append("")
-    out.append("#[derive(Clone, Copy, Debug)]")
+    out.append("#[derive(Clone, Copy)]")
     out.append("pub struct FighterRootConstants {")
     for name, tag in schema.FIGHTER_ROOT_FIELDS:
         out.append(f"    pub {rust_field(name)}: {rust_type(tag)},")
     out.append("}")
     out.append("")
-    out.append("#[derive(Clone, Copy, Debug)]")
+    out.append("#[derive(Clone, Copy)]")
     out.append("pub struct ProjectileRootConstants {")
     for name, tag in schema.PROJECTILE_ROOT_FIELDS:
         out.append(f"    pub {rust_field(name)}: {rust_type(tag)},")
@@ -1089,13 +1089,43 @@ def build_manifest(scopes: dict[str, Scope], character_keys, projectile_keys) ->
     }
 
 
+def emit_opaque_patterns(scopes: dict[str, Scope], character_keys: list[str], projectile_keys: list[str]) -> str:
+    """One Charon CLI token per line: `--opaque X`/`--start-from X`/
+    `--include X` pairs that mark every table data function and large
+    const opaque (so Aeneas does not walk their bodies -- see
+    tools/lean_check/README.md, "port/hustle_core, the tables slice")
+    while keeping the table's own types transparent. `--start-from`
+    makes each opaque item its own translation root: without it,
+    nothing outside the (now unexplored) module ever reaches it, and
+    Aeneas emits no declaration for it at all, opaque or otherwise."""
+    lines = ["--start-from", "crate"]
+    all_keys = [(k, k) for k in character_keys] + [(k, f"projectiles::{k}") for k in projectile_keys]
+    for key, modpath in all_keys:
+        scope = scopes[key]
+        base = f"hustle_core::tables::{modpath}"
+        lines += ["--opaque", base]
+        item_names = ["state_data", "ROOT", "ALL_STATES"]
+        for e in scope.states:
+            if e.hitboxes:
+                item_names.append(f"HITBOXES_{rust_variant(e.name).upper()}")
+        for item in item_names:
+            lines += ["--start-from", f"{base}::{item}", "--opaque", f"{base}::{item}"]
+        type_names = ["State", "StateData", "HitboxRecord"]
+        if scope.kind == "projectile":
+            type_names.append("FallbackState")
+        for t in type_names:
+            lines += ["--include", f"{base}::{t}"]
+    return "\n".join(lines) + "\n"
+
+
 def main() -> None:
     global REPO, BASE_STATE_NAMES, PROJECTILE_KEY_BY_RESPATH, PROJECTILE_VARIANT_BY_RESPATH
-    repo_root, out_tables_dir, out_dump_main, out_manifest = sys.argv[1:5]
+    repo_root, out_tables_dir, out_dump_main, out_manifest, out_opaque = sys.argv[1:6]
     REPO = Path(repo_root).resolve()
     out_tables_dir = Path(out_tables_dir)
     out_dump_main = Path(out_dump_main)
     out_manifest = Path(out_manifest)
+    out_opaque = Path(out_opaque)
     setup_paths()
 
     _registry.update(schema.build_class_registry(REPO))
@@ -1174,6 +1204,10 @@ def main() -> None:
     manifest = build_manifest(scopes, character_keys, projectile_keys)
     out_manifest.parent.mkdir(parents=True, exist_ok=True)
     out_manifest.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+
+    out_opaque.parent.mkdir(parents=True, exist_ok=True)
+    out_opaque.write_text(emit_opaque_patterns(scopes, character_keys, projectile_keys))
+
 
     print(
         f"[tablegen] {len(character_keys)} character scopes, {len(projectile_keys)} projectile scopes, "

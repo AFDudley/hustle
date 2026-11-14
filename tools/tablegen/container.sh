@@ -59,7 +59,8 @@ podman run --rm --cpu-quota 800000 --cpu-period 100000 \
   -v "$repo:/repo:ro" \
   -v "$work/gen_out:/gen_out" \
   "$tablegen_image" \
-  /repo/tools/tablegen/gen.py /repo /gen_out/tables /gen_out/dump_main.rs /gen_out/manifest.json
+  /repo/tools/tablegen/gen.py /repo /gen_out/tables /gen_out/dump_main.rs /gen_out/manifest.json \
+  /gen_out/opaque_patterns.txt
 
 echo "--- stage 2: copy generated output into the repository ---"
 rm -rf "$repo/port/hustle_core/src/tables"
@@ -67,7 +68,9 @@ cp -r "$work/gen_out/tables" "$repo/port/hustle_core/src/tables"
 mkdir -p "$repo/tools/tablegen/dump/rust/src"
 cp "$work/gen_out/dump_main.rs" "$repo/tools/tablegen/dump/rust/src/main.rs"
 cp "$work/gen_out/manifest.json" "$repo/tools/tablegen/manifest.json"
-git -C "$repo" add port/hustle_core/src/tables tools/tablegen/dump/rust/src/main.rs tools/tablegen/manifest.json
+cp "$work/gen_out/opaque_patterns.txt" "$repo/tools/lean_check/generated/opaque_patterns.txt"
+git -C "$repo" add port/hustle_core/src/tables tools/tablegen/dump/rust/src/main.rs tools/tablegen/manifest.json \
+  tools/lean_check/generated/opaque_patterns.txt
 
 echo "--- stage 3: dump the generated tables ---"
 "$tool_dir/dump/build.sh"

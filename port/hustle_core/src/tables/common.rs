@@ -8,7 +8,7 @@
 
 use crate::fixed::Fixed;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy)]
 pub enum ActionType {
     Movement,
     Attack,
@@ -18,21 +18,21 @@ pub enum ActionType {
     Hurt,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy)]
 pub enum AirType {
     Grounded,
     Aerial,
     Both,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy)]
 pub enum BusyInterrupt {
     Normal,
     Hurt,
     NoneKind,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy)]
 pub enum HitboxType {
     Normal,
     Flip,
@@ -43,21 +43,21 @@ pub enum HitboxType {
     Detect,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy)]
 pub enum HitHeight {
     High,
     Mid,
     Low,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy)]
 pub enum HitboxKind {
     Hitbox,
     ThrowBox,
     SweptHitbox,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy)]
 pub enum CancelCategory {
     N3Combo,
     Aerial,
@@ -129,7 +129,7 @@ pub enum CancelCategory {
     WhipWaveParriable,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy)]
 pub enum Stance {
     All,
     BackSway,
@@ -139,13 +139,13 @@ pub enum Stance {
     TPStance,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy)]
 pub enum MiscDataTag {
     IgnoreCaltrops,
     LaunchCaltrops,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy)]
 pub enum OrbTriggerType {
     Lightning,
     OrbDart,
@@ -153,7 +153,7 @@ pub enum OrbTriggerType {
     Sword,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy)]
 pub enum ProjectileKind {
     AfterImage,
     CausticSpike,
@@ -174,7 +174,7 @@ pub enum ProjectileKind {
     WhipWave,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy)]
 pub enum ThrowAnimation {
     BiteThrow,
     CornerCarryGrab,
@@ -195,7 +195,7 @@ pub enum ThrowAnimation {
     ZephyrThrow,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct ThrowPositionEntry {
     pub animation: ThrowAnimation,
     pub frame: i32,
@@ -208,7 +208,7 @@ pub struct ThrowPositionEntry {
 /// none of the five characters' own root scripts assigns `MAX_HEALTH`.
 pub const MAX_HEALTH: i32 = 1500;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct FighterRootConstants {
     pub gravity: Option<Fixed>,
     pub ground_friction: Option<Fixed>,
@@ -230,7 +230,7 @@ pub struct FighterRootConstants {
     pub num_feints: i32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct ProjectileRootConstants {
     pub gravity: Option<Fixed>,
     pub ground_friction: Option<Fixed>,

@@ -47,7 +47,14 @@ cargo test
 
 echo "=== charon cargo --preset=aeneas (port/hustle_core) ==="
 rm -f hustle_core.llbc
-charon cargo --preset=aeneas
+# tools/tablegen/gen.py writes this file (one Charon CLI token per
+# line): it marks every table data function and large const opaque,
+# and keeps the table's own types transparent. Without it, Aeneas's
+# translation of the tables module alone took thousands of seconds
+# (see tools/lean_check/README.md, "port/hustle_core, the tables
+# slice", for the measured counts before and after).
+mapfile -t TABLEGEN_OPAQUE_ARGS < /work/generated/opaque_patterns.txt
+charon cargo --preset=aeneas "${TABLEGEN_OPAQUE_ARGS[@]}"
 
 echo "=== aeneas -backend lean -split-files (port/hustle_core -> HustleCorePort) ==="
 rm -rf /work/generated/src/HustleCorePort
