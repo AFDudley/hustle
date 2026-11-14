@@ -28,6 +28,17 @@ repository and `git add` it, dump (builds and runs `table_dump`), probe
 (a headless Godot run against the real scenes), and compare. No stage
 runs Python, Godot, or `cargo` on the host.
 
+## The result
+
+**100,304/100,304 fields matched exactly, across 1,108 records (636
+state records, 449 hitbox records, 23 root records). 0 mismatches.**
+Checked by running the five stages above on a checkout at commit
+`9d0d8b27`. `report.json` holds the same counts per scope.
+
+Running the generator twice (`gen.py`, independently, in two separate
+containers) gives byte-identical output in `port/hustle_core/src/tables`,
+`tools/tablegen/dump/rust/src/main.rs`, and `manifest.json`.
+
 ## What it covers
 
 | | Count |
