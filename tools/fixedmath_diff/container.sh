@@ -53,9 +53,14 @@ podman run --rm --init --cpus 8 \
   "$godot_image" \
   -c '
     set -e
+    # Xvfb writes its display number to fd 3 when it is ready. Read it
+    # from a FIFO, so Godot starts only after the X server accepts
+    # clients. A plain `sleep 1` raced under host load ("X11 Display is
+    # not available"); tools/rng_diff/container.sh found the same bug.
+    mkfifo /tmp/dispfd
     Xvfb -displayfd 3 -screen 0 1280x720x24 -nolisten tcp 3>/tmp/dispfd &
-    sleep 1
-    export DISPLAY=":$(cat /tmp/dispfd)"
+    read -r display_number </tmp/dispfd
+    export DISPLAY=":$display_number"
     exec timeout 300 /opt/godotsteam/linux-351-editor.64 --no-window --audio-driver Dummy \
       --fixed-fps 60 --path /repo res://tools/fixedmath_diff/FixedMathDiff.tscn \
       --fmd-out=/out/godot_out.jsonl
@@ -69,7 +74,7 @@ podman run --rm --cpus 8 \
   "$fixedmath_image" \
   /out/godot_out.jsonl /out/rust_out.jsonl
 
-podman run --rm --cpus 8 --cpu-quota 800000 --cpu-period 100000 \
+podman run --rm --cpu-quota 800000 --cpu-period 100000 \
   --entrypoint hustle_core_diff \
   -v "$work/out:/out" \
   "$fixedmath_image" \
@@ -89,7 +94,7 @@ podman run --rm --cpus 8 \
 
 # game vs. hustle_core: the same known mismatches, carried over, not
 # introduced by the port.
-podman run --rm --cpus 8 --cpu-quota 800000 --cpu-period 100000 \
+podman run --rm --cpu-quota 800000 --cpu-period 100000 \
   --entrypoint python3 \
   -v "$tool_dir/compare.py:/compare.py:ro" \
   -v "$work/out:/out" \
@@ -100,7 +105,7 @@ podman run --rm --cpus 8 --cpu-quota 800000 --cpu-period 100000 \
 # the fixed-crate reference vs. hustle_core: the acceptance check. Every
 # one of the 32,529 calls must match exactly; this is the one exit code
 # that fails the build.
-podman run --rm --cpus 8 --cpu-quota 800000 --cpu-period 100000 \
+podman run --rm --cpu-quota 800000 --cpu-period 100000 \
   --entrypoint python3 \
   -v "$tool_dir/compare.py:/compare.py:ro" \
   -v "$work/out:/out" \

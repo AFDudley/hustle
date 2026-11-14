@@ -31,23 +31,22 @@ pub struct Fixed(pub i64);
 /// rounds the same real value the same way.
 pub const PI: Fixed = Fixed(205_887);
 
-/// π/2 at 16 fractional bits, rounded to the nearest representable value.
-/// Copies `fixed_trigonometry::sin` and `cos` (`fixed_trigonometry` 0.4.4,
-/// `src/lib.rs`): `<T>::from_num(fixed::consts::PI / 2)`. The division
-/// happens at `fixed::consts::PI`'s 126-bit precision, so the 16-bit
-/// result is the correctly rounded π/2, not half of the rounded `PI`
-/// above.
-const PI_HALF_SINCOS: Fixed = Fixed(102_944);
-
-/// π/2 at 16 fractional bits, computed by dividing the already-rounded
-/// `PI` constant by 2. Copies `fixed_trigonometry::atan::atan2`
-/// (`src/atan.rs`): `T::mixed_pi() / T::mixed_from_num(2)`. This is a
-/// `Fixed` divided by a `Fixed`, which truncates toward zero (see
-/// `wrapping_div` below), so `205_887 / 2` truncates to `102_943`: one
-/// raw unit less than `PI_HALF_SINCOS`. `fixed_trigonometry` uses two
-/// different roundings of π/2 in two different functions; this copies
-/// both exactly.
-const PI_HALF_ATAN2: Fixed = Fixed(102_943);
+/// π/2 at 16 fractional bits. Two call sites in `fixed_trigonometry`
+/// compute this by different routes, and both floor (round toward
+/// `-∞`) at this precision, so both give the same raw value:
+///
+/// - `fixed_trigonometry::sin` and `cos` (`fixed_trigonometry` 0.4.4,
+///   `src/lib.rs`): `<T>::from_num(fixed::consts::PI / 2)`. Converting
+///   one `Fixed` type to another with `from_num` "discards extra
+///   fractional bits, which rounds towards -∞" (`fixed` 1.19.0,
+///   `src/macros_from_to.rs`): `floor(1.5707963267948966... * 65536) =
+///   102_943`.
+/// - `fixed_trigonometry::atan::atan2` (`src/atan.rs`):
+///   `T::mixed_pi() / T::mixed_from_num(2)`, a `Fixed` divided by a
+///   `Fixed`, which truncates toward zero (see `wrapping_div` below):
+///   `205_887 / 2` truncates to `102_943`, the same value, because
+///   truncation and floor agree for a non-negative quotient.
+const PI_HALF: Fixed = Fixed(102_943);
 
 impl Fixed {
     pub const ZERO: Fixed = Fixed(0);
@@ -363,7 +362,7 @@ impl Fixed {
     /// `wrap_phase` (a plain bounded loop, a different range convention
     /// from `Fixed::wrap_phase` above), then call `sin`.
     pub fn cos(self) -> Fixed {
-        let shifted = self.wrapping_add(PI_HALF_SINCOS);
+        let shifted = self.wrapping_add(PI_HALF);
         trig_wrap_phase(shifted).sin()
     }
 
@@ -381,21 +380,21 @@ impl Fixed {
         }
         if y.0 > 0 {
             if x.0 == 0 {
-                return Some(PI_HALF_ATAN2);
+                return Some(PI_HALF);
             }
             if x.0 > 0 {
                 if diff.0 < 0 {
                     atan_poly_1(y, x)
                 } else {
-                    Some(PI_HALF_ATAN2.wrapping_sub(atan_poly_2(y, x)?))
+                    Some(PI_HALF.wrapping_sub(atan_poly_2(y, x)?))
                 }
             } else if diff.0 >= 0 {
-                Some(PI_HALF_ATAN2.wrapping_sub(atan_poly_2(y, x)?))
+                Some(PI_HALF.wrapping_sub(atan_poly_2(y, x)?))
             } else {
                 Some(PI.wrapping_add(atan_poly_1(y, x)?))
             }
         } else {
-            let neg_pi_half = Fixed(-PI_HALF_ATAN2.0);
+            let neg_pi_half = Fixed(-PI_HALF.0);
             if x.0 == 0 {
                 return Some(neg_pi_half);
             }
@@ -955,12 +954,12 @@ fn trig_reduce_high(t: Fixed, two_pi: Fixed) -> Fixed {
 /// the nearer boundary. Copies the clamp at the top of
 /// `fixed_trigonometry::sin`.
 fn clamp_to_half_pi(x: Fixed) -> Fixed {
-    if x.0 < -PI_HALF_SINCOS.0 {
-        let delta = x.wrapping_add(PI_HALF_SINCOS);
-        Fixed(-PI_HALF_SINCOS.0).wrapping_sub(delta)
-    } else if PI_HALF_SINCOS.0 < x.0 {
-        let delta = x.wrapping_sub(PI_HALF_SINCOS);
-        PI_HALF_SINCOS.wrapping_sub(delta)
+    if x.0 < -PI_HALF.0 {
+        let delta = x.wrapping_add(PI_HALF);
+        Fixed(-PI_HALF.0).wrapping_sub(delta)
+    } else if PI_HALF.0 < x.0 {
+        let delta = x.wrapping_sub(PI_HALF);
+        PI_HALF.wrapping_sub(delta)
     } else {
         x
     }
