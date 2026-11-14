@@ -313,8 +313,11 @@ func _physics_process(_delta):
 		_finish()
 		return
 	# A replay that stops before the end of the match hands control back to
-	# the players. That point is the end of the playback.
-	if job.mode == "playback" and !ReplayManager.playback and game.is_waiting_on_player():
+	# the players. That point is the end of the playback. A finished match
+	# ends through stop_pending in _on_post_tick instead: when end_game() runs
+	# after the tick's post_tick, the replay can run out on the same tick, and
+	# this rule would then skip the closing tick that the live path traces.
+	if job.mode == "playback" and !game.game_finished and !ReplayManager.playback and game.is_waiting_on_player():
 		_finish()
 	# A live run whose replay stops before the end of the match ends at the
 	# first decision after the replay's last input. A finished match ends the

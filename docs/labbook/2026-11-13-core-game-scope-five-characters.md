@@ -366,6 +366,21 @@ modes (`lamturbo()`), with float forces from new input fields.
    live-path traces from `tools/nettest`, or with replay-path traces after
    the ignore list removes `interrupt_exceptions`. Record each case where the
    two paths differ in more than this field.
+
+   Set B on the live path (2026-11-14) shows two more fields, and the code
+   explains all three. Each is written only on the live path, at a turn:
+   - `interrupt_exceptions`: `game.gd:1456, 1473` call `on_interrupt()` on the
+     player who did not get the turn. `NewParry.on_interrupt()` adds or
+     removes `AerialMovement`.
+   - `state_interruptable`: `game.gd:1457, 1474` set it on that player.
+   - `state_interruptable` and `state_hit_cancellable`:
+     `BaseChar.on_action_selected()` (`BaseChar.gd:2943-2944`) clears both
+     when a player chooses an input. Playback sets `queued_action` inside
+     the tick instead (`BaseChar.gd:2444`) and does not clear them, so after
+     a `Continue` they stay true until the state changes.
+
+   In all 45 replays with these differences, the final state is equal. The
+   live values are the model's values.
 3. **Resolved: the string interface.** `tools/fixedmath_diff/` called all 38
    registered `FixedMath` methods 32,529 times from GDScript and recomputed
    each call in Rust. A rerun reproduced the result in 37 s. Findings:
@@ -457,14 +472,19 @@ modes (`lamturbo()`), with float forces from new input fields.
 
    Results of the live-path comparison for set B (93 replays):
    - 44 pass.
-   - 45 differ from playback only in the flags `state_interruptable`,
+   - 46 differ from playback only in the flags `state_interruptable`,
      `state_hit_cancellable` and `interrupt_exceptions` for a few ticks,
-     and end in the same state. Two of these first showed a different
-     final state. The cause was `emote_tween`, a chat-emote fade that
-     playback repeats and the live path does not. `ignore.txt` now leaves it
-     out.
-   - 1 ends one tick apart: `Zihop_v_lilfred09` (1,547 against 1,548
-     ticks). Not yet traced.
+     and end in the same state (open item 2 explains the flags). Three of
+     these first showed a different final state, and the check caused all
+     three:
+     - two: `emote_tween`, a chat-emote fade that playback repeats and the
+       live path does not. `ignore.txt` now leaves it out.
+     - one (`Zihop_v_lilfred09`): the playback trace stopped one tick early.
+       `end_game()` runs after the tick's `post_tick`, and this replay ran out
+       of inputs on the same tick. `ReplayCheck.gd` then ended the playback
+       through its "replay ran out" rule before the closing tick. That rule
+       now skips a finished match. Both paths now end at tick 1547 in the
+       same state.
    - 3 break off on the live path: the November replays of decision 7.
 
    One `check` run of set B stopped once: one Godot process hung in the
