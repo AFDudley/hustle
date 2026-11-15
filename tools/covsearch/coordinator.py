@@ -372,8 +372,14 @@ def run(
         jobs_done = state["jobs_done"]
         elapsed_before = state["elapsed_s"]
         seq_box[0] = state["next_seq"]
-        for neg_score, seq, node in state["frontier"]:
-            heapq.heappush(frontier, (neg_score, seq, node))
+        for entry in state["frontier"]:
+            neg_score, seq, node = entry[0], entry[-2], entry[-1]
+            # A 3-entry checkpoint scored nodes by all probes their branch
+            # hit, not by new probes; that score is not comparable, so it
+            # restarts at 0 (roots keep their top priority).
+            if len(entry) == 3 and node["choices"]:
+                neg_score = 0
+            heapq.heappush(frontier, (neg_score, -len(node["choices"]), seq, node))
         print(
             f"resumed {checkpoint_path}: {len(hit_ids)}/{len(total_ids)} probes hit, "
             f"{len(frontier)} frontier nodes, {elapsed_before:.0f}s already elapsed",
@@ -382,7 +388,7 @@ def run(
     else:
         roots = json.loads(roots_path.read_text())
         for i, root in enumerate(roots):
-            heapq.heappush(frontier, (-(10**9), next_seq(), {"root": root, "choices": []}))
+            heapq.heappush(frontier, (-(10**9), 0, next_seq(), {"root": root, "choices": []}))
 
     start = time.monotonic()
     last_checkpoint = time.monotonic()
@@ -427,7 +433,7 @@ def run(
 
     def save_checkpoint():
         state = {
-            "frontier": [[ns, sq, nd] for ns, sq, nd in frontier],
+            "frontier": [[ns, nd_depth, sq, nd] for ns, nd_depth, sq, nd in frontier],
             "next_seq": seq_box[0],
             "hit_ids": sorted(hit_ids),
             "seen_buckets": [_bucket_to_list(b) for b in seen_buckets],
@@ -466,7 +472,7 @@ def run(
 
     def refill():
         while len(in_flight) < backlog_target and frontier and not all_hit():
-            _, _, node = heapq.heappop(frontier)
+            _, _, _, node = heapq.heappop(frontier)
             submit_list(node)
 
     termination_reason = "frontier_exhausted"
@@ -529,7 +535,10 @@ def run(
                         continue
                     total_branches += 1
                     total_ticks_simulated += int(rec["projection"].get("tick", 0))
-                    for pid in rec["probes"]:
+                    # Design step 7: order by NEW probes, the ones no
+                    # earlier branch hit. Count them before crediting.
+                    new_probes = [pid for pid in rec["probes"] if pid not in hit_ids]
+                    for pid in new_probes:
                         hit_ids.add(pid)
                     bucket = bucket_projection(rec["projection"])
                     is_new_state = bucket not in seen_buckets
@@ -539,10 +548,13 @@ def run(
                         "root": node["root"],
                         "choices": node["choices"] + [[rec["p1_input"], rec["p2_input"]]],
                     }
-                    score = len(rec["probes"])
-                    if is_new_state and not rec["projection"].get("game_over"):
-                        heapq.heappush(frontier, (-score, next_seq(), child))
-                    if is_new_state:
+                    score = len(new_probes)
+                    # Ties (usually zero new probes) go to the deeper path,
+                    # so the search reaches late-match states (meter, low
+                    # HP, knockdowns) instead of widening the opening.
+                    if (is_new_state or new_probes) and not rec["projection"].get("game_over"):
+                        heapq.heappush(frontier, (-score, -len(child["choices"]), next_seq(), child))
+                    if is_new_state or new_probes:
                         kept_paths.append({**child, "probes": rec["probes"]})
         refill()
         write_progress()
