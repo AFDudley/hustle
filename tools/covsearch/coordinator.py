@@ -272,11 +272,11 @@ def run(
                 "base": node["root"], "choices": node["choices"],
                 "action": "branch_batch", "pairs": batch,
             }
+            submit_t0 = time.monotonic()
             fut = executor.submit(run_worker, work, name, job)
-            futures[fut] = (name, len(batch), batch)
+            futures[fut] = (name, len(batch), batch, submit_t0)
         for fut in concurrent.futures.as_completed(futures):
-            name, batch_size, batch = futures[fut]
-            t0 = time.monotonic()
+            name, batch_size, batch, submit_t0 = futures[fut]
             try:
                 out_path = fut.result()
             except Exception as exc:
@@ -284,7 +284,7 @@ def run(
                     raise
                 stalled_nodes.append({"node": node, "phase": "branch_batch", "pairs": batch, "reason": str(exc)})
                 continue
-            branch_job_seconds.append(time.monotonic() - t0)
+            branch_job_seconds.append(time.monotonic() - submit_t0)
             branch_job_pairs.append(batch_size)
             jobs_done += 1
             for line in out_path.read_text().splitlines():

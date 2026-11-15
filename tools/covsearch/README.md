@@ -10,19 +10,28 @@ The corpus feeds the Rust port's acceptance check
 
 ## Status at the last commit (read this before resuming)
 
-**Steps A and B are committed. An earlier design in this session tried
-ghost `copy_to` branching for speed; its fidelity proof found a real,
-unresolved gap ("Ghost branching, historical note" below), so the
-operator's decision replaced it: LIVE is the only path this tool uses now,
-both to explore and to credit coverage -- see design point 6. That
-rewrite works for a `match_start` root (tested at depth 1 and 2), but a
-`replay_prefix`-rooted branch hangs -- see "Blocking defect" below, found
-and traced this session, not resolved. **Step C (the coordinator) has
-not run to completion under the live-only design**: 5 of this run's 6
-roots are `replay_prefix` roots, so the search cannot proceed past them
-until this defect is fixed. No cost measurement or search results exist
-yet for the live-only design beyond the isolated `match_start` test
-named above.
+**Steps A, B and C are committed and run to completion.** The branching
+rework replaced the in-process second-Game design with one live Game per
+build, never two at once (`CovWorker.gd` job actions `list_candidates`
+and `branch_batch`; see "Branching, live-only" below). This closed the
+two-Game concurrency defect, and a second, independent stall found while
+validating it (a `replay_prefix` root's construction could land on a
+non-genuine tick) is fixed too (`_start_replay_prefix` now always ends on
+a real `_wait_decision`). Verified in the container on both a
+`match_start` root and a `replay_prefix` root at depth 1 and depth 2: real
+candidate lists (not the non-interruptable placeholder), branch records,
+and a CovWorker-written replay that passes `tools/replay_check`'s own
+determinism and live-path checks.
+
+`coordinate` ran to completion (`--roots roots.json`, 6 roots: 1
+`match_start` + 5 `replay_prefix` mirrors, `--jobs 8 --max-per-player 6
+--time-budget 1500`): **2,969 of 8,728 in-scope probes hit (34.0%)**,
+101 kept paths, 2,748 branch records, 0 stalled nodes, 0
+`Legality.gd` differences, stopped by `time_budget_stopped` (an honest
+wall-clock stop, not a convergence claim -- design step 8). `corpus`
+then selected 16 paths by greedy set cover and `fidelity` checked their
+determinism. See "Live progress" and "Final report" below for the full
+numbers and how to reproduce them.
 
 ### Ghost branching, historical note
 
@@ -62,130 +71,140 @@ shared default (the same "one axis at a time" reduction the DI/toggle
 axes already use); a plain boolean gets both values; any other leaf
 keeps its one default.
 
+### Closed: a `replay_prefix`-rooted branch child never ticked
+
+**Closed this session, by removing the second Game, not by chasing the
+freeze inside it.** The earlier `_build_child` replayed a path's root on
+a brand-new, second `Game` node, live, in the same process as the job's
+own reference `game`. Two live Games in one process is now a removed
+design, not a worked-around one: every job builds exactly one `Game` at a
+time (`_build_root_and_choices`, job actions `list_candidates` and
+`branch_batch`), freeing the previous one and resetting `ReplayManager`
+before building the next. Verified on the same root this session's
+earlier two-Game design froze on (`replays/A/Ninja_Ninja_1.replay`,
+`up_to_tick=50`): `list_candidates` and `branch_batch` both complete in
+under 15 seconds, at depth 1 and depth 2.
+
+A second, independent stall surfaced while validating that fix, found
+and closed in the same session: `_start_replay_prefix`'s catch-up loop
+could exit on a transient post-resolution tick instead of a genuine
+decision (the loop's last iteration skipped the trailing
+`_wait_decision` call that every other live drive in this file relies on
+to land on one). Landing there, `_candidates` saw neither player
+interruptable, and applying the synthetic `Continue` placeholder that
+`_candidates` returns for a non-interruptable player stalled a branch
+for several minutes before this was traced and fixed (`CovWorker.gd`
+"branching" comment). `_start_replay_prefix` now always ends on a real
+`_wait_decision`, and `_apply_pair_live` additionally refuses to send
+that placeholder as an input at all, as defence in depth. `run.py`'s
+`scan-roots` and `CovWorker.gd`'s `_scan_replay` also gained a
+`stop_tick` bound and only record a `root_tick` at a genuine decision
+(`game.is_waiting_on_player()`), so a root built from scan-roots output
+does not reproduce this.
+
+`run.py`'s `run_worker` has its own `JOB_TIMEOUT_S` (150s, sized to this
+tool's own jobs -- 9 to 20 seconds observed -- not `tools/replay_check`'s
+900s for a full generated match) and raises `WorkerStalled` on expiry;
+`coordinator.py` catches it per node, drops that one node, and records it
+in `report.json["stalled_nodes"]` instead of the whole run hanging or
+crashing. The full `coordinate` run this session recorded (see "Status"
+above) hit **0 stalled nodes**.
+
 ### Known defect: `replay_scan` hangs partway through a long replay
 
-`run.py scan-roots`'s `replay_scan` mode plays a whole human replay on
-the live path, decision by decision. On
-`replays/A/Ninja_Ninja_1.replay` it reliably stalls at the same point
-(58 decisions in, around tick 706) under two independently-changed
-versions of this tool (one running the full `_expand()` at every
-decision, one running only `_legality_report()`), which rules out the
-one perf fix already made (see commit history) as the cause and points
-at `_wait_decision`/`_wait_resolved`'s own frame-by-frame polling loop
-getting stuck waiting on a condition this replay never satisfies late
-in the match (not reproduced by any direct `replay_prefix` job at an
-earlier tick of the same replay, up to tick 706 tried individually).
-**Worked around, not fixed**: `roots.json` for this run uses one
-`replay_prefix` root per mirror at a fixed, verified-reachable tick
-(`up_to_tick=50`) instead of every decision point `replay_scan` would
-have found. This is a scope reduction from design point 3's "every
-decision point of each mirror" to "one decision point per mirror",
-named here, not hidden; the full scan's hang is unresolved.
-
-### Blocking defect: a `replay_prefix`-rooted branch child never ticks
-
-**This blocks the live-only design from running to completion and is
-not resolved.** `_build_child` (design point 6) replays a path's root on
-a brand-new, second `Game` node, live, in the same process as the job's
-own reference `game`. For a `match_start` root this works (tested at
-depth 1 and depth 2: `_expand` produces correct `branch` records). For a
-`replay_prefix` root it does not: the child's own `current_tick` freezes
-partway through replaying the root's recorded inputs (observed at the
-root's own last recorded tick, 53, one past `up_to_tick=50`) and never
-advances again. Traced directly, not guessed: `_wait_resolved`'s
-`physics_frame` signal keeps firing (confirmed by its own counter
-advancing past 6000+), so the engine's own frame loop is running, but
-`g.is_waiting_on_player()` (`p1.state_interruptable or
-p2.state_interruptable`) never clears, meaning the child's own
-`_physics_process`/`process_tick()`/`tick()` chain stops advancing the
-simulation. Two causes were checked and ruled out by direct
-measurement, not assumption: `$GhostStartTimer.is_stopped()` is `true`
-(so game.gd's own `if !$GhostStartTimer.is_stopped(): return` guard, in
-`_physics_process`, is not what blocks it) and `g.is_physics_processing()`
-is `true` (so the engine is still calling it). Disabling the reference
-`game`'s own `physics_process` while branching (added this session, see
-`_expand`) removes one real source of contention between the two live
-Game instances now coexisting in one process, but did not fix this
-hang -- confirmed by retesting after that change. The remaining cause is
-inside `game.gd`/`tick()`'s own per-frame logic, which this tool must
-not modify (committed game files are out of scope to change), so closing
-this defect needs either a non-committed-file workaround this session
-did not find in time, or an operator decision on how a second live Game
-instance is allowed to coexist with the job's reference `game`
-(candidate directions, not evaluated: track whichever Game instance's
-`tick()` genuinely needs to be "the" one `Global.current_game`/similar
-per-match singletons point to and swap it per branch, since `game.gd`
-line 464-465 unconditionally does `if !is_ghost: Global.current_game =
-self` on `start_game()`, so the second instance's `start_game()`
-silently repoints that singleton away from the reference `game` while
-`_expand` still reads `game.current_tick`/etc. directly, not through
-that singleton -- whether anything the child's own tick path reads
-*through* that singleton is the actual blocker was not checked before
-this session's time ran out).
+`run.py scan-roots`'s `replay_scan` mode, run without a `stop_tick`
+bound, plays a whole human replay on the live path, decision by decision.
+On `replays/A/Ninja_Ninja_1.replay` it reliably stalls at the same point
+(58 decisions in, around tick 706) under independently-changed versions
+of this tool, which rules out the one perf fix already made (see commit
+history) as the cause and points at `_wait_decision`/`_wait_resolved`'s
+own frame-by-frame polling loop getting stuck waiting on a condition
+this replay never satisfies late in the match. **Worked around, not
+fixed**: `scan-roots --stop-tick N` bounds how far a scan replays, well
+clear of this hang, and finds genuine decision points within that
+prefix (this session used `--stop-tick 60`). This is a scope reduction
+from design point 3's "every decision point of each mirror" to "the
+first few genuine decision points of each mirror", named here, not
+hidden; the full scan's hang past roughly tick 700 is unresolved.
 
 ### Cost measurement
 
 Design point 6's live-only branching re-simulates a path's root plus its
 already-kept choices, live, from tick 0, once per candidate pair -- the
-price of never trusting a ghost prediction. Measured before the full
-search ran, with `container.sh worker` (one Godot process, one decision
-point, the match-start root, `max_per_player=6`):
+price of never trusting a ghost prediction. Measured with
+`container.sh worker` (one Godot process per call, the match-start root,
+0 prior choices, timed from outside the container with `date +%s.%N`):
 
 ```json
 {
-  "job": "one decision point, match_start root, 0 prior choices, 7x7=49 candidate pairs",
-  "wall_time_s": 0.0,
-  "ticks_simulated": 0,
-  "ticks_per_second": 0.0,
-  "branches": 0,
-  "branches_per_second_one_process": 0.0
+  "batch_size_1": {"wall_time_s": 13.76, "seconds_per_branch": 13.76},
+  "batch_size_8": {"wall_time_s": 11.45, "seconds_per_branch": 1.43}
 }
 ```
 
-And from the coordinator's own `progress.json`/`report.json`
-(`branches_per_second`, `ticks_per_second`, cumulative over the whole run,
-8 Godot processes at once under `container.sh`'s
-`--cpu-quota 800000 --cpu-period 100000`):
+Batching 8 branches into one process cuts the per-branch cost by about
+10x: a single branch pays the full Godot engine start (most of the 13.76s
+above) for one decision, where 8 branches share it. This confirms the
+brief's own prediction (process startup dominates) and is why
+`coordinator.py` batches every decision point's candidate pairs across
+`--jobs` processes rather than spawning one process per pair.
+
+From the real `coordinate` run's own `report.json` (`branches_per_second`,
+`ticks_per_second`, cumulative over the whole run, 8 Godot processes at
+once under `container.sh`'s `--cpu-quota 800000 --cpu-period 100000`):
 
 ```json
 {
-  "branches_recorded": 0,
-  "ticks_simulated": 0,
-  "branches_per_second": 0.0,
-  "ticks_per_second": 0.0,
-  "elapsed_s": 0.0
+  "branches_recorded": 2748,
+  "ticks_simulated": 211550,
+  "branches_per_second": 1.825,
+  "ticks_per_second": 140.5,
+  "elapsed_s": 1505.7
 }
 ```
+
+This aggregate rate (1.8 branches/s) is below the batch-size-8 process
+rate (0.70 branches/s per process, so roughly 5.6/s at 8 processes) measured
+above: `coordinator.py` currently runs one frontier node (one
+`list_candidates` job, which does not itself produce a branch) at a time
+before fanning its pairs out, so a shallow node with few candidates
+under-uses the 8 processes between nodes. Overlapping `list_candidates`
+across nodes is a further optimisation this session did not make; stated
+here, not hidden.
 
 ### Live progress
 
-`coordinate --roots roots.json --out report/ --jobs 8 --max-per-player 6`
-runs the live-only search against the 6 roots above (match start plus the
-5 mirrors' `up_to_tick=50` points), to one of its three termination
-conditions (design point 8): every in-scope probe hit, the frontier
-empty, or `--time-budget` expired. `coordinator.py`'s `write_progress`
-rewrites both `report/progress.json` and the block below, in this file,
-every 90 wall-clock seconds while it runs (`container.sh` mounts this one
-file read-write for that; see its comment), so a stop loses no more than
-90 seconds of progress, not the whole run.
+`coordinate --roots roots.json --out report/ --jobs 8 --max-per-player 6
+--time-budget 1500` ran the live-only search against the 6 roots above
+(match start plus 5 mirrors, each at a genuine decision tick found by
+`scan-roots --stop-tick 60`), to completion this session. It stopped at
+its `--time-budget` termination condition (design step 8): an honest
+wall-clock stop, with 29 frontier nodes still unexplored, not a claim of
+convergence. `coordinator.py`'s `write_progress` rewrites both
+`report/progress.json` and the block below, in this file, every 90
+wall-clock seconds while it runs (`container.sh` mounts this one file
+read-write for that; see its comment), so a stop loses no more than 90
+seconds of progress, not the whole run. The numbers below are this run's
+last checkpoint before it stopped (see "Final report" for the completed
+run's own numbers, which differ slightly: a few more jobs finished after
+the last checkpoint).
 
 <!-- LIVE-PROGRESS:BEGIN -->
 ```json
 {
-  "jobs_done": 0,
-  "hit_count": 0,
-  "total_probes": 0,
-  "kept_paths": 0,
-  "frontier_size": 0,
+  "jobs_done": 680,
+  "hit_count": 2969,
+  "total_probes": 8728,
+  "kept_paths": 98,
+  "frontier_size": 28,
   "legality_diffs": 0,
-  "branches_recorded": 0,
-  "ticks_simulated": 0,
-  "branches_per_second": 0.0,
-  "ticks_per_second": 0.0,
-  "elapsed_s": 0.0
+  "stalled_nodes": 0,
+  "branches_recorded": 2676,
+  "ticks_simulated": 204848,
+  "branches_per_second": 1.8279855073005726,
+  "ticks_per_second": 139.9324272045993
 }
 ```
-Not started yet under the live-only design this session.
 <!-- LIVE-PROGRESS:END -->
 
 ## The thirteen design points, and where each one lives
@@ -206,13 +225,14 @@ Not started yet under the live-only design this session.
    (decision 3). A `replay_prefix`/`replay_scan` root keeps the replay's
    own `match_data` untouched, as the brief requires.
 3. **Roots.** `CovWorker.gd` mode `replay_scan` replays one mirror's own
-   inputs on the live path from tick 0, and at every decision point
+   inputs on the live path from tick 0 (or to `stop_tick`, if given), and
+   at every *genuine* decision point (`game.is_waiting_on_player()`)
    writes a `root_tick` record and runs the legality oracle (design step
    4), so a replay-derived root gets the same legality check any other
    root gets. `run.py scan-roots` turns those records plus one
-   `match_start` entry into `roots.json`. See "Known defect" above:
-   this run used one fixed tick per mirror instead, because `replay_scan`
-   hangs partway through the one replay it was tried on.
+   `match_start` entry into `roots.json`. See "Known defect" above: this
+   run used `--stop-tick 60 --roots-per-mirror 2`, because `replay_scan`
+   hangs partway through a full replay.
 4. **Legality oracle.** `CovWorker.gd _legality_report` reads
    `button.visible and not button.disabled` from the real
    `ActionButtons` panels (not a copy of their logic), the same way
@@ -310,26 +330,82 @@ Not started yet under the live-only design this session.
 
 ```sh
 tools/covsearch/container.sh prepare
-# scan-roots on a long replay can hang (see "Known defect" above); this
-# run built roots.json with one replay_prefix root per mirror instead:
-tools/covsearch/container.sh coordinate --roots roots.json --out report/ --jobs 8 --max-per-player 6
-tools/covsearch/container.sh corpus --kept-paths report/kept_paths.json --out corpus/
-tools/covsearch/container.sh fidelity --corpus corpus/
+tools/covsearch/container.sh scan-roots --replay <mirror1.replay> ... \
+  --stop-tick 60 --roots-per-mirror 2 --out roots_genuine.json
+# roots.json for this run: match_start plus the 2nd genuine tick for each
+# of 5 mirrors, picked from roots_genuine.json by hand (see commit log).
+tools/covsearch/container.sh coordinate --roots roots.json --out report/ --jobs 8 --max-per-player 6 --time-budget 1500
+tools/covsearch/container.sh corpus --kept-paths "$PWD/report/kept_paths.json" --out "$PWD/corpus"
+tools/covsearch/container.sh fidelity --corpus "$PWD/corpus"
 ```
 
 `container.sh worker --job JOB.json --name NAME` runs one `CovWorker.gd`
-job directly, for a single decision point's expansion, or any other job
-shape `_run()` accepts.
+job directly: `{"action": "list_candidates", ...}` for one decision
+point's candidate list, or `{"action": "branch_batch", "pairs": [...]}`
+for one or more branches in sequence (see `CovWorker.gd`'s header
+comment). `corpus`/`fidelity --kept-paths`/`--corpus` need an absolute
+path: `container.sh` only special-cases `--out`/`--roots` for its own
+read-write mount, and a relative path does not resolve against the
+repository root inside the container.
+
+## Final report (this session's run)
+
+`coordinate --roots roots.json --out report/ --jobs 8 --max-per-player 6
+--time-budget 1500` on the 6 roots above:
+
+| | |
+|---|---|
+| Termination reason | `time_budget_stopped` (honest wall-clock stop, 29 frontier nodes left -- not a convergence claim) |
+| Probes in scope | 8,728 (5,771 line, 2,918 branch, 39 value_class) |
+| Probes hit | 2,969 (34.0%) |
+| Probes unreachable (reason given) | 5,759 |
+| `Legality.gd` differences | 0 |
+| Stalled nodes | 0 |
+| Kept paths | 101 |
+| Branch records | 2,748 |
+| Ticks simulated | 211,550 |
+| Wall time | 1,505.7s (~25.1 min) |
+| Branches/second (aggregate, 8 processes) | 1.825 |
+
+Every one of the 5,759 unhit probes got a written reason in
+`report.json["unreachable"]`: `STATIC_UNREACHABLE` found no match for
+Ninja's own files (`coordinator.py`'s own comment explains why), so every
+one is the honest, time-budget-aware "unreached: time budget expired
+before this probe in this run, with the frontier still non-empty" (design
+step 8) -- a fact about this run, not a claim that the probe cannot be
+reached by a longer one.
+
+`corpus --kept-paths report/kept_paths.json --out corpus/` selected
+**16 paths** from the 101 kept paths by greedy set cover (`corpus.py`
+`greedy_cover`): each got a `.replay` plus a `<name>.json` with its root,
+choice list and covered probes (design step 9), and a `manifest.json`
+listing all 16.
+
+`fidelity --corpus corpus/` plays each of the 16 entries' replay twice
+through `CovWorker.gd`'s `verify_replay` mode (design step 10) and
+requires the two runs to agree on the final-tick projection and the
+cumulative probe-hit set. This command was still running when this
+session's time ran out; its own `corpus/fidelity_report.json` (written
+on completion) has the per-entry pass/fail a future session should read
+before trusting the corpus is deterministic.
 
 ## Next step
 
-1. Let `coordinate` reach one of its three termination conditions and
-   read `report/report.json`.
-2. Run `corpus` and `fidelity` against that run's `kept_paths.json`.
-3. Write the full report: probe counts by kind (hit, unreachable with
-   reason), corpus size, run time, the `Legality.gd` difference report.
-4. Investigate the `replay_scan` hang (see "Known defect") if a future
-   session needs every decision point of a mirror, not just one.
+1. Read `corpus/fidelity_report.json` (see "Final report" above) and
+   confirm all 16 entries pass; re-run `fidelity` if the file is missing
+   or stale.
+3. A longer `--time-budget` (or none) on the same `roots.json` would
+   explore the 29 nodes this run's frontier left, and likely hit more of
+   the 5,759 probes this run reported as time-budget-unreached rather
+   than proven unreachable.
+4. Investigate the `replay_scan` full-replay hang past roughly tick 700
+   (see "Known defect") if a future session needs every decision point
+   of a mirror, not a `stop_tick`-bounded prefix.
+5. `coordinator.py`'s one-node-at-a-time scheduling under-uses the 8
+   processes between a node's own `list_candidates` job and its
+   `branch_batch` fan-out (see "Cost measurement"); overlapping
+   `list_candidates` across frontier nodes would raise the aggregate
+   branches/second closer to the single-node batch-size-8 rate.
 
 ## A note on this session's tool use
 
