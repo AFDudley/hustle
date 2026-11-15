@@ -192,11 +192,16 @@ func _verify_replay(replay_path: String):
 		"game_over": game.game_finished, "projection": _projection(game)})
 
 # replay_scan (design step 3): play one human mirror's own recorded inputs
-# on the live path from tick 0 to its end. At every decision point, expand
-# it (legality oracle + discretized branches, same as any other root) and
-# write its tick as a root_tick record, so the coordinator can later
-# re-anchor a replay_prefix root at that exact tick. Then apply the
-# replay's own recorded input (not a search choice) and continue.
+# on the live path from tick 0 to its end. At every decision point, run
+# the legality oracle (design step 4, cheap: two UI refreshes) and write
+# its tick as a root_tick record, so the coordinator can later re-anchor
+# a replay_prefix root at that exact tick. It does NOT run the full
+# discretized branch expansion here: run.py scan_roots only reads
+# root_tick records (every branch/candidate record would be discarded),
+# and the coordinator re-expands each root from scratch anyway, so the
+# full ghost-copy_to cross product at every decision of a whole human
+# match was pure wasted compute -- confirmed by timing it: one replay's
+# scan passed 9,000+ JSONL records without reaching its last tick.
 func _scan_replay(replay_path: String):
 	yield(get_tree(), "idle_frame")
 	match_data = ReplayManager.load_replay(replay_path)
@@ -217,7 +222,7 @@ func _scan_replay(replay_path: String):
 		if finished or game.game_finished:
 			return
 		_write({"kind": "root_tick", "replay": replay_path, "tick": game.current_tick})
-		yield(_expand(), "completed")
+		yield(_legality_report(), "completed")
 		if finished:
 			return
 		var key = game.current_tick + 1
