@@ -577,12 +577,22 @@ func _expand():
 # this across 20 sample paths from two different roots.
 # The ignore list is the same one tools/replay_check/ignore.txt documents
 # (presentation/wall-clock/playback variables that do not feed the
-# simulation), plus three fields that are definitionally different
-# between a ghost and the real game and so would always "differ" without
-# being a fidelity defect: is_ghost itself, game_paused (a ghost child
-# never reaches the real pause/turn UI state), and ghost_time (ghost
-# real-time pacing, game.gd tick(), presentation only).
-const FIDELITY_IGNORE_EXTRA = ["is_ghost", "game_paused", "ghost_time"]
+# simulation), plus fields that are definitionally different between a
+# ghost and the real game and so would always "differ" without being a
+# fidelity defect: is_ghost itself, game_paused (a ghost child never
+# reaches the real pause/turn UI state), ghost_time (ghost real-time
+# pacing, game.gd tick(), presentation only), and super_freeze_ticks/
+# super_active/p1_super/p2_super. game.gd's own _on_super_started
+# returns at once "if is_ghost", so a ghost branch never sets these; its
+# only other reader, process_tick() ("if super_freeze_ticks > 0: ...
+# return", game.gd ~1397-1405), is the real-frame pacing loop
+# _drive_to_decision bypasses for both the ghost child and the real
+# game, and no character state file reads these four names (checked:
+# only main.gd's speed-line UI effect does). So this is a known,
+# presentation-only gap in game.gd's own ghost support, not a defect in
+# this tool's branching.
+const FIDELITY_IGNORE_EXTRA = ["is_ghost", "game_paused", "ghost_time",
+	"super_freeze_ticks", "super_active", "p1_super", "p2_super"]
 var _fidelity_ignore_cache = null
 
 func _fidelity_ignore() -> Dictionary:
