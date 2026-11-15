@@ -770,13 +770,13 @@ def emit_value_lean(tag: str, raw, scope: Scope, state_names: set[str], name: st
         return f"(some tables.common.Stance.{rust_str_enum('Stance', raw)})"
     if tag == "stances":
         items = ", ".join(f"tables.common.Stance.{rust_str_enum('Stance', t)}" for t in split_lines(raw))
-        return f"(Slice.from [{items}] (by decide))"
+        return f"(Slice.from [{items}] (by first | decide | scalar_tac))"
     if tag.startswith("categories:"):
         items = ", ".join(f"tables.common.CancelCategory.{rust_str_enum('CancelCategory', t)}" for t in split_lines(raw))
-        return f"(Slice.from [{items}] (by decide))"
+        return f"(Slice.from [{items}] (by first | decide | scalar_tac))"
     if tag == "frame_list":
         items = ", ".join(lean_int_lit(int(v), "i32") for v in raw)
-        return f"(Slice.from [{items}] (by decide))"
+        return f"(Slice.from [{items}] (by first | decide | scalar_tac))"
     if tag == "throw_positions":
         parts = []
         for anim_name, frame, x, y in raw:
@@ -786,7 +786,7 @@ def emit_value_lean(tag: str, raw, scope: Scope, state_names: set[str], name: st
                 f"frame := {lean_int_lit(frame, 'i32')}, x := {lean_int_lit(x, 'i32')}, "
                 f"y := {lean_int_lit(y, 'i32')} }}"
             )
-        return f"(Slice.from [{', '.join(parts)}] (by decide))"
+        return f"(Slice.from [{', '.join(parts)}] (by first | decide | scalar_tac))"
     if tag == "misc_tag":
         if not raw:
             return "none"
@@ -942,7 +942,7 @@ def emit_scope_lean(scope: Scope) -> str:
     n_states = len(scope.states)
     state_items = ", ".join(f"{mod}.State.{rust_variant(e.name)}" for e in scope.states)
     out.append(f"def {mod}.ALL_STATES : Result (Array {mod}.State {n_states}#usize) :=")
-    out.append(f"  ok (Array.make {n_states}#usize [{state_items}] (by decide))")
+    out.append(f"  ok (Array.make {n_states}#usize [{state_items}] (by first | decide | scalar_tac))")
     out.append("")
 
     def hitbox_record_fields_lean(hfields: dict[str, object]) -> list[str]:
@@ -959,7 +959,7 @@ def emit_scope_lean(scope: Scope) -> str:
             field_strs = [f"kind := tables.common.HitboxKind.{kind}"] + hitbox_record_fields_lean(hfields)
             items.append("{ " + ", ".join(field_strs) + " }")
         out.append(f"def {const_name} : Result (Array {mod}.HitboxRecord {n}#usize) :=")
-        out.append(f"  ok (Array.make {n}#usize [{', '.join(items)}] (by decide))")
+        out.append(f"  ok (Array.make {n}#usize [{', '.join(items)}] (by first | decide | scalar_tac))")
         out.append("")
 
     out.append(f"def {mod}.state_data : {mod}.State → Result {mod}.StateData")
@@ -977,9 +977,9 @@ def emit_scope_lean(scope: Scope) -> str:
             const_name = f"{mod}.HITBOXES_{rust_variant(e.name).upper()}"
             out.append(f"  | .{rust_variant(e.name)} => do")
             out.append(f"      let hb ← {const_name}")
-            out.append(f"      ok {{ {fields_joined}, hitboxes := Slice.from hb.val (by decide) }}")
+            out.append(f"      ok {{ {fields_joined}, hitboxes := Slice.from hb.val (by first | decide | scalar_tac) }}")
         else:
-            out.append(f"  | .{rust_variant(e.name)} => ok {{ {fields_joined}, hitboxes := Slice.from [] (by decide) }}")
+            out.append(f"  | .{rust_variant(e.name)} => ok {{ {fields_joined}, hitboxes := Slice.from [] (by first | decide | scalar_tac) }}")
     out.append("")
 
     root_list = schema.FIGHTER_ROOT_FIELDS if scope.kind == "character" else schema.PROJECTILE_ROOT_FIELDS
@@ -1407,9 +1407,9 @@ def emit_dump_main_lean(
         '  ",\\"frame\\":" ++ tdI32 e.frame ++ ",\\"x\\":" ++ tdI32 e.x ++ ",\\"y\\":" ++ tdI32 e.y ++ "}"\n'
     )
 
-    all_keys = [("base", "base", "character")] + [
-        (k, k, "character") for k in character_keys if k != "base"
-    ] + [(k, f"projectiles.{k}", "projectile") for k in projectile_keys]
+    all_keys = [("base", "tables.base", "character")] + [
+        (k, f"tables.{k}", "character") for k in character_keys if k != "base"
+    ] + [(k, f"tables.projectiles.{k}", "projectile") for k in projectile_keys]
 
     for key, mod, _kind in all_keys:
         scope = scopes[key]
@@ -1421,10 +1421,16 @@ def emit_dump_main_lean(
         scope = scopes[key]
         field_list = scope_field_list(scope)
         name_fn = f"name_of_{key}"
+        n_states = len(scope.states)
+        root_type = "FighterRootConstants" if kind == "character" else "ProjectileRootConstants"
         lines = [f"def dump_{key} : IO Unit := do"]
-        lines.append(f'  let states \u2190 unwrapTd {mod}.ALL_STATES "{mod}.ALL_STATES"')
+        lines.append(
+            f'  let states : Array {mod}.State {n_states}#usize \u2190 unwrapTd {mod}.ALL_STATES "{mod}.ALL_STATES"'
+        )
         lines.append("  for s in states.val do")
-        lines.append(f'    let d \u2190 unwrapTd ({mod}.state_data s) "{mod}.state_data"')
+        lines.append(
+            f'    let d : {mod}.StateData \u2190 unwrapTd ({mod}.state_data s) "{mod}.state_data"'
+        )
         entries = [
             ("scope", lean_str_lit(f'"{key}"')),
             ("record", lean_str_lit('"state"')),
@@ -1442,7 +1448,7 @@ def emit_dump_main_lean(
                 expr = dump_field_expr_lean(tag, accessor, name_fn)
             entries.append((name, expr))
         lines.append(f"    IO.println ({build_json_concat_lean(entries)})")
-        lines.append("    tdForIndexed d.hitboxes.val (fun i h => do")
+        lines.append(f"    tdForIndexed d.hitboxes.val (fun (i : Nat) (h : {mod}.HitboxRecord) => do")
         hentries = [
             ("scope", lean_str_lit(f'"{key}"')),
             ("record", lean_str_lit('"hitbox"')),
@@ -1453,7 +1459,7 @@ def emit_dump_main_lean(
             hentries.append((name, dump_field_expr_lean(tag, f"h.{rust_field(name)}", name_fn)))
         lines.append(f"      IO.println ({build_json_concat_lean(hentries)}))")
         root_list = schema.FIGHTER_ROOT_FIELDS if kind == "character" else schema.PROJECTILE_ROOT_FIELDS
-        lines.append(f'  let root \u2190 unwrapTd {mod}.ROOT "{mod}.ROOT"')
+        lines.append(f'  let root : tables.common.{root_type} \u2190 unwrapTd {mod}.ROOT "{mod}.ROOT"')
         rentries = [
             ("scope", lean_str_lit(f'"{key}"')),
             ("record", lean_str_lit('"root"')),

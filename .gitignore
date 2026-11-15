@@ -19,3 +19,11 @@ target/
 # tools/lean_check's writable copy of port/hustle_core inside its
 # container mount; see tools/lean_check/podman/in_container.sh.
 /tools/lean_check/hustle_core_build/
+# tools/lean_check's writable copy of tools/tablegen/dump/rust, the
+# symlink to hustle_core_build it needs, and its own JSON Lines
+# output, all inside the container mount; see
+# tools/lean_check/podman/in_container.sh.
+/tools/lean_check/table_dump_build/
+/tools/lean_check/hustle_core
+/tools/lean_check/rust_table_dump.jsonl
+/tools/lean_check/lean_table_dump.jsonl

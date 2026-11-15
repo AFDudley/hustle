@@ -23,10 +23,11 @@ cat ~/.cache/hustle-tablegen/out/report.json
 ```
 
 Five podman stages: generate (writes the tables, the `table_dump` source,
-and `manifest.json` to a scratch directory), copy that output into the
-repository and `git add` it, dump (builds and runs `table_dump`), probe
-(a headless Godot run against the real scenes), and compare. No stage
-runs Python, Godot, or `cargo` on the host.
+`manifest.json`, and the Lean table `def`s and `TableDump` program to a
+scratch directory), copy that output into the repository and `git add`
+it, dump (builds and runs `table_dump`), probe (a headless Godot run
+against the real scenes), and compare. No stage runs Python, Godot, or
+`cargo` on the host.
 
 ## The result
 
@@ -232,6 +233,15 @@ meaningful).
   (no-feature) build — the same build Charon analyzes — so a mismatch
   between what Charon sees and what this binary reads cannot happen by
   construction.
+- `HustleCorePortFunsExternal.lean` and `HustleCorePortTableDump.lean`
+  (written into `tools/lean_check/generated/`): a Lean `def` for every
+  table item Charon marks opaque for the lean-check pipeline, and a
+  Lean program that prints those `def`s in `table_dump`'s own JSON
+  Lines format. `emit_value_lean` mirrors `emit_value` field for
+  field, from the same `raw` data, so the Rust and Lean tables cannot
+  hold different values by construction. See `tools/lean_check/README.md`,
+  "port/hustle_core, the tables slice", for how the lean-check pipeline
+  uses these two files and the Rust/Lean equality check it runs.
 - `compare.py`: joins the two JSON-Lines files by `(scope, record,
   state, hitbox_index)`, not by line position (the engine's own child
   order and the generated Rust's declaration order need not match), and

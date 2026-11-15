@@ -78,7 +78,20 @@ fi
 ls /work/generated/src/HustleCorePort
 
 echo "=== check no axiom or sorry remains in HustleCorePort ==="
-if grep -rEwn 'axiom|sorry' /work/generated/src/HustleCorePort; then
+# Strips "-- ..." line comments first, so a doc comment that merely
+# *mentions* "axiom" or "sorry" (like this script's own comments, or
+# Aeneas's per-item doc comments) cannot trip the check; only the
+# real Lean keyword, used as code, counts.
+axiom_or_sorry_found=0
+for f in /work/generated/src/HustleCorePort/*.lean; do
+  hits="$(sed 's/--.*//' "$f" | grep -nwE 'axiom|sorry' || true)"
+  if [ -n "$hits" ]; then
+    echo "$f:"
+    echo "$hits"
+    axiom_or_sorry_found=1
+  fi
+done
+if [ "$axiom_or_sorry_found" = 1 ]; then
   echo "found axiom or sorry in HustleCorePort (lines above); fix before building" >&2
   exit 1
 fi
@@ -104,5 +117,15 @@ cargo build --release
 echo "=== run the Lean TableDump executable and compare (equality check) ==="
 cd /work/generated
 lake exe TableDump > /work/lean_table_dump.jsonl
-cmp /work/rust_table_dump.jsonl /work/lean_table_dump.jsonl
-echo "table dumps match: $(wc -l < /work/rust_table_dump.jsonl) lines"
+# This image has no `cmp`/`diff` (see ../README.md, "The container");
+# a matching sha256 over the whole file is byte-for-byte equality,
+# the same guarantee `cmp` would give, for two files this size.
+rust_sum="$(sha256sum /work/rust_table_dump.jsonl | cut -d' ' -f1)"
+lean_sum="$(sha256sum /work/lean_table_dump.jsonl | cut -d' ' -f1)"
+rust_lines="$(wc -l < /work/rust_table_dump.jsonl)"
+lean_lines="$(wc -l < /work/lean_table_dump.jsonl)"
+if [ "$rust_sum" != "$lean_sum" ]; then
+  echo "table dump mismatch: rust sha256 $rust_sum ($rust_lines lines), lean sha256 $lean_sum ($lean_lines lines)" >&2
+  exit 1
+fi
+echo "table dumps match: sha256 $rust_sum, $rust_lines lines"
