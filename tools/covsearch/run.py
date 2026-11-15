@@ -150,7 +150,11 @@ def main() -> int:
     if args.cmd == "coordinate":
         import coordinator
 
-        return coordinator.run(work, args.roots, args.out, args.jobs, args.time_budget, run_worker, args.max_per_player)
+        readme_path = TOOL_DIR / "README.md"
+        return coordinator.run(
+            work, args.roots, args.out, args.jobs, args.time_budget, run_worker,
+            args.max_per_player, readme_path if readme_path.exists() else None,
+        )
     if args.cmd == "corpus":
         import corpus
 

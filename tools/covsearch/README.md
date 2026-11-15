@@ -11,9 +11,11 @@ The corpus feeds the Rust port's acceptance check
 ## Status at the last commit (read this before resuming)
 
 **Steps A and B are committed. The fidelity proof ran and found four
-real defects in this tool, now fixed. Step C (the coordinator) ran
-partway and was stopped at session end, not converged; see "Live
-progress" for its last counts and what resuming it looks like.**
+real defects in this tool, now fixed; it also found one residual gap
+("Decision: hybrid branching, exact credit" below), which this session
+closed by splitting the search into ghost exploration and exact-run
+credit. Step C (the coordinator) now runs on that hybrid design; see
+"Live progress" for its current counts.**
 
 ### Fidelity proof
 
@@ -106,6 +108,36 @@ brief's own fallback applies: switch branching to exact re-simulation
 (replay the path from tick 0 in a fresh live run per branch) and
 measure its cost against the ghost-`copy_to` approach's.
 
+### Decision: hybrid branching, exact credit
+
+The residual gap above means a probe hit only inside a ghost branch does
+not prove the real, non-ghost live path reaches it: `ObjectState.gd`
+(~295/306) runs `_frame_N` dispatch differently when `host.is_ghost`, and
+`game.gd`'s `tick()` returns early for a ghost after `post_tick`. Ghost
+branching by source is therefore not faithful, and the search needs a
+rule for what counts as a found probe, not just a faster way to explore.
+
+**Decision: a hybrid.** Exploration keeps the fast ghost `copy_to`
+branching (design step 6, unchanged) to propose paths: it is cheap, and
+every sampled pair in the fidelity proof above matched the live path on
+the externally observable projection, so it is a good *guide*. Credit is
+exact: a probe counts as hit only when an exact re-simulation hits it --
+the path's inputs (its root plus its ordered choice list) replayed from
+tick 0 in a fresh process, on the real, non-ghost live path
+(`on_action_selected`, the same application `_verify_replay` and the
+corpus writer already use), with coverage recorded in that run
+(`CovWorker.gd`'s `exact` job mode, `_hit_ids`). A path whose exact
+re-run differs from its ghost run is reported with its first differing
+tick and field (`coordinator.py first_divergence`), and its ghost-only
+probes -- the ones only the ghost branch recorded -- are never credited:
+credit comes from the exact run's own cumulative coverage, never from a
+ghost branch's probe-delta. Termination and the corpus use only this
+exact credit (design steps 8 and 9, below). `coordinator.py`'s module
+docstring has the scheduling detail: every ghost-kept path is queued for
+one exact re-run, sharing the same `jobs` worker-process pool the ghost
+frontier uses, with the exact queue given priority so credit keeps
+moving.
+
 ### Discretization completeness
 
 Every Ninja (stickman) data UI found, and how `_candidates`/
@@ -144,42 +176,44 @@ have found. This is a scope reduction from design point 3's "every
 decision point of each mirror" to "one decision point per mirror",
 named here, not hidden; the full scan's hang is unresolved.
 
-### Live progress -- stopped at session end, not converged
+### Live progress
 
-Step C (`coordinate --roots roots.json --out report/ --jobs 8
---max-per-player 6`) ran against the 6 roots above (match start plus
-the 5 mirrors' `up_to_tick=50` points). It was stopped (not killed on
-an error) at the end of this session, before reaching either real
-termination condition (every probe hit, or the frontier empty), so
-**`report/report.json` does not exist and Steps D and E (corpus,
-fidelity, final report) have not run.** Its last `progress.json`
-(`coordinator.run` writes this every 10 finished worker jobs):
+`coordinate --roots roots.json --out report/ --jobs 8 --max-per-player 6`
+runs the hybrid search (ghost exploration plus exact-run credit, see
+"Decision" above) against the 6 roots above (match start plus the 5
+mirrors' `up_to_tick=50` points), uncapped (no `--time-budget`), to one
+of its two real termination conditions: every in-scope probe has exact
+credit, or both the ghost frontier and the exact-verify queue empty
+first. `coordinator.py`'s `write_progress` rewrites both
+`report/progress.json` and the block below, in this file, every 90
+wall-clock seconds while it runs (`container.sh` mounts this one file
+read-write for that; see its comment), so a stop loses no more than 90
+seconds of progress, not the whole run.
 
+<!-- LIVE-PROGRESS:BEGIN -->
 ```json
 {
-  "jobs_done": 100,
-  "hit_count": 3884,
-  "total_probes": 8728,
-  "kept_paths": 216,
-  "frontier_size": 116,
+  "jobs_done": 0,
+  "exact_confirmed_probes": 0,
+  "ghost_proposed_probes": 0,
+  "total_probes": 0,
+  "kept_paths_ghost_proposed": 0,
+  "kept_paths_exact_confirmed": 0,
+  "frontier_size": 0,
+  "exact_queue_size": 0,
   "legality_diffs": 0,
-  "elapsed_s": 135.0
+  "divergence_count": 0,
+  "elapsed_s": 0.0
 }
 ```
+Not started yet this session. `exact_confirmed_probes` (out of
+`total_probes`) is the only number the termination condition and the
+corpus's set cover read; `ghost_proposed_probes` is the ghost
+exploration's own, uncredited, proposal count, kept here only to compare
+against it.
+<!-- LIVE-PROGRESS:END -->
 
-3,884 of 8,728 in-scope probes (line, branch, value-class) were hit by
-100 worker jobs in 135 s of coordinator wall time, with 216 kept paths
-and 116 nodes still on the frontier -- the frontier was still growing,
-not quiet, so continuing this run is expected to find more probes, not
-converge immediately. Resume it with the same command; it starts over
-(no checkpoint/resume of the frontier itself exists yet), but each run
-is deterministic in which roots and candidates it tries first, so a
-fresh run from the same `roots.json` retraces this one's early jobs.
-**Next session: run `coordinate` uncapped (no `--time-budget`) to one
-of its two real termination conditions, then `corpus` and `fidelity`
-against its `kept_paths.json`, then write Step E's full report.**
-
-## The twelve design points, and where each one lives
+## The fourteen design points, and where each one lives
 
 1. **Scope and probes.** `instrument.py`'s `IN_SCOPE_DIRS` /
    `IN_SCOPE_FILES` / `IN_SCOPE_GLOBS` name exactly the files the brief
@@ -231,57 +265,84 @@ against its `kept_paths.json`, then write Step E's full report.**
    `on_action_selected`, the child ticks to its next decision point, and
    the probe-count delta and a projection are recorded. The parent
    `Game` is never touched, so every candidate pair starts from the
-   same root. See "Fidelity proof" above for what this was checked
-   against and the one open item.
-7. **Ordering and dedup.** `coordinator.py`: the frontier is a
-   `heapq` keyed by `-(number of probes the branch hit)`. A child is
-   dropped from the frontier (but still contributes its hit probes and
-   is recorded as a kept path once) only in that its *bucketed*
-   projection (`bucket_projection`: positions rounded to 8, velocities
-   rounded to 1, state names and HP/meter/burst exact) controls whether
-   it is pushed back onto the frontier at all — a repeat bucket is not
-   re-expanded.
-8. **Termination.** `coordinator.run` stops when every probe id in
-   `probe_map.json` is in `hit_ids`, or the frontier empties. There is
-   no iteration cap in the algorithm; `--time-budget` is a wall-clock
-   escape hatch for *interactive* runs (documented in `run.py`'s
-   `--help`), not part of the search's own stopping rule, and a run
-   stopped by it is reported as such, not as converged. On a frontier-
-   empty exit, every probe id outside `hit_ids` gets a reason in
-   `report.json["unreachable"]`: either a curated static reason
-   (`coordinator.STATIC_UNREACHABLE`) or the honest "unreached: frontier
-   exhausted before this probe in this run", which is a fact about the
-   run, not a proof of unreachability.
-9. **Corpus.** `corpus.build`: greedy set cover over
-   `kept_paths.json`'s probe sets, then one `write_replay` job per
-   selected path (a real, non-ghost match applies the path's choices
-   through `on_action_selected`, so `ReplayManager.frames` fills the
-   normal way; `ReplayManager.save_replay` writes the binary replay).
-   Each entry also gets a `<name>.json` with its root, its choice list
-   and the probes it covers — the ".replay plus inputs and settings as
-   JSON" the brief asks for.
-10. **Fidelity.** Two checks exist now, at different grains. The
-    acceptance-order-1 check (`CovWorker.gd _fidelity_pair`, run once
-    before any search; see "Fidelity proof" above) compares a ghost
-    branch against a fresh live continuation tick for tick, over every
-    script variable `StateSnapshot.gd` captures. `corpus.check_fidelity`
-    is a lighter, per-corpus-entry check: it plays each corpus replay
-    twice through `CovWorker.gd`'s `verify_replay` mode (the live path,
+   same root. See "Fidelity proof" and "Decision" above: this ghost
+   branch only ever *proposes* a path now; it earns that path's probes
+   no credit by itself.
+7. **Ordering and dedup.** `coordinator.py`: the ghost frontier is a
+   `heapq` keyed by `-(number of probes the ghost branch hit)`. A child is
+   dropped from the frontier only in that its *bucketed* projection
+   (`bucket_projection`: positions rounded to 8, velocities rounded to 1,
+   state names and HP/meter/burst exact) controls whether it is pushed
+   back onto the frontier at all — a repeat bucket is not re-expanded.
+   Every distinct new bucket, whether or not it is pushed back (a
+   `game_over` child is not), is queued once for exact credit (below).
+8. **Exact credit.** `CovWorker.gd`'s `exact` job mode (see "Decision"
+   above) replays a kept path's root and choices from tick 0, on the
+   real `game`, in a fresh process, and writes one `exact_step` record
+   per choice (its decision-point projection, for divergence
+   comparison) plus one `exact_result` record with that process's full
+   cumulative probe-hit set (`_hit_ids`). `coordinator.py`'s
+   `submit_exact`/`first_divergence` queue every ghost-kept path for
+   this, sharing the same `jobs` worker-process pool the ghost frontier
+   uses (exact re-runs take priority when both queues have work), add
+   only the exact run's own `hit_ids` to the credited set, and report any
+   ghost/exact projection mismatch with its first differing step, tick
+   and field.
+9. **Termination.** `coordinator.run` stops when every probe id in
+   `probe_map.json` has exact credit, or both the ghost frontier and the
+   exact-verify queue empty. There is no iteration cap in the algorithm;
+   `--time-budget` is a wall-clock escape hatch for *interactive* runs
+   (documented in `run.py`'s `--help`), not part of the search's own
+   stopping rule, and a run stopped by it is reported as such, not as
+   converged. On a real exit, every probe id outside the credited set
+   gets a reason in `report.json["unreachable"]`: either a curated
+   static reason (`coordinator.STATIC_UNREACHABLE`) or the honest
+   "unreached: frontier exhausted before this probe in this run", which
+   is a fact about the run, not a proof of unreachability.
+10. **Corpus.** `corpus.build`: greedy set cover over
+    `kept_paths.json`'s probe sets -- now exact-confirmed sets only, one
+    entry per exact re-run, never a ghost branch's probe-delta -- then
+    one `write_replay` job per selected path (a real, non-ghost match
+    applies the path's choices through `on_action_selected`, so
+    `ReplayManager.frames` fills the normal way; `ReplayManager.save_replay`
+    writes the binary replay). Each entry also gets a `<name>.json` with
+    its root, its choice list and the probes it covers — the ".replay
+    plus inputs and settings as JSON" the brief asks for.
+11. **Fidelity and determinism.** Three checks exist now, at different
+    grains. The acceptance-order-1 check (`CovWorker.gd _fidelity_pair`,
+    run once before any search; see "Fidelity proof" above) compares a
+    ghost branch against a fresh live continuation tick for tick, over
+    every script variable `StateSnapshot.gd` captures. Every kept path's
+    own exact re-run (point 8 above) is itself a second, per-path
+    fidelity check: it is what exposed the residual gap's practical
+    reach, by comparing the ghost branch's projection against its own
+    exact re-run at every decision point of every kept path, not just 20
+    samples. `corpus.check_fidelity` is the corpus determinism check the
+    brief asks for: it plays each corpus replay twice through
+    `CovWorker.gd`'s `verify_replay` mode (the live path,
     `Fighter.on_action_selected`) and requires the two runs to produce
-    the same final-tick projection -- a determinism check, not a
-    tick-for-tick one; it does not need to be, since the harder,
-    tick-for-tick question is what `_fidelity_pair` already answered
-    once for the branching mechanism itself.
-11. **Parallelism.** `coordinator.run` uses a
+    the same final-tick projection *and* the same cumulative probe-hit
+    set (`_hit_ids`) -- a determinism check, not a tick-for-tick one; it
+    does not need to be, since the harder, tick-for-tick question is
+    what `_fidelity_pair` already answered once for the branching
+    mechanism itself.
+12. **Exact re-run cost.** `coordinator.py` times each exact re-run's
+    wall clock around its `subprocess.run` and divides by its
+    `final_tick` (every exact run starts at tick 0, so this tick count is
+    the whole cost, not a delta) to get seconds per 1,000 ticks; the
+    report's `exact_rerun_cost_s_per_1000_ticks` is this figure's mean,
+    min and max over every exact job the run submitted -- the brief's
+    "measure its cost" for the exact-re-simulation fallback, point 8.
+13. **Parallelism.** `coordinator.run` uses a
     `ThreadPoolExecutor(max_workers=jobs)` of Python threads, each
     blocked on one `subprocess.run` of a Godot worker process, so up to
     `--jobs` (default 4, 8 used for this run) Godot processes run at
-    once, sharing the one frontier and the one `hit_ids`/`seen_buckets`
-    state in this process. `container.sh` sets `--cpu-quota 800000
-    --cpu-period 100000`, `--pids-limit=-1` and `LP_NUM_THREADS=1` on
-    the whole container, matching the per-run limits used elsewhere in
-    this repository's tooling.
-12. **Hand-off.** The corpus directory (`corpus/`) holds one `.replay`
+    once, sharing the one frontier, the one exact-verify queue and the
+    one `hit_ids`/`seen_buckets` state in this process. `container.sh`
+    sets `--cpu-quota 800000 --cpu-period 100000`, `--pids-limit=-1` and
+    `LP_NUM_THREADS=1` on the whole container, matching the per-run
+    limits used elsewhere in this repository's tooling.
+14. **Hand-off.** The corpus directory (`corpus/`) holds one `.replay`
     file per path plus its `<name>.json` and a `manifest.json` listing
     every entry. This is the same directory shape
     `tools/replay_check/run.py`'s `check`/`census` commands already read

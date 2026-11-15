@@ -119,6 +119,36 @@ func _run():
 			return
 	if finished:
 		return
+	# Hybrid branching (README.md "Decision"): exploration above already
+	# replayed `base` plus every already-kept `choice` on the real, non-ghost
+	# `game` (on_action_selected, the live path), so this point in the
+	# function already *is* an exact re-run of the path from tick 0 -- the
+	# ghost `copy_to` branching only ever runs inside `_expand()`, below,
+	# never here. A job with "exact": true stops right here, after writing
+	# one "exact_step" record per choice (so the coordinator can compare
+	# each decision's exact projection against the ghost projection that
+	# proposed it) and one "exact_result" record with the full cumulative
+	# probe id set this live process has hit since tick 0 -- the only
+	# source of probe credit the hybrid design allows (README.md decision).
+	var exact_mode = bool(job.get("exact", false))
+	if exact_mode:
+		var step_i = 0
+		var before = _probe_snapshot()
+		for choice in job.get("choices", []):
+			yield(_apply_pair(game, choice[0], choice[1]), "completed")
+			if finished:
+				return
+			var after = _probe_snapshot()
+			_write({"kind": "exact_step", "step": step_i, "tick": game.current_tick,
+				"projection": _projection(game), "probes": _probe_delta(before, after)})
+			before = after
+			step_i += 1
+		_write({"kind": "exact_result", "final_tick": game.current_tick,
+			"game_over": game.game_finished, "projection": _projection(game),
+			"hit_ids": _hit_ids()})
+		out.close()
+		get_tree().quit(0)
+		return
 	for choice in job.get("choices", []):
 		yield(_apply_pair(game, choice[0], choice[1]), "completed")
 		if finished:
@@ -153,12 +183,16 @@ func _write_replay(name: String):
 # Fighter.on_action_selected. Fails if the game ever disagrees with the
 # replay about who acts, same rule ReplayCheck.gd _on_live_actionable
 # enforces. Reports the final-tick projection, which run.py's caller
-# compares against the branched search's own recorded projection for that
-# path, and runs this twice to compare the two live runs against each
-# other (determinism). A full tick-for-tick comparison would additionally
-# need tools/replay_check/TraceHooks.gd's per-tick hashing; this check
-# compares the final tick's projection only -- see README.md, "Fidelity",
-# for why that is a stated scope reduction, not a silent one.
+# compares against the branched search's own recorded projection for
+# that path, and runs this twice to compare the two live runs against each
+# other (determinism). Also reports the full cumulative probe id set this
+# live process has hit since tick 0 (`_hit_ids`), so corpus.py's
+# determinism check compares probe hits as well as the final-tick
+# projection, as the brief's corpus determinism check requires. A full
+# tick-for-tick comparison would additionally need tools/replay_check/
+# TraceHooks.gd's per-tick hashing; this check compares the final tick's
+# projection and the cumulative probe set only -- see README.md,
+# "Fidelity", for why that is a stated scope reduction, not a silent one.
 func _verify_replay(replay_path: String):
 	yield(get_tree(), "idle_frame")
 	match_data = ReplayManager.load_replay(replay_path)
@@ -189,7 +223,8 @@ func _verify_replay(replay_path: String):
 				fighter.on_action_selected(input["action"], input["data"], input["extra"])
 		yield(_wait_resolved(), "completed")
 	_write({"kind": "verify_result", "final_tick": game.current_tick,
-		"game_over": game.game_finished, "projection": _projection(game)})
+		"game_over": game.game_finished, "projection": _projection(game),
+		"hit_ids": _hit_ids()})
 
 # replay_scan (design step 3): play one human mirror's own recorded inputs
 # on the live path from tick 0 to its end. At every decision point, run
@@ -507,6 +542,18 @@ func _probe_delta(before: Array, after: Array) -> Array:
 		if after[i] > before[i]:
 			hit.append(i)
 	return hit
+
+# The full cumulative set of probe ids this process has hit since it
+# started (tick 0 of the job's root), used only by exact-mode jobs
+# (README.md "Decision") and _verify_replay's determinism check: the
+# one and only source of probe credit the hybrid design allows.
+func _hit_ids() -> Array:
+	var ids = []
+	var h = __COV__.h
+	for i in range(h.size()):
+		if h[i] > 0:
+			ids.append(i)
+	return ids
 
 func _projection(g) -> Dictionary:
 	var objs = {}

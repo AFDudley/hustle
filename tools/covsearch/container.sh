@@ -46,8 +46,16 @@ mkdir -p "$work"
 mounts+=(-v "$work:$work")
 
 "$tool_dir/../replay_check/build.sh"
+# README.md is mounted a second time, read-write, at its own path inside
+# the /repo mount -- the one file a running "coordinate" needs to write,
+# so it can checkpoint live progress into it every 90s (see
+# coordinator.py _update_readme_progress and README.md "Live progress").
+# Every other file stays under the read-only /repo mount above: this does
+# not reopen the "never modify committed game files" rule, it narrows one
+# documentation file's own mount from read-only to read-write.
 exec podman run --rm --init --cpu-quota 800000 --cpu-period 100000 --pids-limit=-1 \
   -e LP_NUM_THREADS=1 \
   --entrypoint python3 \
   "${mounts[@]}" -v "$repo:/repo:ro" \
+  -v "$tool_dir/README.md:/repo/tools/covsearch/README.md" \
   "$image" /repo/tools/covsearch/run.py --work "$work" "${args[@]}"
