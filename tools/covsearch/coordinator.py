@@ -129,6 +129,20 @@ def run(
         _, _, node = heapq.heappop(frontier)
         submit(node)
 
+    jobs_done = 0
+    progress_path = out_dir / "progress.json"
+
+    def write_progress():
+        progress_path.write_text(json.dumps({
+            "jobs_done": jobs_done,
+            "hit_count": len(hit_ids),
+            "total_probes": len(total_ids),
+            "kept_paths": len(kept_paths),
+            "frontier_size": len(frontier),
+            "legality_diffs": len(legality_diffs),
+            "elapsed_s": time.monotonic() - start,
+        }, indent=2))
+
     while pending:
         if total_ids and total_ids <= hit_ids:
             break
@@ -137,6 +151,7 @@ def run(
         done, _ = concurrent.futures.wait(pending, return_when=concurrent.futures.FIRST_COMPLETED)
         for fut in done:
             node = pending.pop(fut)
+            jobs_done += 1
             out_path = fut.result()
             for line in out_path.read_text().splitlines():
                 rec = json.loads(line)
@@ -164,6 +179,9 @@ def run(
             if frontier and (not time_budget or time.monotonic() - start <= time_budget) and not (total_ids and total_ids <= hit_ids):
                 _, _, nxt = heapq.heappop(frontier)
                 submit(nxt)
+        if jobs_done % 10 == 0:
+            write_progress()
+    write_progress()
     executor.shutdown(wait=False, cancel_futures=True)
 
     missing = total_ids - hit_ids
