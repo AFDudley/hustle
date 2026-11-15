@@ -52,6 +52,10 @@ if [[ ! -d "$census_replays" ]]; then
   exit 2
 fi
 
+# The recorder appends to its output files (several objects share one file),
+# so a run must start from an empty out/. Otherwise probe.jsonl keeps the
+# calls of every earlier run and the counts grow by one probe set per run.
+rm -rf "$work/out"
 mkdir -p "$work/out" "$work/xdg" "$work/godot_project/xdg"
 
 echo "--- stage 1: Godot edge-value probe ---"
