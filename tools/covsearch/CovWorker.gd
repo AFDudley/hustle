@@ -575,11 +575,39 @@ func _expand():
 # itself; this only adds snapshot capture per tick, gated by job
 # "fidelity_pair". See README.md "Fidelity proof" for how run.py drives
 # this across 20 sample paths from two different roots.
+# The ignore list is the same one tools/replay_check/ignore.txt documents
+# (presentation/wall-clock/playback variables that do not feed the
+# simulation), plus three fields that are definitionally different
+# between a ghost and the real game and so would always "differ" without
+# being a fidelity defect: is_ghost itself, game_paused (a ghost child
+# never reaches the real pause/turn UI state), and ghost_time (ghost
+# real-time pacing, game.gd tick(), presentation only).
+const FIDELITY_IGNORE_EXTRA = ["is_ghost", "game_paused", "ghost_time"]
+var _fidelity_ignore_cache = null
+
+func _fidelity_ignore() -> Dictionary:
+	if _fidelity_ignore_cache != null:
+		return _fidelity_ignore_cache
+	var out = {}
+	for name in FIDELITY_IGNORE_EXTRA:
+		out[name] = true
+	var f = File.new()
+	if f.open("res://tools/replay_check/ignore.txt", File.READ) == OK:
+		while !f.eof_reached():
+			var line = f.get_line().split("#")[0].strip_edges()
+			if line != "":
+				out[line] = true
+		f.close()
+	_fidelity_ignore_cache = out
+	return out
+
 func _snapshot(g) -> Dictionary:
-	return StateSnapshot.game_state(g, {})
+	return StateSnapshot.game_state(g, _fidelity_ignore())
 
 func _apply_pair_traced(g, p1in: Dictionary, p2in: Dictionary, trace: Array):
 	yield(get_tree(), "idle_frame")
+	g.p1_turn = false
+	g.p2_turn = false
 	g.get_player(1).on_action_selected(p1in.action, p1in.data, p1in.extra)
 	g.get_player(2).on_action_selected(p2in.action, p2in.data, p2in.extra)
 	while !g.is_waiting_on_player():
