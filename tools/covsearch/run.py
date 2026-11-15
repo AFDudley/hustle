@@ -39,11 +39,9 @@ SCENE = "res://tools/covsearch/CovWorker.tscn"
 # session: 9 to 20 seconds. tools/replay_check's own JOB_TIMEOUT_S (900s)
 # is sized for a full generated match, not one decision point here; using
 # it as this tool's own per-job budget would let one stalled job block the
-# search for 15 minutes. README.md "Blocking defect" names a real,
-# unresolved stall: driving a replay_prefix root live past its own last
-# recorded input can leave game.gd's tick() never reaching another
-# decision. `WorkerStalled` lets the coordinator skip that one node with a
-# named reason instead of the whole run hanging or crashing.
+# search for 15 minutes. `WorkerStalled` lets a caller (coordinator.run,
+# scan_roots) skip or salvage that one stalled job with a named reason
+# instead of the whole run hanging or crashing (README.md "Known defect").
 JOB_TIMEOUT_S = 150
 
 
@@ -113,28 +111,55 @@ def run_worker(work: rc_run.Work, name: str, job: dict, job_timeout: float = JOB
     return job_out
 
 
-def scan_roots(work: rc_run.Work, replays: list[str], out_path: Path, stop_tick: int, roots_per_mirror: int) -> None:
+def scan_roots(work: rc_run.Work, replays: list[str], out_path: Path, roots_per_mirror: int) -> None:
     """Run replay_scan for each mirror, then write roots.json.
 
     Design step 3: the match-start root, plus up to `roots_per_mirror`
     *genuine* decision points of each mirror (CovWorker.gd `_scan_replay`
     only records a tick where some player is actually interruptable, not
-    just wherever a bounded replay happened to stop -- see its own
-    comment and README.md "Blocking defect"). `stop_tick` bounds how far
-    each scan replays, staying well clear of the full-replay hang
-    README.md "Known defect" names. Each replay_scan run also writes its
-    own branch and legality records; scan-roots does not fold them into a
-    coverage total (the coordinator re-expands each root), so no coverage
-    is double counted and no coverage silently depends on this command
-    having run.
+    just wherever the scan happened to stop).
+
+    `replay_scan` plays a mirror all the way to its own last recorded
+    tick, live, decision by decision. One root this session,
+    `replays/A/Ninja_Ninja_1.replay`, reliably runs the single Godot
+    process at 85-100% CPU with no further output starting around tick
+    706 -- confirmed this session to be specific to driving this replay
+    through this tool's own instrumented project, not to the replay or
+    the game code: a fresh, uninstrumented `tools/replay_check` "live"
+    run of the same replay completes the whole match (2,576 ticks) in
+    about 90 seconds, and `CovWorker.gd _verify_replay` (the same live
+    input-application loop, with no legality-report side work)
+    reproduces the same stall independently of `_scan_replay`, which
+    rules out a bug in `_scan_replay`'s own extra work as the cause. No
+    committed game file may change to chase this further (see README.md
+    "Known defect" for the full evidence trail). `run_worker`'s own
+    per-job timeout (`JOB_TIMEOUT_S`) already kills a job that runs this
+    long and raises `WorkerStalled`, the same signal `coordinator.run()`
+    already treats as "drop this one node, keep the rest of the search"
+    rather than a crash. `scan_roots` applies the same rule here: on a
+    stall, it reads whatever `root_tick` records `_scan_replay` already
+    wrote to the job's own output file before the kill (a line the kill
+    cut off mid-write is simply skipped, not treated as a parse error),
+    instead of losing the whole mirror's scan or capping every mirror's
+    scan at one hand-picked tick up front, which this tool no longer
+    does.
     """
     roots = [{"mode": "match_start", "seed": 1}]
     for i, replay in enumerate(replays):
-        out = run_worker(work, f"scan{i}", {"base": {"mode": "replay_scan", "replay": replay, "stop_tick": stop_tick}})
+        name = f"scan{i}"
+        job_out = work.jobs / f"{name}.jsonl"
+        try:
+            out = run_worker(work, name, {"base": {"mode": "replay_scan", "replay": replay}})
+        except WorkerStalled as exc:
+            print(f"{replay}: {exc}; keeping the root_tick records it wrote before the stall", file=sys.stderr)
+            out = job_out
         found = 0
         for line in out.read_text().splitlines():
-            rec = json.loads(line)
-            if rec["kind"] == "root_tick" and found < roots_per_mirror:
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue  # a kill mid-write can leave a partial trailing line
+            if rec.get("kind") == "root_tick" and found < roots_per_mirror:
                 roots.append({"mode": "replay_prefix", "replay": rec["replay"], "up_to_tick": rec["tick"]})
                 found += 1
     out_path.write_text(json.dumps(roots, indent=2))
@@ -152,14 +177,12 @@ def main() -> int:
     scan = sub.add_parser("scan-roots")
     scan.add_argument("--replay", action="append", required=True, dest="replays")
     scan.add_argument("--out", type=Path, required=True)
-    scan.add_argument("--stop-tick", type=int, default=200, help="bounds how far each mirror replays while scanning for genuine decision points, staying clear of the full-replay hang README.md 'Known defect' names")
     scan.add_argument("--roots-per-mirror", type=int, default=1, help="how many of a mirror's own genuine decision points become replay_prefix roots")
     coord = sub.add_parser("coordinate")
     coord.add_argument("--out", type=Path, required=True)
     coord.add_argument("--jobs", type=int, default=4)
     coord.add_argument("--roots", type=Path, required=True)
     coord.add_argument("--max-per-player", type=int, default=12, help="caps the discretized candidates tried per player at each decision point (design step 5 groups continuous inputs into classes; this bounds how many of those classes one decision point tries, so a search step stays tractable -- see README.md)")
-    coord.add_argument("--time-budget", type=float, default=0.0, help="stop after this many seconds (0 = until the frontier empties or every probe is hit; the design forbids an iteration cap, so this is a wall-clock escape hatch for interactive runs only)")
     corpus_p = sub.add_parser("corpus")
     corpus_p.add_argument("--kept-paths", type=Path, required=True)
     corpus_p.add_argument("--out", type=Path, required=True)
@@ -178,15 +201,16 @@ def main() -> int:
         print(out)
         return 0
     if args.cmd == "scan-roots":
-        scan_roots(work, args.replays, args.out, args.stop_tick, args.roots_per_mirror)
+        scan_roots(work, args.replays, args.out, args.roots_per_mirror)
         return 0
     if args.cmd == "coordinate":
         import coordinator
 
         readme_path = TOOL_DIR / "README.md"
         return coordinator.run(
-            work, args.roots, args.out, args.jobs, args.time_budget, run_worker,
+            work, args.roots, args.out, args.jobs, run_worker,
             args.max_per_player, readme_path if readme_path.exists() else None,
+            REPO,
         )
     if args.cmd == "corpus":
         import corpus
