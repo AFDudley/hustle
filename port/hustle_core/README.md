@@ -135,6 +135,19 @@ every function that used it is split so the `?` becomes a plain `match`
 in a non-loop function body (allowed; only `while`/`for` loop bodies
 must avoid it), which does not need an axiom for `Try::branch` either.
 
+`tables` (see "`tables`: the five characters' data" below) is a
+partial exception to "none" at the Charon level, not the Lean level.
+Charon marks every table data function and large const in `tables/`
+opaque (`tools/tablegen/gen.py`'s `emit_opaque_patterns`; see
+`tools/lean_check/README.md`, "port/hustle_core, the tables slice" --
+Aeneas's translation of this module did not finish in over ten
+minutes otherwise). Marking an item opaque makes Aeneas emit one
+`axiom` per item, the same template it would emit for any opaque
+call. This crate does not keep that template: `gen.py` writes a real
+Lean `def` for every one of those items instead, from the same `raw`
+data its own Rust emitter reads, so the crate's Lean output still
+carries zero axioms end to end.
+
 ## How it is checked
 
 - `tools/fixedmath_diff` runs the game's own `FixedMath` methods and two
@@ -151,7 +164,7 @@ must avoid it), which does not need an axiom for `Try::branch` either.
   translation) on this crate, then `lake build` on the result
   (`HustleCorePort` in `tools/lean_check/generated/`): 0 Aeneas errors,
   0 axioms, build green. See `tools/lean_check/README.md`,
-  "port/hustle_core".
+  "port/hustle_core" and "port/hustle_core, the tables slice".
 - `tools/tablegen` checks `tables/` against a headless Godot probe of
   the real `.tscn` scenes, field by field, state by state, hitbox by
   hitbox. See `tools/tablegen/README.md`.
