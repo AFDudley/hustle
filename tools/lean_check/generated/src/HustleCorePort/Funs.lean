@@ -1539,6 +1539,864 @@ def godot_hash.hash_bytes (bytes : Slice Std.U8) : Result Std.U32 := do
   let i := Slice.len bytes
   godot_hash.hash_bytes_rec bytes 0#usize i 5381#u32
 
+/-- [hustle_core::physics::{impl core::clone::Clone for hustle_core::physics::Facing}::clone]:
+    Source: 'src/physics.rs', lines 48:9-48:14
+    Visibility: public -/
+def physics.Facing.Insts.CoreCloneClone.clone
+  (self : physics.Facing) : Result physics.Facing := do
+  ok self
+
+/-- Trait implementation: [hustle_core::physics::{impl core::clone::Clone for hustle_core::physics::Facing}]
+    Source: 'src/physics.rs', lines 48:9-48:14 -/
+@[reducible]
+def physics.Facing.Insts.CoreCloneClone : core.clone.Clone physics.Facing := {
+  clone := physics.Facing.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::physics::{impl core::marker::Copy for hustle_core::physics::Facing}]
+    Source: 'src/physics.rs', lines 48:16-48:20 -/
+@[reducible]
+def physics.Facing.Insts.CoreMarkerCopy : core.marker.Copy physics.Facing := {
+  cloneInst := physics.Facing.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [hustle_core::physics::{impl core::marker::StructuralPartialEq for hustle_core::physics::Facing}]
+    Source: 'src/physics.rs', lines 48:22-48:31 -/
+@[reducible]
+def physics.Facing.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq physics.Facing := {
+}
+
+/-- [hustle_core::physics::{impl core::cmp::PartialEq<hustle_core::physics::Facing> for hustle_core::physics::Facing}::eq]:
+    Source: 'src/physics.rs', lines 48:22-48:31
+    Visibility: public -/
+def physics.Facing.Insts.CoreCmpPartialEqFacing.eq
+  (self : physics.Facing) (other : physics.Facing) : Result Bool := do
+  let self1 := read_discriminant self
+  let other1 := read_discriminant other
+  ok (self1 = other1)
+
+/-- Trait implementation: [hustle_core::physics::{impl core::cmp::PartialEq<hustle_core::physics::Facing> for hustle_core::physics::Facing}]
+    Source: 'src/physics.rs', lines 48:22-48:31 -/
+@[reducible]
+def physics.Facing.Insts.CoreCmpPartialEqFacing : core.cmp.PartialEq
+  physics.Facing physics.Facing := {
+  eq := physics.Facing.Insts.CoreCmpPartialEqFacing.eq
+}
+
+/-- Trait implementation: [hustle_core::physics::{impl core::cmp::Eq for hustle_core::physics::Facing}]
+    Source: 'src/physics.rs', lines 48:33-48:35 -/
+@[reducible]
+impl_def physics.Facing.Insts.CoreCmpEq : core.cmp.Eq physics.Facing := {
+  partialEqInst := physics.Facing.Insts.CoreCmpPartialEqFacing
+  assert_fields_are_eq := core.cmp.Eq.assert_fields_are_eq.default
+    physics.Facing.Insts.CoreCmpEq
+}
+
+/-- [hustle_core::physics::{impl core::fmt::Debug for hustle_core::physics::Facing}::fmt]:
+    Source: 'src/physics.rs', lines 48:37-48:42
+    Visibility: public -/
+def physics.Facing.Insts.CoreFmtDebug.fmt
+  (self : physics.Facing) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  match self with
+  | physics.Facing.Right => core.fmt.Formatter.write_str f (toStr "Right")
+  | physics.Facing.Left => core.fmt.Formatter.write_str f (toStr "Left")
+
+/-- Trait implementation: [hustle_core::physics::{impl core::fmt::Debug for hustle_core::physics::Facing}]
+    Source: 'src/physics.rs', lines 48:37-48:42 -/
+@[reducible]
+def physics.Facing.Insts.CoreFmtDebug : core.fmt.Debug physics.Facing := {
+  fmt := physics.Facing.Insts.CoreFmtDebug.fmt
+}
+
+/-- [hustle_core::physics::facing_sign]:
+    Source: 'src/physics.rs', lines 57:0-63:1 -/
+def physics.facing_sign (facing : physics.Facing) : Result Std.I64 := do
+  let b ←
+    physics.Facing.Insts.CoreCmpPartialEqFacing.eq facing physics.Facing.Right
+  if b
+  then ok 1#i64
+  else ok (-1)#i64
+
+/-- [hustle_core::physics::{impl core::clone::Clone for hustle_core::physics::ObjectData}::clone]:
+    Source: 'src/physics.rs', lines 80:9-80:14
+    Visibility: public -/
+def physics.ObjectData.Insts.CoreCloneClone.clone
+  (self : physics.ObjectData) : Result physics.ObjectData := do
+  ok self
+
+/-- Trait implementation: [hustle_core::physics::{impl core::clone::Clone for hustle_core::physics::ObjectData}]
+    Source: 'src/physics.rs', lines 80:9-80:14 -/
+@[reducible]
+def physics.ObjectData.Insts.CoreCloneClone : core.clone.Clone
+  physics.ObjectData := {
+  clone := physics.ObjectData.Insts.CoreCloneClone.clone
+}
+
+/-- Trait implementation: [hustle_core::physics::{impl core::marker::Copy for hustle_core::physics::ObjectData}]
+    Source: 'src/physics.rs', lines 80:16-80:20 -/
+@[reducible]
+def physics.ObjectData.Insts.CoreMarkerCopy : core.marker.Copy
+  physics.ObjectData := {
+  cloneInst := physics.ObjectData.Insts.CoreCloneClone
+}
+
+/-- Trait implementation: [hustle_core::physics::{impl core::marker::StructuralPartialEq for hustle_core::physics::ObjectData}]
+    Source: 'src/physics.rs', lines 80:22-80:31 -/
+@[reducible]
+def physics.ObjectData.Insts.CoreMarkerStructuralPartialEq :
+  core.marker.StructuralPartialEq physics.ObjectData := {
+}
+
+/-- [hustle_core::physics::{impl core::cmp::PartialEq<hustle_core::physics::ObjectData> for hustle_core::physics::ObjectData}::eq]:
+    Source: 'src/physics.rs', lines 80:22-80:31
+    Visibility: public -/
+def physics.ObjectData.Insts.CoreCmpPartialEqObjectData.eq
+  (self : physics.ObjectData) (other : physics.ObjectData) : Result Bool := do
+  if self.id = other.id
+  then
+    if self.grounded = other.grounded
+    then
+      if self.snap_to_ground = other.snap_to_ground
+      then
+        let b ←
+          fixed.Fixed.Insts.CoreCmpPartialEqFixed.eq self.position_x
+            other.position_x
+        if b
+        then
+          let b1 ←
+            fixed.Fixed.Insts.CoreCmpPartialEqFixed.eq self.position_y
+              other.position_y
+          if b1
+          then
+            let b2 ←
+              fixed.Fixed.Insts.CoreCmpPartialEqFixed.eq self.vel_x other.vel_x
+            if b2
+            then
+              let b3 ←
+                fixed.Fixed.Insts.CoreCmpPartialEqFixed.eq self.vel_y
+                  other.vel_y
+              if b3
+              then
+                let b4 ←
+                  physics.Facing.Insts.CoreCmpPartialEqFacing.eq self.facing
+                    other.facing
+                if b4
+                then
+                  let b5 ←
+                    fixed.Fixed.Insts.CoreCmpPartialEqFixed.eq self.gravity
+                      other.gravity
+                  if b5
+                  then
+                    let b6 ←
+                      fixed.Fixed.Insts.CoreCmpPartialEqFixed.eq
+                        self.gravity_modifier other.gravity_modifier
+                    if b6
+                    then
+                      let b7 ←
+                        fixed.Fixed.Insts.CoreCmpPartialEqFixed.eq
+                          self.ground_friction other.ground_friction
+                      if b7
+                      then
+                        let b8 ←
+                          fixed.Fixed.Insts.CoreCmpPartialEqFixed.eq
+                            self.air_friction other.air_friction
+                        if b8
+                        then
+                          let b9 ←
+                            fixed.Fixed.Insts.CoreCmpPartialEqFixed.eq
+                              self.max_ground_speed other.max_ground_speed
+                          if b9
+                          then
+                            let b10 ←
+                              fixed.Fixed.Insts.CoreCmpPartialEqFixed.eq
+                                self.max_air_speed other.max_air_speed
+                            if b10
+                            then
+                              let b11 ←
+                                fixed.Fixed.Insts.CoreCmpPartialEqFixed.eq
+                                  self.max_fall_speed other.max_fall_speed
+                              if b11
+                              then
+                                let b12 ←
+                                  fixed.Fixed.Insts.CoreCmpPartialEqFixed.eq
+                                    self.pending_force_x other.pending_force_x
+                                if b12
+                                then
+                                  let b13 ←
+                                    fixed.Fixed.Insts.CoreCmpPartialEqFixed.eq
+                                      self.pending_force_y
+                                      other.pending_force_y
+                                  if b13
+                                  then
+                                    fixed.Fixed.Insts.CoreCmpPartialEqFixed.eq
+                                      self.pushback other.pushback
+                                  else ok false
+                                else ok false
+                              else ok false
+                            else ok false
+                          else ok false
+                        else ok false
+                      else ok false
+                    else ok false
+                  else ok false
+                else ok false
+              else ok false
+            else ok false
+          else ok false
+        else ok false
+      else ok false
+    else ok false
+  else ok false
+
+/-- Trait implementation: [hustle_core::physics::{impl core::cmp::PartialEq<hustle_core::physics::ObjectData> for hustle_core::physics::ObjectData}]
+    Source: 'src/physics.rs', lines 80:22-80:31 -/
+@[reducible]
+def physics.ObjectData.Insts.CoreCmpPartialEqObjectData : core.cmp.PartialEq
+  physics.ObjectData physics.ObjectData := {
+  eq := physics.ObjectData.Insts.CoreCmpPartialEqObjectData.eq
+}
+
+/-- [hustle_core::physics::{impl core::fmt::Debug for hustle_core::physics::ObjectData}::fmt]:
+    Source: 'src/physics.rs', lines 80:33-80:38
+    Visibility: public -/
+def physics.ObjectData.Insts.CoreFmtDebug.fmt
+  (self : physics.ObjectData) (f : core.fmt.Formatter) :
+  Result ((core.result.Result Unit core.fmt.Error) × core.fmt.Formatter)
+  := do
+  let dyn := Dyn.mk _ core.fmt.DebugI64 self.id
+  let dyn1 := Dyn.mk _ fixed.Fixed.Insts.CoreFmtDebug self.position_x
+  let dyn2 := Dyn.mk _ fixed.Fixed.Insts.CoreFmtDebug self.position_y
+  let dyn3 := Dyn.mk _ fixed.Fixed.Insts.CoreFmtDebug self.vel_x
+  let dyn4 := Dyn.mk _ fixed.Fixed.Insts.CoreFmtDebug self.vel_y
+  let dyn5 := Dyn.mk _ physics.Facing.Insts.CoreFmtDebug self.facing
+  let dyn6 := Dyn.mk _ core.fmt.DebugBool self.grounded
+  let dyn7 := Dyn.mk _ core.fmt.DebugBool self.snap_to_ground
+  let dyn8 := Dyn.mk _ fixed.Fixed.Insts.CoreFmtDebug self.gravity
+  let dyn9 := Dyn.mk _ fixed.Fixed.Insts.CoreFmtDebug self.gravity_modifier
+  let dyn10 := Dyn.mk _ fixed.Fixed.Insts.CoreFmtDebug self.ground_friction
+  let dyn11 := Dyn.mk _ fixed.Fixed.Insts.CoreFmtDebug self.air_friction
+  let dyn12 := Dyn.mk _ fixed.Fixed.Insts.CoreFmtDebug self.max_ground_speed
+  let dyn13 := Dyn.mk _ fixed.Fixed.Insts.CoreFmtDebug self.max_air_speed
+  let dyn14 := Dyn.mk _ fixed.Fixed.Insts.CoreFmtDebug self.max_fall_speed
+  let dyn15 := Dyn.mk _ fixed.Fixed.Insts.CoreFmtDebug self.pending_force_x
+  let dyn16 := Dyn.mk _ fixed.Fixed.Insts.CoreFmtDebug self.pending_force_y
+  let dyn17 :=
+    Dyn.mk _ (core.fmt.DebugShared fixed.Fixed.Insts.CoreFmtDebug)
+      self.pushback
+  let values :=
+    Array.to_slice
+      (Array.make 18#usize [
+        dyn, dyn1, dyn2, dyn3, dyn4, dyn5, dyn6, dyn7, dyn8, dyn9, dyn10,
+        dyn11, dyn12, dyn13, dyn14, dyn15, dyn16, dyn17
+        ])
+  let s ←
+    lift (Array.to_slice
+      (Array.make 18#usize [
+        toStr "id", toStr "position_x", toStr "position_y", toStr "vel_x",
+        toStr "vel_y", toStr "facing", toStr "grounded", toStr
+        "snap_to_ground", toStr "gravity", toStr "gravity_modifier", toStr
+        "ground_friction", toStr "air_friction", toStr "max_ground_speed",
+        toStr "max_air_speed", toStr "max_fall_speed", toStr "pending_force_x",
+        toStr "pending_force_y", toStr "pushback"
+        ]))
+  core.fmt.Formatter.debug_struct_fields_finish f (toStr "ObjectData") s values
+
+/-- Trait implementation: [hustle_core::physics::{impl core::fmt::Debug for hustle_core::physics::ObjectData}]
+    Source: 'src/physics.rs', lines 80:33-80:38 -/
+@[reducible]
+def physics.ObjectData.Insts.CoreFmtDebug : core.fmt.Debug physics.ObjectData
+  := {
+  fmt := physics.ObjectData.Insts.CoreFmtDebug.fmt
+}
+
+/-- [hustle_core::physics::new_object]:
+    Source: 'src/physics.rs', lines 117:0-138:1
+    Visibility: public -/
+def physics.new_object : Result physics.ObjectData := do
+  let f ← fixed.Fixed.ONE
+  ok
+    {
+      id := 0#i64,
+      position_x := fixed.Fixed.ZERO,
+      position_y := fixed.Fixed.ZERO,
+      vel_x := fixed.Fixed.ZERO,
+      vel_y := fixed.Fixed.ZERO,
+      facing := physics.Facing.Right,
+      grounded := true,
+      snap_to_ground := true,
+      gravity := fixed.Fixed.ZERO,
+      gravity_modifier := f,
+      ground_friction := fixed.Fixed.ZERO,
+      air_friction := fixed.Fixed.ZERO,
+      max_ground_speed := fixed.Fixed.ZERO,
+      max_air_speed := fixed.Fixed.ZERO,
+      max_fall_speed := fixed.Fixed.ZERO,
+      pending_force_x := fixed.Fixed.ZERO,
+      pending_force_y := fixed.Fixed.ZERO,
+      pushback := fixed.Fixed.ZERO
+    }
+
+/-- [hustle_core::physics::fixed_from_int]:
+    Source: 'src/physics.rs', lines 146:0-148:1 -/
+def physics.fixed_from_int (n : Std.I64) : Result fixed.Fixed := do
+  let f ← fixed.Fixed.ONE
+  fixed.Fixed.wrapping_mul_int f n
+
+/-- [hustle_core::physics::clamp_sym]:
+    Source: 'src/physics.rs', lines 154:0-162:1 -/
+def physics.clamp_sym
+  (v : fixed.Fixed) (limit : fixed.Fixed) : Result fixed.Fixed := do
+  if v > limit
+  then ok limit
+  else let i ← -. limit
+       if v < i
+       then ok i
+       else ok v
+
+/-- [hustle_core::physics::snap_position_y]:
+    Source: 'src/physics.rs', lines 185:0-195:1 -/
+def physics.snap_position_y
+  (new_pos_y : fixed.Fixed) (snap_to_ground : Bool) : Result fixed.Fixed := do
+  if new_pos_y >= 0#i64
+  then if snap_to_ground
+       then ok fixed.Fixed.ZERO
+       else ok new_pos_y
+  else ok new_pos_y
+
+/-- [hustle_core::physics::set_x]:
+    Source: 'src/physics.rs', lines 201:0-205:1
+    Visibility: public -/
+def physics.set_x
+  (o : physics.ObjectData) (x : Std.I64) : Result physics.ObjectData := do
+  let f ← physics.fixed_from_int x
+  ok { o with position_x := f }
+
+/-- [hustle_core::physics::set_y]:
+    Source: 'src/physics.rs', lines 207:0-211:1
+    Visibility: public -/
+def physics.set_y
+  (o : physics.ObjectData) (y : Std.I64) : Result physics.ObjectData := do
+  let f ← physics.fixed_from_int y
+  ok { o with position_y := f }
+
+/-- [hustle_core::physics::set_position]:
+    Source: 'src/physics.rs', lines 213:0-215:1
+    Visibility: public -/
+def physics.set_position
+  (o : physics.ObjectData) (x : Std.I64) (y : Std.I64) :
+  Result physics.ObjectData
+  := do
+  let od ← physics.set_x o x
+  physics.set_y od y
+
+/-- [hustle_core::physics::set_position_str]:
+    Source: 'src/physics.rs', lines 217:0-222:1
+    Visibility: public -/
+def physics.set_position_str
+  (o : physics.ObjectData) (x : fixed.Fixed) (y : fixed.Fixed) :
+  Result physics.ObjectData
+  := do
+  ok { o with position_x := x, position_y := y }
+
+/-- [hustle_core::physics::set_vel]:
+    Source: 'src/physics.rs', lines 224:0-229:1
+    Visibility: public -/
+def physics.set_vel
+  (o : physics.ObjectData) (x : fixed.Fixed) (y : fixed.Fixed) :
+  Result physics.ObjectData
+  := do
+  ok { o with vel_x := x, vel_y := y }
+
+/-- [hustle_core::physics::set_facing]:
+    Source: 'src/physics.rs', lines 238:0-250:1
+    Visibility: public -/
+def physics.set_facing
+  (o : physics.ObjectData) (dir : Std.I64) :
+  Result (Option physics.ObjectData)
+  := do
+  if dir = 1#i64
+  then ok (some { o with facing := physics.Facing.Right })
+  else
+    if dir = (-1)#i64
+    then ok (some { o with facing := physics.Facing.Left })
+    else ok none
+
+/-- [hustle_core::physics::get_facing]:
+    Source: 'src/physics.rs', lines 252:0-254:1
+    Visibility: public -/
+def physics.get_facing (o : physics.ObjectData) : Result physics.Facing := do
+  ok o.facing
+
+/-- [hustle_core::physics::set_id]:
+    Source: 'src/physics.rs', lines 261:0-265:1
+    Visibility: public -/
+def physics.set_id
+  (o : physics.ObjectData) (id : Std.I64) : Result physics.ObjectData := do
+  ok { o with id }
+
+/-- [hustle_core::physics::set_grounded]:
+    Source: 'src/physics.rs', lines 267:0-271:1
+    Visibility: public -/
+def physics.set_grounded
+  (o : physics.ObjectData) (grounded : Bool) : Result physics.ObjectData := do
+  ok { o with grounded }
+
+/-- [hustle_core::physics::is_grounded]:
+    Source: 'src/physics.rs', lines 273:0-275:1
+    Visibility: public -/
+def physics.is_grounded (o : physics.ObjectData) : Result Bool := do
+  ok o.grounded
+
+/-- [hustle_core::physics::set_snap_to_ground]:
+    Source: 'src/physics.rs', lines 277:0-281:1
+    Visibility: public -/
+def physics.set_snap_to_ground
+  (o : physics.ObjectData) (snap : Bool) : Result physics.ObjectData := do
+  ok { o with snap_to_ground := snap }
+
+/-- [hustle_core::physics::get_snap_to_ground]:
+    Source: 'src/physics.rs', lines 283:0-285:1
+    Visibility: public -/
+def physics.get_snap_to_ground (o : physics.ObjectData) : Result Bool := do
+  ok o.snap_to_ground
+
+/-- [hustle_core::physics::update_grounded]:
+    Source: 'src/physics.rs', lines 290:0-298:1
+    Visibility: public -/
+def physics.update_grounded
+  (o : physics.ObjectData) : Result physics.ObjectData := do
+  let i := o.position_y
+  if i >= 0#i64
+  then ok { o with grounded := true }
+  else ok { o with grounded := false }
+
+/-- [hustle_core::physics::get_x_vel_int]:
+    Source: 'src/physics.rs', lines 307:0-309:1
+    Visibility: public -/
+def physics.get_x_vel_int (o : physics.ObjectData) : Result Std.I64 := do
+  let i ← fixed.Fixed.round_half_away o.vel_x
+  let i1 ← lift (IScalar.cast .I32 i)
+  ok (IScalar.cast .I64 i1)
+
+/-- [hustle_core::physics::position_pixels]:
+    Source: 'src/physics.rs', lines 324:0-328:1
+    Visibility: public -/
+def physics.position_pixels
+  (o : physics.ObjectData) : Result (Std.I32 × Std.I32) := do
+  let x ← fixed.Fixed.round_half_away o.position_x
+  let y ← fixed.Fixed.round_half_away o.position_y
+  let i ← lift (IScalar.cast .I32 x)
+  let i1 ← lift (IScalar.cast .I32 y)
+  ok (i, i1)
+
+/-- [hustle_core::physics::reset_momentum]:
+    Source: 'src/physics.rs', lines 340:0-347:1
+    Visibility: public -/
+def physics.reset_momentum
+  (o : physics.ObjectData) : Result physics.ObjectData := do
+  ok
+    {
+      o
+        with
+        vel_x := fixed.Fixed.ZERO,
+        vel_y := fixed.Fixed.ZERO,
+        pending_force_x := fixed.Fixed.ZERO,
+        pending_force_y := fixed.Fixed.ZERO
+    }
+
+/-- [hustle_core::physics::set_gravity]:
+    Source: 'src/physics.rs', lines 353:0-357:1
+    Visibility: public -/
+def physics.set_gravity
+  (o : physics.ObjectData) (v : fixed.Fixed) : Result physics.ObjectData := do
+  ok { o with gravity := v }
+
+/-- [hustle_core::physics::set_gravity_modifier]:
+    Source: 'src/physics.rs', lines 359:0-363:1
+    Visibility: public -/
+def physics.set_gravity_modifier
+  (o : physics.ObjectData) (v : fixed.Fixed) : Result physics.ObjectData := do
+  ok { o with gravity_modifier := v }
+
+/-- [hustle_core::physics::set_ground_friction]:
+    Source: 'src/physics.rs', lines 365:0-369:1
+    Visibility: public -/
+def physics.set_ground_friction
+  (o : physics.ObjectData) (v : fixed.Fixed) : Result physics.ObjectData := do
+  ok { o with ground_friction := v }
+
+/-- [hustle_core::physics::set_air_friction]:
+    Source: 'src/physics.rs', lines 371:0-375:1
+    Visibility: public -/
+def physics.set_air_friction
+  (o : physics.ObjectData) (v : fixed.Fixed) : Result physics.ObjectData := do
+  ok { o with air_friction := v }
+
+/-- [hustle_core::physics::set_max_ground_speed]:
+    Source: 'src/physics.rs', lines 377:0-381:1
+    Visibility: public -/
+def physics.set_max_ground_speed
+  (o : physics.ObjectData) (v : fixed.Fixed) : Result physics.ObjectData := do
+  ok { o with max_ground_speed := v }
+
+/-- [hustle_core::physics::set_max_air_speed]:
+    Source: 'src/physics.rs', lines 383:0-387:1
+    Visibility: public -/
+def physics.set_max_air_speed
+  (o : physics.ObjectData) (v : fixed.Fixed) : Result physics.ObjectData := do
+  ok { o with max_air_speed := v }
+
+/-- [hustle_core::physics::set_max_fall_speed]:
+    Source: 'src/physics.rs', lines 389:0-393:1
+    Visibility: public -/
+def physics.set_max_fall_speed
+  (o : physics.ObjectData) (v : fixed.Fixed) : Result physics.ObjectData := do
+  ok { o with max_fall_speed := v }
+
+/-- [hustle_core::physics::apply_force_str]:
+    Source: 'src/physics.rs', lines 417:0-423:1
+    Visibility: public -/
+def physics.apply_force_str
+  (o : physics.ObjectData) (x : fixed.Fixed) (y : fixed.Fixed) :
+  Result physics.ObjectData
+  := do
+  let queued_y ←
+    if o.grounded
+    then if y >= 0#i64
+         then ok fixed.Fixed.ZERO
+         else ok y
+    else ok y
+  let f ← fixed.Fixed.wrapping_add o.pending_force_x x
+  let f1 ← fixed.Fixed.wrapping_add o.pending_force_y queued_y
+  ok { o with pending_force_x := f, pending_force_y := f1 }
+
+/-- [hustle_core::physics::apply_force]:
+    Source: 'src/physics.rs', lines 403:0-405:1
+    Visibility: public -/
+def physics.apply_force
+  (o : physics.ObjectData) (x : Std.I64) (y : Std.I64) :
+  Result physics.ObjectData
+  := do
+  let f ← physics.fixed_from_int x
+  let f1 ← physics.fixed_from_int y
+  physics.apply_force_str o f f1
+
+/-- [hustle_core::physics::apply_force_relative_str]:
+    Source: 'src/physics.rs', lines 434:0-437:1
+    Visibility: public -/
+def physics.apply_force_relative_str
+  (o : physics.ObjectData) (x : fixed.Fixed) (y : fixed.Fixed) :
+  Result physics.ObjectData
+  := do
+  let i ← physics.facing_sign o.facing
+  let signed_x ← fixed.Fixed.wrapping_mul_int x i
+  physics.apply_force_str o signed_x y
+
+/-- [hustle_core::physics::apply_force_relative]:
+    Source: 'src/physics.rs', lines 430:0-432:1
+    Visibility: public -/
+def physics.apply_force_relative
+  (o : physics.ObjectData) (x : Std.I64) (y : Std.I64) :
+  Result physics.ObjectData
+  := do
+  let f ← physics.fixed_from_int x
+  let f1 ← physics.fixed_from_int y
+  physics.apply_force_relative_str o f f1
+
+/-- [hustle_core::physics::apply_grav_custom]:
+    Source: 'src/physics.rs', lines 469:0-479:1
+    Visibility: public -/
+def physics.apply_grav_custom
+  (o : physics.ObjectData) (grav : fixed.Fixed) (fall_speed : fixed.Fixed) :
+  Result physics.ObjectData
+  := do
+  if o.grounded
+  then ok o
+  else
+    let i := o.vel_y
+    if i < fall_speed
+    then
+      let g ← fixed.Fixed.wrapping_mul grav o.gravity_modifier
+      physics.apply_force_str o fixed.Fixed.ZERO g
+    else ok o
+
+/-- [hustle_core::physics::apply_grav]:
+    Source: 'src/physics.rs', lines 504:0-506:1
+    Visibility: public -/
+def physics.apply_grav
+  (o : physics.ObjectData) : Result physics.ObjectData := do
+  physics.apply_grav_custom o o.gravity o.max_fall_speed
+
+/-- [hustle_core::physics::MIN_MOVE_SPEED]
+    Source: 'src/physics.rs', lines 563:0-563:39 -/
+@[global_simps, irreducible] def physics.MIN_MOVE_SPEED : fixed.Fixed := 6#i64
+
+/-- [hustle_core::physics::apply_forces]:
+    Source: 'src/physics.rs', lines 565:0-610:1
+    Visibility: public -/
+def physics.apply_forces
+  (o : physics.ObjectData) : Result physics.ObjectData := do
+  let x_limit ←
+    if o.grounded
+    then ok o.max_ground_speed
+    else ok o.max_air_speed
+  let raw_vel_x ← fixed.Fixed.wrapping_add o.vel_x o.pending_force_x
+  let new_vel_x ← physics.clamp_sym raw_vel_x x_limit
+  let raw_vel_y ← fixed.Fixed.wrapping_add o.vel_y o.pending_force_y
+  let i := o.max_fall_speed
+  let i1 ← if raw_vel_y > i
+             then ok i
+             else ok raw_vel_y
+  let new_pos_x ← fixed.Fixed.wrapping_add o.position_x new_vel_x
+  let raw_pos_y ← fixed.Fixed.wrapping_add o.position_y i1
+  let vel_y_after_landing ←
+    if raw_pos_y >= 0#i64
+    then if i1 > 0#i64
+         then ok fixed.Fixed.ZERO
+         else ok i1
+    else ok i1
+  let f ← physics.snap_position_y raw_pos_y o.snap_to_ground
+  let o1 ← fixed.Fixed.vec_len new_vel_x vel_y_after_landing
+  match o1 with
+  | none =>
+    ok
+      {
+        o
+          with
+          position_x := new_pos_x,
+          position_y := f,
+          vel_x := new_vel_x,
+          vel_y := vel_y_after_landing,
+          grounded := (raw_pos_y >= 0#i64)
+      }
+  | some speed =>
+    let i2 := physics.MIN_MOVE_SPEED
+    if speed <= i2
+    then
+      ok
+        {
+          o
+            with
+            position_x := new_pos_x,
+            position_y := f,
+            vel_x := fixed.Fixed.ZERO,
+            vel_y := fixed.Fixed.ZERO,
+            grounded := (raw_pos_y >= 0#i64),
+            pending_force_x := fixed.Fixed.ZERO,
+            pending_force_y := fixed.Fixed.ZERO
+        }
+    else
+      ok
+        {
+          o
+            with
+            position_x := new_pos_x,
+            position_y := f,
+            vel_x := new_vel_x,
+            vel_y := vel_y_after_landing,
+            grounded := (raw_pos_y >= 0#i64),
+            pending_force_x := fixed.Fixed.ZERO,
+            pending_force_y := fixed.Fixed.ZERO
+        }
+
+/-- [hustle_core::physics::apply_forces_no_limit]:
+    Source: 'src/physics.rs', lines 624:0-644:1
+    Visibility: public -/
+def physics.apply_forces_no_limit
+  (o : physics.ObjectData) : Result physics.ObjectData := do
+  let new_vel_x ← fixed.Fixed.wrapping_add o.vel_x o.pending_force_x
+  let raw_vel_y ← fixed.Fixed.wrapping_add o.vel_y o.pending_force_y
+  let new_pos_x ← fixed.Fixed.wrapping_add o.position_x new_vel_x
+  let raw_pos_y ← fixed.Fixed.wrapping_add o.position_y raw_vel_y
+  let i := o.position_y
+  let new_vel_y ←
+    if i >= 0#i64
+    then if raw_vel_y > 0#i64
+         then ok fixed.Fixed.ZERO
+         else ok raw_vel_y
+    else ok raw_vel_y
+  let f ← physics.snap_position_y raw_pos_y o.snap_to_ground
+  ok
+    {
+      o
+        with
+        position_x := new_pos_x,
+        position_y := f,
+        vel_x := new_vel_x,
+        vel_y := new_vel_y,
+        grounded := (i >= 0#i64),
+        pending_force_x := fixed.Fixed.ZERO,
+        pending_force_y := fixed.Fixed.ZERO
+    }
+
+/-- [hustle_core::physics::apply_x_fric]:
+    Source: 'src/physics.rs', lines 666:0-675:1
+    Visibility: public -/
+def physics.apply_x_fric
+  (o : physics.ObjectData) (fric : fixed.Fixed) :
+  Result physics.ObjectData
+  := do
+  let f ← fixed.Fixed.abs o.vel_x
+  if fric < f
+  then
+    let decrement ← fixed.Fixed.wrapping_mul o.vel_x fric
+    let f1 ← fixed.Fixed.wrapping_sub o.vel_x decrement
+    ok { o with vel_x := f1 }
+  else ok o
+
+/-- [hustle_core::physics::apply_y_fric]:
+    Source: 'src/physics.rs', lines 678:0-687:1
+    Visibility: public -/
+def physics.apply_y_fric
+  (o : physics.ObjectData) (fric : fixed.Fixed) :
+  Result physics.ObjectData
+  := do
+  let f ← fixed.Fixed.abs o.vel_y
+  if fric < f
+  then
+    let decrement ← fixed.Fixed.wrapping_mul o.vel_y fric
+    let f1 ← fixed.Fixed.wrapping_sub o.vel_y decrement
+    ok { o with vel_y := f1 }
+  else ok o
+
+/-- [hustle_core::physics::apply_fric]:
+    Source: 'src/physics.rs', lines 713:0-733:1
+    Visibility: public -/
+def physics.apply_fric
+  (o : physics.ObjectData) : Result physics.ObjectData := do
+  let (friction, max_speed) ←
+    if o.grounded
+    then ok (o.ground_friction, o.max_ground_speed)
+    else ok (o.air_friction, o.max_air_speed)
+  let f ← fixed.Fixed.abs o.vel_x
+  let o1 ← fixed.Fixed.wrapping_div f max_speed
+  match o1 with
+  | none => ok o
+  | some scaled =>
+    let magnitude ← fixed.Fixed.wrapping_mul scaled friction
+    let i := o.vel_x
+    let decrement ←
+      if i < 0#i64
+      then do
+           let i1 ← -. magnitude
+           ok i1
+      else ok magnitude
+    let f1 ← fixed.Fixed.wrapping_sub o.vel_x decrement
+    ok { o with vel_x := f1 }
+
+/-- [hustle_core::physics::move_directly_str]:
+    Source: 'src/physics.rs', lines 752:0-759:1
+    Visibility: public -/
+def physics.move_directly_str
+  (o : physics.ObjectData) (x : fixed.Fixed) (y : fixed.Fixed) :
+  Result physics.ObjectData
+  := do
+  let new_pos_x ← fixed.Fixed.wrapping_add o.position_x x
+  let raw_pos_y ← fixed.Fixed.wrapping_add o.position_y y
+  let f ← physics.snap_position_y raw_pos_y o.snap_to_ground
+  ok { o with position_x := new_pos_x, position_y := f }
+
+/-- [hustle_core::physics::move_directly]:
+    Source: 'src/physics.rs', lines 739:0-741:1
+    Visibility: public -/
+def physics.move_directly
+  (o : physics.ObjectData) (x : Std.I64) (y : Std.I64) :
+  Result physics.ObjectData
+  := do
+  let f ← physics.fixed_from_int x
+  let f1 ← physics.fixed_from_int y
+  physics.move_directly_str o f f1
+
+/-- [hustle_core::physics::move_directly_relative_str]:
+    Source: 'src/physics.rs', lines 768:0-771:1
+    Visibility: public -/
+def physics.move_directly_relative_str
+  (o : physics.ObjectData) (x : fixed.Fixed) (y : fixed.Fixed) :
+  Result physics.ObjectData
+  := do
+  let i ← physics.facing_sign o.facing
+  let signed_x ← fixed.Fixed.wrapping_mul_int x i
+  physics.move_directly_str o signed_x y
+
+/-- [hustle_core::physics::move_directly_relative]:
+    Source: 'src/physics.rs', lines 764:0-766:1
+    Visibility: public -/
+def physics.move_directly_relative
+  (o : physics.ObjectData) (x : Std.I64) (y : Std.I64) :
+  Result physics.ObjectData
+  := do
+  let f ← physics.fixed_from_int x
+  let f1 ← physics.fixed_from_int y
+  physics.move_directly_relative_str o f f1
+
+/-- [hustle_core::physics::PUSHBACK_DECAY_STEP]
+    Source: 'src/physics.rs', lines 801:0-801:49 -/
+@[global_simps, irreducible]
+def physics.PUSHBACK_DECAY_STEP : fixed.Fixed := 36045#i64
+
+/-- [hustle_core::physics::PUSHBACK_DECAY_FLOOR]
+    Source: 'src/physics.rs', lines 802:0-802:50 -/
+@[global_simps, irreducible]
+def physics.PUSHBACK_DECAY_FLOOR : fixed.Fixed := 36046#i64
+
+/-- [hustle_core::physics::decay_pushback]:
+    Source: 'src/physics.rs', lines 806:0-814:1 -/
+def physics.decay_pushback (p : fixed.Fixed) : Result fixed.Fixed := do
+  let f ← fixed.Fixed.abs p
+  let i := physics.PUSHBACK_DECAY_FLOOR
+  if f < i
+  then ok fixed.Fixed.ZERO
+  else
+    if p < 0#i64
+    then fixed.Fixed.wrapping_add p physics.PUSHBACK_DECAY_STEP
+    else fixed.Fixed.wrapping_sub p physics.PUSHBACK_DECAY_STEP
+
+/-- [hustle_core::physics::PUSHBACK_ADD_CAP]
+    Source: 'src/physics.rs', lines 833:0-833:47 -/
+@[global_simps, irreducible]
+def physics.PUSHBACK_ADD_CAP : fixed.Fixed := 655360#i64
+
+/-- [hustle_core::physics::add_pushback]:
+    Source: 'src/physics.rs', lines 835:0-841:1
+    Visibility: public -/
+def physics.add_pushback
+  (o : physics.ObjectData) (v : fixed.Fixed) : Result physics.ObjectData := do
+  let f ← fixed.Fixed.abs o.pushback
+  let i := physics.PUSHBACK_ADD_CAP
+  if f < i
+  then
+    let f1 ← fixed.Fixed.wrapping_add o.pushback v
+    ok { o with pushback := f1 }
+  else ok o
+
+/-- [hustle_core::physics::apply_pushback]:
+    Source: 'src/physics.rs', lines 860:0-867:1
+    Visibility: public -/
+def physics.apply_pushback
+  (o : physics.ObjectData) (dir : Std.I64) : Result physics.ObjectData := do
+  let delta ← fixed.Fixed.wrapping_mul_int o.pushback dir
+  let f ← fixed.Fixed.wrapping_add o.position_x delta
+  let f1 ← physics.snap_position_y o.position_y o.snap_to_ground
+  let f2 ← physics.decay_pushback o.pushback
+  ok { o with position_x := f, position_y := f1, pushback := f2 }
+
+/-- [hustle_core::physics::reset_pushback]:
+    Source: 'src/physics.rs', lines 869:0-873:1
+    Visibility: public -/
+def physics.reset_pushback
+  (o : physics.ObjectData) : Result physics.ObjectData := do
+  ok { o with pushback := fixed.Fixed.ZERO }
+
+/-- [hustle_core::physics::copy_to]:
+    Source: 'src/physics.rs', lines 883:0-885:1
+    Visibility: public -/
+def physics.copy_to
+  (source : physics.ObjectData) : Result physics.ObjectData := do
+  ok source
+
 /-- [hustle_core::rng::PCG_DEFAULT_INC_64]
     Source: 'src/rng.rs', lines 35:0-35:56
     Visibility: public -/

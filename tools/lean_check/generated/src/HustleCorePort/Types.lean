@@ -54,6 +54,37 @@ inductive fixed.FracCmp where
 | Equal : fixed.FracCmp
 | Greater : fixed.FracCmp
 
+/-- [hustle_core::physics::Facing]
+    Source: 'src/physics.rs', lines 49:0-52:1
+    Visibility: public -/
+@[discriminant isize]
+inductive physics.Facing where
+| Right : physics.Facing
+| Left : physics.Facing
+
+/-- [hustle_core::physics::ObjectData]
+    Source: 'src/physics.rs', lines 81:0-109:1
+    Visibility: public -/
+structure physics.ObjectData where
+  id : Std.I64
+  position_x : fixed.Fixed
+  position_y : fixed.Fixed
+  vel_x : fixed.Fixed
+  vel_y : fixed.Fixed
+  facing : physics.Facing
+  grounded : Bool
+  snap_to_ground : Bool
+  gravity : fixed.Fixed
+  gravity_modifier : fixed.Fixed
+  ground_friction : fixed.Fixed
+  air_friction : fixed.Fixed
+  max_ground_speed : fixed.Fixed
+  max_air_speed : fixed.Fixed
+  max_fall_speed : fixed.Fixed
+  pending_force_x : fixed.Fixed
+  pending_force_y : fixed.Fixed
+  pushback : fixed.Fixed
+
 /-- [hustle_core::rng::Rng]
     Source: 'src/rng.rs', lines 49:0-53:1
     Visibility: public -/
