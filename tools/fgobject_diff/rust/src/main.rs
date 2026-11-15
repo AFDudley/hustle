@@ -187,9 +187,19 @@ fn apply_call(o: ObjectData, method: &str, args: &[Value]) -> (ObjectData, Value
     }
 }
 
+/// The main diagnostic loop for this tool: every mismatch is kept
+/// (`mismatches`), but `first_mismatches` keeps only the first
+/// mismatching call for each `(file, obj)` pair, with its before
+/// state, args, the engine's own after state, and the port's
+/// computed after state. A method with a wrong formula fails on
+/// almost every later call too, once an object's state has
+/// diverged; the FIRST failure per object is the one call that
+/// still has a correct "before" state to read the formula from.
 struct Report {
     counts: BTreeMap<String, (u64, u64)>, // method -> (total, matched)
     mismatches: Vec<Value>,
+    first_mismatches: Vec<Value>,
+    seen_first: std::collections::HashSet<(String, i64)>,
 }
 
 impl Report {
@@ -197,6 +207,8 @@ impl Report {
         Report {
             counts: BTreeMap::new(),
             mismatches: Vec::new(),
+            first_mismatches: Vec::new(),
+            seen_first: std::collections::HashSet::new(),
         }
     }
 
@@ -205,6 +217,17 @@ impl Report {
         entry.0 += 1;
         if ok {
             entry.1 += 1;
+        }
+    }
+
+    /// Marks `(file, obj)`'s first mismatch, if this is it. Returns
+    /// whether `entry` was pushed to `first_mismatches`.
+    fn record_first_mismatch(&mut self, file: &str, obj: i64, entry: Value) -> bool {
+        if self.seen_first.insert((file.to_string(), obj)) {
+            self.first_mismatches.push(entry);
+            true
+        } else {
+            false
         }
     }
 }
@@ -261,7 +284,7 @@ fn run_file(path: &str, report: &mut Report) {
             if !result_ok {
                 bad_fields.push("result".to_string());
             }
-            report.mismatches.push(json!({
+            let entry = json!({
                 "file": path,
                 "line": line_no + 1,
                 "obj": obj_id,
@@ -273,7 +296,9 @@ fn run_file(path: &str, report: &mut Report) {
                 "recorded_result": rec["result"],
                 "computed_result": result,
                 "bad_fields": bad_fields,
-            }));
+            });
+            report.record_first_mismatch(path, obj_id, entry.clone());
+            report.mismatches.push(entry);
         }
         states.insert(obj_id, after_state);
     }
@@ -311,7 +336,7 @@ fn run_copy_to(
     let ok = bad_fields.is_empty();
     report.record("copy_to", ok);
     if !ok {
-        report.mismatches.push(json!({
+        let entry = json!({
             "file": path,
             "line": line_no + 1,
             "obj": source_id,
@@ -321,7 +346,9 @@ fn run_copy_to(
             "recorded_after": recorded_after,
             "computed_after": computed_after,
             "bad_fields": bad_fields,
-        }));
+        });
+        report.record_first_mismatch(path, target_id, entry.clone());
+        report.mismatches.push(entry);
     }
     states.insert(target_id, computed_target);
 }
@@ -351,11 +378,18 @@ fn main() {
             json!({"calls": count, "matched": ok}),
         );
     }
+    let mut first_by_method: BTreeMap<String, u64> = BTreeMap::new();
+    for entry in &report.first_mismatches {
+        let method = entry["method"].as_str().unwrap_or("unknown").to_string();
+        *first_by_method.entry(method).or_insert(0) += 1;
+    }
     let summary = json!({
         "total_calls": total,
         "matched_calls": matched,
         "by_method": by_method,
         "mismatches": report.mismatches,
+        "first_mismatches": report.first_mismatches,
+        "first_mismatches_by_method": first_by_method,
     });
     let mut f = fs::File::create(out_path).unwrap_or_else(|e| panic!("{out_path}: {e}"));
     f.write_all(serde_json::to_string_pretty(&summary).unwrap().as_bytes())
@@ -365,6 +399,16 @@ fn main() {
     for (method, (count, ok)) in &report.counts {
         if *ok != *count {
             println!("  {method}: {ok}/{count} matched");
+        }
+    }
+    if !first_by_method.is_empty() {
+        println!(
+            "first-divergence (the first mismatching call per object): {} object(s) across {} method(s)",
+            report.first_mismatches.len(),
+            first_by_method.len()
+        );
+        for (method, count) in &first_by_method {
+            println!("  {method}: {count} object(s) first diverge here");
         }
     }
     if matched != total {
