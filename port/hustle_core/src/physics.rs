@@ -102,17 +102,10 @@ pub struct ObjectData {
     pub pending_force_x: Fixed,
     pub pending_force_y: Fixed,
     /// The magnitude `add_pushback` accumulates and `apply_pushback`
-    /// spends down. Not part of `get_data()`'s output.
+    /// spends down, by a fixed amount every call (not once per
+    /// `add_pushback`; see `apply_pushback`). Not part of
+    /// `get_data()`'s output.
     pub pushback: Fixed,
-    /// Whether `pushback` has already been decayed once since the
-    /// last `add_pushback`. Confirmed by probing
-    /// (`tools/fgobject_diff/README.md`, "apply_pushback"): three
-    /// consecutive `apply_pushback` calls with no new `add_pushback`
-    /// between them moved the object by the full pushback, then by
-    /// `PUSHBACK_DECAY` times that, then by the *same* decayed
-    /// amount again — the decay applies once per `add_pushback`, not
-    /// once per `apply_pushback` call.
-    pub pushback_decayed: bool,
 }
 
 /// A fresh `FGObject.new()`: facing right, grounded, snapped to the
@@ -141,7 +134,6 @@ pub fn new_object() -> ObjectData {
         pending_force_x: Fixed::ZERO,
         pending_force_y: Fixed::ZERO,
         pushback: Fixed::ZERO,
-        pushback_decayed: false,
     }
 }
 
@@ -169,57 +161,36 @@ fn clamp_sym(v: Fixed, limit: Fixed) -> Fixed {
     }
 }
 
-/// The ground-contact check `move_directly`, `move_directly_relative`,
-/// and their two `_str` siblings apply after moving. Confirmed by
-/// probing (`tools/fgobject_diff/README.md`, "The ground"): a raw Y
-/// position at or past 0 (the game's downward axis, 0 being the
-/// stage floor) marks the object grounded, zeroes its vertical
-/// velocity, and — only when `snap_to_ground` is set — clamps the
-/// position back to exactly 0. This check is one-directional: it can
-/// only turn `grounded` on (landing), never off. Moving to a
-/// position above the ground (Y still negative) leaves `grounded`
-/// exactly as it was before the call — a real recorded case moved an
-/// already-grounded object to Y = -1 and it stayed grounded.
-/// `apply_forces`/`apply_forces_no_limit` use a different,
-/// bidirectional rule; see `ground_clamp_bidirectional` below.
-fn ground_clamp_landing_only(
-    pos_y: Fixed,
-    vel_y: Fixed,
-    grounded: bool,
-    snap_to_ground: bool,
-) -> (Fixed, Fixed, bool) {
-    if pos_y.0 >= 0 {
+/// The position-Y snap every position-changing method applies after
+/// moving. Decompiled from `BaseObject::apply_forces`,
+/// `apply_forces_no_limit`'s `ThisMethod::call`,
+/// `move_directly_str`/`move_directly_relative_str`'s
+/// `ThisMethod::call`, and `apply_pushback`'s `ThisMethod::call`
+/// (`tools/ghidra`; see `tools/fgobject_diff/README.md`, "The
+/// ground"): the real code always recomputes
+/// `new_pos_y>=0 ? (snap_to_ground ? 0 : new_pos_y) : new_pos_y`,
+/// one plain expression with no separate "grounded" or velocity
+/// side effect baked in. Every caller below applies `grounded` and
+/// `vel_y`'s own update separately, because the decompile shows each
+/// of the four callers treats those two fields differently:
+/// `move_directly_str`/`move_directly_relative_str` touch neither
+/// one at all; `apply_forces` recomputes `grounded` from the new
+/// position and zeroes `vel_y` only when it is landed and the
+/// velocity that moved it was downward (positive);
+/// `apply_forces_no_limit` does the same `vel_y` zeroing but
+/// computes `grounded` from the position **before** this move, not
+/// after (confirmed by decompile; also observed as the engine's own
+/// behavior in real play: `tools/fgobject_diff/README.md`,
+/// "apply_forces_no_limit").
+fn snap_position_y(new_pos_y: Fixed, snap_to_ground: bool) -> Fixed {
+    if new_pos_y.0 >= 0 {
         if snap_to_ground {
-            (Fixed::ZERO, Fixed::ZERO, true)
+            Fixed::ZERO
         } else {
-            (pos_y, Fixed::ZERO, true)
+            new_pos_y
         }
     } else {
-        (pos_y, vel_y, grounded)
-    }
-}
-
-/// The ground-contact check `apply_forces`/`apply_forces_no_limit`
-/// apply after integrating. Unlike `ground_clamp_landing_only`, this
-/// recomputes `grounded` both ways: a recorded real call left an
-/// already-grounded object's Y at -195 (no snap needed, already
-/// above ground) and `grounded` came back `false`
-/// (`tools/fgobject_diff/README.md`, "apply_forces"). Landing
-/// (`pos_y >= 0`) still zeroes `vel_y` and, with `snap_to_ground`
-/// set, clamps the position to 0, the same as the landing-only rule.
-fn ground_clamp_bidirectional(
-    pos_y: Fixed,
-    vel_y: Fixed,
-    snap_to_ground: bool,
-) -> (Fixed, Fixed, bool) {
-    if pos_y.0 >= 0 {
-        if snap_to_ground {
-            (Fixed::ZERO, Fixed::ZERO, true)
-        } else {
-            (pos_y, Fixed::ZERO, true)
-        }
-    } else {
-        (pos_y, vel_y, false)
+        new_pos_y
     }
 }
 
@@ -454,34 +425,25 @@ pub fn apply_force_relative_str(o: ObjectData, x: Fixed, y: Fixed) -> ObjectData
     apply_force_str(o, signed_x, y)
 }
 
-/// Queues `gravity * gravity_modifier` as a downward (`y`) force,
-/// but only while the object is airborne and `gravity_modifier` is
-/// positive. Confirmed by probing: with `gravity_modifier` left at
-/// its default (`ONE`), one call while airborne added exactly
-/// `gravity`; with `gravity_modifier` set to `"2.0"`, one call added
-/// `2 * gravity`; with a negative `gravity_modifier` (a small one
-/// and the type's minimum), real calls added nothing at all, not
-/// the negative product — the real method appears to treat a
-/// non-positive modifier as "no gravity this call", not a direction
-/// flip. The grounded gate itself was confirmed on
-/// `apply_grav_custom` (see below), which shares the same shape;
-/// no probed call exercised plain `apply_grav` while grounded, so
-/// this one side is inferred, not directly observed.
-pub fn apply_grav(o: ObjectData) -> ObjectData {
-    if o.grounded {
-        return o;
-    }
-    if o.gravity_modifier.0 > 0 {
-        let g = o.gravity.wrapping_mul(o.gravity_modifier);
-        apply_force_str(o, Fixed::ZERO, g)
-    } else {
-        o
-    }
-}
-
-/// Queues `grav` as a downward force, but only while the object is
-/// airborne and its current `vel_y` is still below `fall_speed`.
-/// Confirmed by probing: from rest and airborne,
+/// Queues `grav * gravity_modifier` as a downward force, but only
+/// while the object is airborne and its current `vel_y` is still
+/// below `fall_speed`. Decompiled from `apply_grav_custom`'s
+/// `ThisMethod::call` (`tools/ghidra`, address `0x6ab30`): the gate
+/// is a plain `vel_y < fall_speed` comparison, with no check on
+/// `grav`'s or `gravity_modifier`'s sign; the queued amount is
+/// `grav.wrapping_mul(gravity_modifier)`, the same multiplication
+/// `apply_grav` performs with its own stored `gravity` field (see
+/// below) — the decompile reuses the identical struct field
+/// (`gravity_modifier`, field index `0x11` in the `ThisMethod::call`
+/// struct layout) in both functions. This corrects this crate's own
+/// earlier, probe-only-based belief that `apply_grav_custom` ignores
+/// `gravity_modifier`: every probe that checked this left
+/// `gravity_modifier` at its default (`ONE`), so a missing
+/// multiplication and a multiplication by exactly `1.0` produced the
+/// same observed result.
+///
+/// Confirmed by probing (`tools/fgobject_diff/README.md`,
+/// "apply_grav_custom"): from rest and airborne,
 /// `apply_grav_custom("1.5", "6")` added `1.5` to the queue (`vel_y`
 /// integrated to `1.5`); from `vel_y = "20"` (already past
 /// `fall_speed`), the same call added nothing, and the following
@@ -492,26 +454,57 @@ pub fn apply_grav(o: ObjectData) -> ObjectData {
 /// (the default state, not explicitly set) ignored the call entirely:
 /// `vel_y` carried a preset value of 5 straight through unchanged,
 /// where the ungated formula would have added `1.5`
-/// (`tools/fgobject_diff/README.md`, "apply_grav_custom"). The
-/// boundary case `vel_y == fall_speed` was not probed; this follows
-/// the observed `vel_y < fall_speed` side.
+/// (`tools/fgobject_diff/README.md`, "apply_grav_custom").
 pub fn apply_grav_custom(o: ObjectData, grav: Fixed, fall_speed: Fixed) -> ObjectData {
     if o.grounded {
         return o;
     }
     if o.vel_y.0 < fall_speed.0 {
-        apply_force_str(o, Fixed::ZERO, grav)
+        let g = grav.wrapping_mul(o.gravity_modifier);
+        apply_force_str(o, Fixed::ZERO, g)
     } else {
         o
     }
 }
 
+/// Queues `gravity * gravity_modifier` as a downward (`y`) force.
+/// Decompiled from `apply_grav`'s own `ThisMethod::call`
+/// (`tools/ghidra`, address `0x6a7a0`): it is `apply_grav_custom`
+/// with the object's own stored `gravity` and `max_fall_speed` as
+/// the two arguments — the same struct field (`max_fall_speed`) that
+/// gates the X-axis speed cap in `apply_forces` also gates this
+/// call, in place of a custom `fall_speed`. There is **no** gate on
+/// `gravity_modifier`'s sign anywhere in the decompiled code.
+///
+/// This corrects this crate's own earlier, probe-only-based gate (a
+/// non-positive `gravity_modifier` added nothing): a recorded real
+/// call (`tools/fgobject_diff/README.md`, object `553`,
+/// `set_gravity("0.8")`, `set_gravity_modifier("-1")`,
+/// `set_grounded(false)`, `apply_grav()`, `apply_forces()`) moved
+/// `vel_y` from `0` to exactly `-0.8` — `gravity * gravity_modifier`
+/// with no sign gate, not the `0` a "skip on non-positive modifier"
+/// gate would have produced. Every probe that only varied
+/// `gravity_modifier`'s sign left `vel_y` at `0` and `max_fall_speed`
+/// at a small positive value, so `vel_y < max_fall_speed` was true
+/// either way: the old gate and the real `vel_y < max_fall_speed`
+/// gate agreed on every one of those probed calls, hiding the wrong
+/// formula until the object `553` probe (negative modifier, airborne,
+/// `vel_y` below `max_fall_speed`) exposed it.
+pub fn apply_grav(o: ObjectData) -> ObjectData {
+    apply_grav_custom(o, o.gravity, o.max_fall_speed)
+}
+
 /// Integrates the queued force into velocity, clamps it, moves the
 /// object by the new velocity, and applies the ground check.
-/// Confirmed by probing (`tools/fgobject_diff/README.md`,
-/// "apply_forces"):
+/// Decompiled from `BaseObject::apply_forces` (`tools/ghidra`; see
+/// `tools/fgobject_diff/README.md`, "The result"):
 /// - `vel_x` is clamped to `[-max_ground_speed, max_ground_speed]`
-///   when grounded, `[-max_air_speed, max_air_speed]` when not.
+///   when grounded, `[-max_air_speed, max_air_speed]` when not. The
+///   real code computes this by dividing the raw velocity by its
+///   own magnitude (giving exactly its sign, `±1.0`, since a nonzero
+///   value always divides its own magnitude evenly) and multiplying
+///   the limit by that sign; `clamp_sym` gives the same raw bits,
+///   since multiplying by exactly `±1.0` changes nothing.
 /// - `vel_y` is clamped only on the downward (positive) side, to
 ///   `max_fall_speed`; an upward (negative) velocity is never capped.
 /// - the clamp is on the final velocity, not only the queued force:
@@ -520,6 +513,44 @@ pub fn apply_grav_custom(o: ObjectData, grav: Fixed, fall_speed: Fixed) -> Objec
 ///   `apply_forces` call.
 /// - position moves by the clamped velocity, not the raw queued
 ///   force.
+/// - `grounded` is recomputed from the **new** position
+///   (`raw_pos_y>=0`, before `snap_position_y`'s own clamp — the two
+///   agree on sign in every case, since `snap_position_y` only ever
+///   replaces a non-negative value with another non-negative one).
+/// - `vel_y` is zeroed only when the object is now grounded **and**
+///   the velocity that produced the move was downward (positive):
+///   an object already grounded that received a small negative
+///   (upward) force stays at that negative `vel_y`, not zeroed, as
+///   long as it is still grounded afterward.
+/// - **after** all of the above, if the resulting speed
+///   (`Fixed::vec_len(vel_x, vel_y)`, the same `sqrt(x*x+y*y)` this
+///   crate already copies bit for bit from the `fixed-sqrt` crate —
+///   the decompiled code's own panic string names that crate
+///   directly) is `6` raw units (`6/65536`, far below any value a
+///   display string ever shows) or less, **both** `vel_x` and
+///   `vel_y` are zeroed outright, overriding whatever the clamp and
+///   landing steps above computed. Confirmed by a recorded real call
+///   (`tools/fgobject_diff/README.md`, object `463`): `apply_fric`
+///   left `vel_x` at a tiny `-0.0034` (`vel_y` already `0`, well
+///   under `max_ground_speed`, so no clamp applied), and the
+///   following `apply_forces` zeroed it outright — not the untouched
+///   `-0.0034` a clamp-only formula would have kept.
+/// - `Fixed::vec_len` returns `None` when the sum of squares
+///   overflows negative (the same pathological-`gravity_modifier`
+///   case this crate's README already reports as unreachable from
+///   any real call site): the real binary's own `sqrt` panics there,
+///   but `position_x`/`position_y`/`grounded`/`vel_x`/`vel_y` are
+///   already written to the object's fields by that point in the
+///   decompiled code, **before** the `sqrt` call — gdnative's panic
+///   boundary catches the panic and returns Nil, but does not roll
+///   those writes back, and the queued force is never cleared either
+///   (that write is also after the `sqrt` call). This is exactly the
+///   previously-unexplained shape of that open mismatch: "a huge
+///   position change with `vel_y` left at `0`" — the clamp and
+///   landing steps had already run and committed their result before
+///   the panic.
+const MIN_MOVE_SPEED: Fixed = Fixed(6);
+
 pub fn apply_forces(o: ObjectData) -> ObjectData {
     let x_limit = if o.grounded {
         o.max_ground_speed
@@ -536,32 +567,63 @@ pub fn apply_forces(o: ObjectData) -> ObjectData {
     };
     let new_pos_x = o.position_x.wrapping_add(new_vel_x);
     let raw_pos_y = o.position_y.wrapping_add(capped_vel_y);
-    let (new_pos_y, new_vel_y, grounded) = ground_clamp_bidirectional(raw_pos_y, capped_vel_y, o.snap_to_ground);
+    let grounded = raw_pos_y.0 >= 0;
+    let vel_y_after_landing = if grounded && capped_vel_y.0 > 0 {
+        Fixed::ZERO
+    } else {
+        capped_vel_y
+    };
+
     let mut out = o;
     out.position_x = new_pos_x;
-    out.position_y = new_pos_y;
-    out.vel_x = new_vel_x;
-    out.vel_y = new_vel_y;
+    out.position_y = snap_position_y(raw_pos_y, o.snap_to_ground);
     out.grounded = grounded;
-    out.pending_force_x = Fixed::ZERO;
-    out.pending_force_y = Fixed::ZERO;
-    out
+    out.vel_x = new_vel_x;
+    out.vel_y = vel_y_after_landing;
+
+    match Fixed::vec_len(new_vel_x, vel_y_after_landing) {
+        // The real sqrt panics; position/grounded/velocity are
+        // already committed above (see the doc comment), and the
+        // pending force is left queued, uncleared.
+        None => out,
+        Some(speed) => {
+            if speed.0 <= MIN_MOVE_SPEED.0 {
+                out.vel_x = Fixed::ZERO;
+                out.vel_y = Fixed::ZERO;
+            }
+            out.pending_force_x = Fixed::ZERO;
+            out.pending_force_y = Fixed::ZERO;
+            out
+        }
+    }
 }
 
 /// Like `apply_forces`, but skips both speed clamps: the queued force
-/// integrates into velocity unclamped, in either axis. The ground
-/// check still applies, the same as `move_directly`: both are
-/// position-changing methods, and the ground check was confirmed on
-/// every one of them independently.
+/// integrates into velocity unclamped, in either axis. Decompiled from
+/// `apply_forces_no_limit`'s `ThisMethod::call` (`tools/ghidra`; see
+/// `tools/fgobject_diff/README.md`): `vel_y` zeroes the same way as
+/// `apply_forces` (grounded and downward), but `grounded` itself is
+/// computed from the position **before** this move, not after — the
+/// real binary reads `position_y` for the comparison before writing
+/// the new one. A fully airborne-to-landed move in one
+/// `apply_forces_no_limit` call therefore reports `grounded = false`
+/// for this call, even though the stored position is now at or past
+/// the ground; the next call (reading the now-updated `position_y`)
+/// sees it correctly.
 pub fn apply_forces_no_limit(o: ObjectData) -> ObjectData {
     let new_vel_x = o.vel_x.wrapping_add(o.pending_force_x);
     let raw_vel_y = o.vel_y.wrapping_add(o.pending_force_y);
     let new_pos_x = o.position_x.wrapping_add(new_vel_x);
     let raw_pos_y = o.position_y.wrapping_add(raw_vel_y);
-    let (new_pos_y, new_vel_y, grounded) = ground_clamp_bidirectional(raw_pos_y, raw_vel_y, o.snap_to_ground);
+    let grounded = o.position_y.0 >= 0;
+    let new_vel_y = if grounded && raw_vel_y.0 > 0 {
+        Fixed::ZERO
+    } else {
+        raw_vel_y
+    };
     let mut out = o;
     out.position_x = new_pos_x;
-    out.position_y = new_pos_y;
+    out.position_y = snap_position_y(raw_pos_y, o.snap_to_ground);
     out.vel_x = new_vel_x;
     out.vel_y = new_vel_y;
     out.grounded = grounded;
@@ -667,15 +729,21 @@ pub fn move_directly(o: ObjectData, x: i64, y: i64) -> ObjectData {
     move_directly_str(o, fixed_from_int(x), fixed_from_int(y))
 }
 
+/// Decompiled from `move_directly_str`'s `ThisMethod::call`
+/// (`tools/ghidra`; see `tools/fgobject_diff/README.md`, "The
+/// ground"): this method touches only `position_x` and
+/// `position_y`. It does not zero `vel_y` and does not change
+/// `grounded`, contrary to this crate's own earlier,
+/// probe-only-based version of this function (the probe that
+/// suggested otherwise never isolated this method's own effect from
+/// a later `apply_forces`/`update_grounded` call in the same probe
+/// sequence).
 pub fn move_directly_str(o: ObjectData, x: Fixed, y: Fixed) -> ObjectData {
     let new_pos_x = o.position_x.wrapping_add(x);
     let raw_pos_y = o.position_y.wrapping_add(y);
-    let (new_pos_y, new_vel_y, grounded) = ground_clamp_landing_only(raw_pos_y, o.vel_y, o.grounded, o.snap_to_ground);
     let mut out = o;
     out.position_x = new_pos_x;
-    out.position_y = new_pos_y;
-    out.vel_y = new_vel_y;
-    out.grounded = grounded;
+    out.position_y = snap_position_y(raw_pos_y, o.snap_to_ground);
     out
 }
 
@@ -695,48 +763,80 @@ pub fn move_directly_relative_str(o: ObjectData, x: Fixed, y: Fixed) -> ObjectDa
 // pushback
 // ============================================================================
 
-/// The pushback accumulator's decay, applied by `apply_pushback`
-/// exactly once per `add_pushback` (see `ObjectData::pushback_decayed`).
-/// Confirmed by probing (`tools/fgobject_diff/README.md`,
-/// "apply_pushback"): a pushback of `5`, applied three times with no
-/// new `add_pushback` between the calls, moved the object by `5`,
-/// then by `4 = 5 * 0.8`, then by `4` again — not `3.2`. One data
-/// point does not fix the constant exactly; this is the nearest
-/// `Fixed` value to the decimal `0.8` that produced it, flagged as
-/// open in the README.
-const PUSHBACK_DECAY: Fixed = Fixed(52_429);
+/// The pushback accumulator's decay, applied by `apply_pushback` on
+/// **every** call (not once per `add_pushback`). Decompiled from
+/// `apply_pushback`'s `ThisMethod::call` (`tools/ghidra`, address
+/// `0x678b0`): the real code has no "already decayed" flag anywhere;
+/// every call subtracts `PUSHBACK_DECAY_STEP` from the accumulator's
+/// own magnitude, toward zero, unless the magnitude is already below
+/// `PUSHBACK_DECAY_FLOOR`, in which case it is zeroed outright
+/// instead of going negative.
+///
+/// This corrects this crate's own earlier, probe-only-based belief
+/// (a one-time decay gated by a flag): a probe of three consecutive
+/// `apply_pushback` calls with no new `add_pushback` between them,
+/// starting from a pushback of `5`, moved the object by `5`, then by
+/// an *integer-rounded* `4`, then by `4` again — read as "the same
+/// decayed amount twice". The real raw values are `5`, then
+/// `5 - 0.55004 = 4.44996`, then `4.44996 - 0.55004 = 3.89992`: both
+/// round to the displayed `4`, hiding the second decay step. Six
+/// census replays confirm the continuous read is the real one: every
+/// one of this method's own live-play mismatches under the old flag
+/// model was a real call where the engine's own pushback had already
+/// decayed all the way to `0` (many `apply_pushback` calls after one
+/// `add_pushback`, common in a hit-stun sequence), while the flag
+/// model's pushback froze at its first decayed value forever and
+/// kept moving the object every call.
+const PUSHBACK_DECAY_STEP: Fixed = Fixed(0x8ccd);
+const PUSHBACK_DECAY_FLOOR: Fixed = Fixed(0x8cce);
+
+/// `p` moved `PUSHBACK_DECAY_STEP` toward zero, or to exactly zero if
+/// that would overshoot (`|p| < PUSHBACK_DECAY_FLOOR`).
+fn decay_pushback(p: Fixed) -> Fixed {
+    if p.abs().0 < PUSHBACK_DECAY_FLOOR.0 {
+        Fixed::ZERO
+    } else if p.0 < 0 {
+        p.wrapping_add(PUSHBACK_DECAY_STEP)
+    } else {
+        p.wrapping_sub(PUSHBACK_DECAY_STEP)
+    }
+}
 
 pub fn add_pushback(o: ObjectData, v: Fixed) -> ObjectData {
     let mut out = o;
     out.pushback = o.pushback.wrapping_add(v);
-    out.pushback_decayed = false;
     out
 }
 
 /// Moves the object horizontally by the accumulated pushback times
-/// `dir`. The first call after an `add_pushback` then decays the
-/// accumulator by `PUSHBACK_DECAY`; every call after that leaves it
-/// alone, until the next `add_pushback` resets the one-time decay.
+/// `dir`, then decays the accumulator (see `decay_pushback`).
 /// Confirmed by probing: `dir` is applied directly, with no
 /// dependence on the object's own facing (a pushback applied with
 /// `facing = Left` moved the object the same way as with `facing =
-/// Right`, for the same `dir`). Only the `x` position moves; no probe
-/// showed a `y` effect.
+/// Right`, for the same `dir`).
+///
+/// Decompiling `apply_pushback`'s `ThisMethod::call` (`tools/ghidra`)
+/// shows it also re-applies `snap_position_y` to the object's own
+/// stored `position_y`, even though this method never changes `y`:
+/// the real binary always recomputes
+/// `position_y>=0 ? (snap_to_ground ? 0 : position_y) : position_y`
+/// on every call. This has no visible effect unless an earlier call
+/// left `position_y` positive without snapping it (`set_position`/
+/// `set_position_str`/`set_y`, or a landing with `snap_to_ground`
+/// unset) and `snap_to_ground` is now set; in that case
+/// `apply_pushback` snaps it to `0` as a side effect.
 pub fn apply_pushback(o: ObjectData, dir: i64) -> ObjectData {
     let delta = o.pushback.wrapping_mul_int(dir);
     let mut out = o;
     out.position_x = o.position_x.wrapping_add(delta);
-    if !o.pushback_decayed {
-        out.pushback = o.pushback.wrapping_mul(PUSHBACK_DECAY);
-        out.pushback_decayed = true;
-    }
+    out.position_y = snap_position_y(o.position_y, o.snap_to_ground);
+    out.pushback = decay_pushback(o.pushback);
     out
 }
 
 pub fn reset_pushback(o: ObjectData) -> ObjectData {
     let mut out = o;
     out.pushback = Fixed::ZERO;
-    out.pushback_decayed = false;
     out
 }
 
@@ -867,24 +967,34 @@ mod tests {
     }
 
     #[test]
-    fn pushback_decays_after_each_application() {
+    fn pushback_decays_on_every_application() {
+        // tools/fgobject_diff/README.md, "apply_pushback": a pushback
+        // of 5, applied three times with no new add_pushback, moved
+        // the object by 5, then (integer-rounded) by 4 twice. The raw
+        // values are 5, 5-0.55004=4.44996, 4.44996-0.55004=3.89992:
+        // both round to the displayed 4, so this checks the raw
+        // values directly, not the rounded display.
         let mut o = configured();
         o.position_x = Fixed::ZERO;
         let after_add = add_pushback(o, fixed(5, 0, 1));
         let first = apply_pushback(after_add, 1);
         assert_eq!(first.position_x, fixed(5, 0, 1));
-        // The second application moves the object by less than the
-        // first: PUSHBACK_DECAY shrinks the accumulator strictly
-        // between calls, not by a hardcoded amount (PUSHBACK_DECAY
-        // itself is one probed data point, flagged open in its own
-        // doc comment; this checks the decay property it is meant to
-        // model, not a specific raw value).
-        let decayed = fixed(5, 0, 1).wrapping_mul(PUSHBACK_DECAY);
         let second = apply_pushback(first, 1);
-        assert_eq!(second.position_x, first.position_x.wrapping_add(decayed));
-        assert!(decayed.0 > 0);
-        assert!(decayed.0 < fixed(5, 0, 1).0);
+        assert_eq!(second.position_x, first.position_x.wrapping_add(Fixed(291_635)));
+        let third = apply_pushback(second, 1);
+        assert_eq!(third.position_x, second.position_x.wrapping_add(Fixed(255_590)));
     }
+
+    #[test]
+    fn pushback_zeroes_once_below_the_decay_floor() {
+        // decay_pushback zeroes outright, rather than going negative,
+        // once the magnitude drops below PUSHBACK_DECAY_FLOOR.
+        let mut o = configured();
+        o.pushback = Fixed(0x8ccd);
+        let after = apply_pushback(o, 1);
+        assert_eq!(after.pushback, Fixed::ZERO);
+    }
+
 
     #[test]
     fn reset_pushback_zeroes_the_accumulator() {
