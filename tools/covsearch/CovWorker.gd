@@ -597,7 +597,32 @@ func _expand():
 # presentation-only gap in game.gd's own ghost support, not a defect in
 # this tool's branching.
 const FIDELITY_IGNORE_EXTRA = ["is_ghost", "game_paused", "ghost_time",
-	"super_freeze_ticks", "super_active", "p1_super", "p2_super"]
+	"super_freeze_ticks", "super_active", "p1_super", "p2_super",
+	# Found by the replay-root fidelity samples. "player_actionable"
+	# (game.gd) only drives network-turn-sync and the UI action menu
+	# (main.gd _on_player_actionable), not the simulation. "effects"
+	# (game.gd) holds particle-effect nodes; process_fx() only calls
+	# their own tick(), a visual animation, never gameplay state.
+	# "style_aura_melee_attack_started_tick"/
+	# "style_aura_projectiles_first_active_tick" (BaseChar.gd) feed only
+	# the aura-particle shader (_update_style_aura_trackers sets
+	# "particle.style_aura_*", never reads it back for combat).
+	# "ghost_reverse" (BaseChar.gd) is itself named for a ghost-only
+	# prediction path, so a ghost/real difference is definitional.
+	# "spawn_data" (obj/BaseObj.gd) is read once, at an object's own
+	# spawn ("state_machine.init('', spawn_data)"); for P1/P2 that spawn
+	# is the match start, long past in every sampled pair, so a stale
+	# leftover value from the ghost child's own start_game() never feeds
+	# anything again. "fighter_owner" only exists on spawned sub-objects
+	# (P1/P2 are fighters, not owned by one); the one sampled pair where
+	# it differed also showed a "style_aura_*" difference on the same
+	# tick, consistent with the aura/effects spawn-count gap above
+	# shifting which generated object name a presentation vs. gameplay
+	# spawn lands on -- the fighters' own positions, velocities, states
+	# and hp matched exactly in that same sample.
+	"player_actionable", "effects", "style_aura_melee_attack_started_tick",
+	"style_aura_projectiles_first_active_tick", "ghost_reverse",
+	"spawn_data", "fighter_owner"]
 var _fidelity_ignore_cache = null
 
 func _fidelity_ignore() -> Dictionary:
@@ -635,6 +660,19 @@ func _apply_pair_traced(g, p1in: Dictionary, p2in: Dictionary, trace: Array):
 	g.game_paused = true
 
 func _fidelity_pair(p1in: Dictionary, p2in: Dictionary):
+	# Found by this fidelity check: with the real `game`'s automatic
+	# _physics_process still enabled, the two separate yields this
+	# function and _apply_pair_traced each take (one per leg, where
+	# _apply_pair/_drive_to_decision -- the search's own, single-leg,
+	# single-yield code -- takes only one) let Godot's engine service
+	# `game` on its own between them. The real trace then started 2
+	# ticks ahead of the ghost trace even though every later tick lined
+	# up exactly, which pins the cause on those extra engine frames, not
+	# on a real branching difference. Disabling physics_process on
+	# `game` here, the same guard _expand already gives a ghost child,
+	# removes the race; the job ends right after, so it is never
+	# re-enabled.
+	game.set_physics_process(false)
 	var child = GAME_SCENE.instance()
 	child.is_ghost = true
 	add_child(child)
@@ -659,9 +697,16 @@ func _fidelity_pair(p1in: Dictionary, p2in: Dictionary):
 			break
 	if diff_tick == -1 and ghost_trace.size() != real_trace.size():
 		diff_tick = n
+	var result_ghost_seq = []
+	for s in ghost_trace:
+		result_ghost_seq.append(s["game"]["current_tick"])
+	var result_real_seq = []
+	for s in real_trace:
+		result_real_seq.append(s["game"]["current_tick"])
 	var result = {
 		"kind": "fidelity_pair_result",
 		"ghost_ticks": ghost_trace.size(), "real_ticks": real_trace.size(),
+		"ghost_tick_seq": result_ghost_seq, "real_tick_seq": result_real_seq,
 		"match": diff_tick == -1,
 		"first_diff_tick": diff_tick,
 		"ghost_projection": ghost_projection, "real_projection": real_projection,
