@@ -10,17 +10,11 @@ The corpus feeds the Rust port's acceptance check
 
 ## Status at the last commit (read this before resuming)
 
-**Steps A and B are committed.** Step B's acceptance job has not yet
-completed successfully; three real defects were found and fixed this
-session, and a fourth run is still hanging (no script error, no output)
-when this file was written.** This is an honest statement of where the
-work stands, not a result. Steps C-E are implemented as code
-(`coordinator.py`, `corpus.py`) but unexercised against a real
-coordinator run, for the same reason: Step B must produce clean job
-output first.
-
-Defects found and fixed in `CovWorker.gd` this session, each confirmed
-against the Godot script-error log before being judged fixed:
+**Steps A and B are committed, and Step B's acceptance job now runs to
+completion.** Four real defects were found and fixed while checking it;
+the last two were diagnosed against the hang Main (the dispatching
+agent) named a probable cause for, and the fix is confirmed by the
+job's own before/after behaviour, not just by reading the source:
 
 1. `func _start_match(seed: int)`: `seed` is a GDScript built-in global
    function name; using it as a parameter name produced a reload parse
@@ -29,20 +23,40 @@ against the Godot script-error log before being judged fixed:
 2. `game.game_over` does not exist on `Game` (`game.gd` has
    `game_finished`; `game_over` is a per-player `Fighter` flag). Fixed
    every reference.
-3. Several helper coroutines (`_wait_decision`, `_wait_resolved`,
-   `_wait_decision_on`, `_legality_report`, `_apply_pair`, and the root
-   constructors) could return without ever executing a `yield`, when
-   their condition was already satisfied at entry. GDScript then returns
-   a plain value instead of a `GDScriptFunctionState`, and the caller's
-   `yield(fn(), "completed")` fails with "First argument of yield() not
-   of type object". Fixed by making each of these functions yield one
-   idle frame unconditionally before doing anything conditional, which
-   also makes every caller up the chain correctly yield in turn.
-4. `ActionButton.gd` has no `.disabled` property and no `.action` field;
-   the right calls are `.get_disabled()` and `.action_name`. Fixed in
-   `_legality_report`.
+3. Several helper coroutines could return without ever executing a
+   `yield`, when their wait condition was already satisfied at entry,
+   breaking the caller's `yield(fn(), "completed")`. Fixed by making
+   each yield one idle frame unconditionally first.
+4. **The hang, confirmed by source (game.gd, both sides of the call) and
+   fixed:** a ghost `Game` (`is_ghost = true`) never runs
+   `process_tick()` (game.gd ~1575-1581); its `_physics_process` only
+   calls `ghost_tick()` -> `simulate_one_tick()` -> `tick()` (game.gd
+   ~1586-1592). The turn-start block that sets `game_paused`,
+   `p1_turn`/`p2_turn`, `busy_interrupt` and calls `on_interrupt()`
+   (game.gd ~1434-1484) lives inside `process_tick()` only, so a child
+   waiting on `child.game_paused` waited forever. Fix, in
+   `CovWorker.gd _drive_to_decision`: disable the child's automatic
+   `_physics_process` (`set_physics_process(false)`, so Godot's own
+   per-frame `ghost_tick()` can never double-tick it), call `game.gd`'s
+   own `simulate_until_ready()` (game.gd 1313-1316), then replicate the
+   turn-start block directly in `_turn_start_step`.
+5. A second, unrelated defect surfaced once the hang was fixed:
+   `_candidates` gave every action with a data UI the generic
+   `{"x","y"}` aim shape, but not every data UI has that shape (Parry's
+   is `{"Melee Parry Timing": {...}, "Block Height": {...}}`,
+   `characters/states/NewParry.gd`). Fixed by reading the data node's
+   own default value (`button.data_node.get_data()`) and only
+   overwriting it with a discretized aim when that default itself has
+   `x` and `y` keys.
 
-What is checked, with evidence:
+**Checked:** `tools/covsearch/container.sh worker` on the match-start
+root with `max_per_player: 3` completes in under 10 s and writes 10
+JSONL records: one `candidate_count` (`p1: 3, p2: 3`) and 9 `branch`
+records (the full 3×3 cross product), each with a non-empty `probes`
+list and a `projection`. No `legality_diff` record appeared at this one
+root (not evidence that none exists anywhere else).
+
+What remains, with evidence:
 
 - The coordinator (`coordinator.py`) has not completed a run: no run has
   reached either termination condition (every probe hit, or the frontier
@@ -165,38 +179,12 @@ What is checked, with evidence:
     corpus directly, and `port-step`'s `project` command (which reads a
     replay directory the same way, per its own README) does too.
 
-## Known issues at the last commit
+## Known issues resolved this session
 
-1. **Candidate count at the match-start root.** The first attempt at
-   Step B's acceptance check (one `CovWorker.gd` job at the match-start
-   root, uncapped) did not finish in reasonable time; it was killed by
-   hand. The cause: Ninja's menu shows many actions at the first
-   decision point, and `_candidates` without a cap tries 9 aim classes
-   for every aimed action on both sides, so the (p1 candidate) ×
-   (p2 candidate) cross product easily reaches the tens of thousands.
-   `max_per_player` (plumbed through the job, `CovWorker.gd _expand`,
-   and `coordinator.py`'s `--max-per-player`) bounds this; every run
-   after this one used `max_per_player: 3`.
-2. **The capped job still has not produced output.** With the four
-   defects above fixed (see "Status" at the top) and `max_per_player: 3`,
-   the fifth attempt at this job ran for the full 150 s this session
-   allotted it with no `SCRIPT ERROR` and no JSONL output at all — a
-   genuine hang, not a crash. This is the open item: find which wait
-   loop in `CovWorker.gd` never resolves for the match-start root. The
-   most likely candidates, in order of suspicion:
-   - `_wait_decision_on`/`_apply_pair`'s child `Game` never reaches
-     `game_paused` or the two turn flags, because something about a
-     `copy_to`'d, `is_ghost = true` child does not drive its own
-     `tick()`/turn-start block the same way the parent does. This needs
-     a one-off diagnostic job (print `child.current_tick`,
-     `child.game_paused`, `child.p1_turn`/`p2_turn` every few seconds)
-     to confirm before changing anything.
-   - `_legality_report`'s `panel.activate()` on the real `ActionButtons`
-     panel may itself wait on a signal that a non-visual, `--no-window`
-     run never fires.
-   Do not assume which one without that diagnostic: this file's own
-   history in this session (candidate-count theory, then three
-   unrelated real bugs) is the evidence for checking before guessing.
+The candidate-count tractability finding and the match-start job's hang
+(both named in an earlier version of this file) are resolved; see
+"Status" above for the root causes and fixes, and "What remains" for
+what is still open (the coordinator has not run end to end).
 
 ## Running it
 

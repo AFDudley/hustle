@@ -352,12 +352,23 @@ func _candidates(player_id: int) -> Array:
 			continue
 		var action_name = button.state.state_name if button.state else str(button.name)
 		var has_aim = button.data_node != null
-		var aims = DIRECTIONS if has_aim else [null]
+		var default_data = button.data_node.get_data() if has_aim else null
+		var is_xy = has_aim and typeof(default_data) == TYPE_DICTIONARY and default_data.has("x") and default_data.has("y")
+		# Only the x/y (aim) data shape is discretized (design step 5). A
+		# data UI with a different shape (for example Parry's "Melee Parry
+		# Timing"/"Block Height" dict, NewParry.gd _enter/start) keeps its
+		# node's own default value: not every action's data UI is an aim
+		# plot, and guessing a shape for one that is not produced
+		# "Invalid get index" script errors instead of a legal state. This
+		# is a stated scope reduction, recorded in README.md.
+		var aims = DIRECTIONS if is_xy else [null]
 		for dir in aims:
 			var extra = base_extra.duplicate(true)
-			var data = null
+			var data = default_data
 			if dir != null:
-				data = {"x": str(dir[0]), "y": str(dir[1])}
+				data = default_data.duplicate(true)
+				data["x"] = str(dir[0])
+				data["y"] = str(dir[1])
 			out_candidates.append({"action": action_name, "data": data, "extra": extra})
 			# One DI class per direction, one toggle flip each, independent
 			# of the aim loop (design step 5: "each extra toggle on/off,
@@ -378,27 +389,54 @@ func _candidates(player_id: int) -> Array:
 
 # --- branching (design step 6) -------------------------------------------
 
+# A ghost Game (is_ghost = true) never runs game.gd's turn-start block:
+# _physics_process only calls ghost_tick() -> simulate_one_tick() -> tick()
+# for a ghost (game.gd ~1586-1592), never process_tick() (game.gd
+# ~1575-1581), which is where game_paused, p1_turn/p2_turn, busy_interrupt
+# and on_interrupt() are set (game.gd ~1434-1484). A child driven by
+# waiting on those frame-by-frame signals therefore hangs forever: this
+# was the cause of the match-start job's hang (confirmed by reading
+# game.gd's _physics_process and process_tick side by side with the ones
+# CovWorker.gd _wait_decision/_wait_decision_on depended on).
+#
+# Fix: drive the child synchronously instead. Disable its automatic
+# _physics_process (so Godot's own per-frame ghost_tick() never fires and
+# double-ticks it) and call game.gd's own simulate_until_ready()
+# (game.gd 1313-1316: `while !is_waiting_on_player(): tick()`), then
+# replicate the turn-start block (game.gd 1452-1484) directly, since that
+# block normally runs inside process_tick(), which a ghost never calls.
 func _apply_pair(g, p1in: Dictionary, p2in: Dictionary):
 	yield(get_tree(), "idle_frame")
 	g.get_player(1).on_action_selected(p1in.action, p1in.data, p1in.extra)
 	g.get_player(2).on_action_selected(p2in.action, p2in.data, p2in.extra)
-	var ticks = 0
-	while !finished and !g.game_finished and g.is_waiting_on_player() and ticks < 100000:
-		yield(get_tree(), "physics_frame")
-		ticks += 1
-	if !g.game_finished:
-		yield(_wait_decision_on(g), "completed")
+	_drive_to_decision(g)
 
-func _wait_decision_on(g):
-	yield(get_tree(), "idle_frame")
-	while !g.game_paused and !g.game_finished:
-		yield(get_tree(), "idle_frame")
+func _drive_to_decision(g):
+	g.simulate_until_ready()
 	if g.game_finished:
 		return
 	while !(g.p1_turn or !g.p1.state_interruptable) or !(g.p2_turn or !g.p2.state_interruptable):
-		yield(get_tree(), "physics_frame")
-		if g.game_finished:
-			return
+		_turn_start_step(g)
+	g.game_paused = true
+
+# One pass of game.gd's turn-start block (game.gd 1452-1484), the part
+# that normally runs once per physics frame inside process_tick() and
+# sets at most one player's turn flag per call (note the `elif`) -- the
+# same reason ReplayCheck.gd and CovWorker.gd's root-level waits need two
+# frames. Looped by _drive_to_decision until both sides are settled.
+func _turn_start_step(g):
+	if g.p1.state_interruptable and !g.p1_turn:
+		g.p2.busy_interrupt = (!g.p2.state_interruptable and !(g.p2.current_state().interruptible_on_opponent_turn or g.p2.feinting or g.negative_on_hit(g.p2)))
+		if !g.p2.busy_interrupt:
+			g.p2.current_state().on_interrupt()
+		g.p2.state_interruptable = true
+		g.p1_turn = true
+	elif g.p2.state_interruptable and !g.p2_turn:
+		g.p1.busy_interrupt = (!g.p1.state_interruptable and !(g.p1.current_state().interruptible_on_opponent_turn or g.p1.feinting or g.negative_on_hit(g.p1)))
+		if !g.p1.busy_interrupt:
+			g.p1.current_state().on_interrupt()
+		g.p1.state_interruptable = true
+		g.p2_turn = true
 
 func _probe_snapshot() -> Array:
 	return __COV__.h.duplicate()
@@ -452,6 +490,10 @@ func _expand():
 			var child = GAME_SCENE.instance()
 			child.is_ghost = true
 			add_child(child)
+			# Only _drive_to_decision ticks this child; Godot's own
+			# _physics_process must not also call ghost_tick() on it (that
+			# would double-tick nondeterministically).
+			child.set_physics_process(false)
 			child.start_game(true, match_data)
 			game.copy_to(child)
 			yield(_apply_pair(child, p1in, p2in), "completed")
