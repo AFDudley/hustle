@@ -35,6 +35,22 @@ sys.path.insert(0, str(TOOL_DIR))
 import instrument as cs_instrument  # noqa: E402
 
 SCENE = "res://tools/covsearch/CovWorker.tscn"
+# A normal job (list_candidates or one branch_batch pair) observed in this
+# session: 9 to 20 seconds. tools/replay_check's own JOB_TIMEOUT_S (900s)
+# is sized for a full generated match, not one decision point here; using
+# it as this tool's own per-job budget would let one stalled job block the
+# search for 15 minutes. README.md "Blocking defect" names a real,
+# unresolved stall: driving a replay_prefix root live past its own last
+# recorded input can leave game.gd's tick() never reaching another
+# decision. `WorkerStalled` lets the coordinator skip that one node with a
+# named reason instead of the whole run hanging or crashing.
+JOB_TIMEOUT_S = 150
+
+
+class WorkerStalled(Exception):
+    """A worker job did not finish within JOB_TIMEOUT_S. See the constant's
+    own comment: this is a named, surfaced stall, not a silently swallowed
+    error -- the caller decides what the stalled node means for the search."""
 
 
 def prepare(work: rc_run.Work) -> dict:
@@ -48,8 +64,13 @@ def prepare(work: rc_run.Work) -> dict:
     return cov_map
 
 
-def run_worker(work: rc_run.Work, name: str, job: dict) -> Path:
-    """Run one CovWorker.gd job. Returns the path to its JSONL output."""
+def run_worker(work: rc_run.Work, name: str, job: dict, job_timeout: float = JOB_TIMEOUT_S) -> Path:
+    """Run one CovWorker.gd job. Returns the path to its JSONL output.
+
+    Raises WorkerStalled if the Godot process does not exit within
+    `job_timeout` seconds; the process is killed first (subprocess.run's
+    own behaviour on a timeout), so no Godot process outlives this call.
+    """
     work.jobs.mkdir(parents=True, exist_ok=True)
     job_out = work.jobs / f"{name}.jsonl"
     job["out"] = str(job_out)
@@ -63,24 +84,27 @@ def run_worker(work: rc_run.Work, name: str, job: dict) -> Path:
         shutil.rmtree(xdg)
     env = dict(os.environ, XDG_DATA_HOME=str(xdg))
     with log.open("w") as fh:
-        result = subprocess.run(
-            [
-                *rc_run.godot_prefix(),
-                str(work.godot),
-                *rc_run.GODOT_FLAGS,
-                "--path",
-                str(work.project),
-                "--fixed-fps",
-                "60",
-                SCENE,
-                f"--rc-job={job_file}",
-            ],
-            env=env,
-            stdout=fh,
-            stderr=subprocess.STDOUT,
-            timeout=rc_run.JOB_TIMEOUT_S,
-            check=False,
-        )
+        try:
+            result = subprocess.run(
+                [
+                    *rc_run.godot_prefix(),
+                    str(work.godot),
+                    *rc_run.GODOT_FLAGS,
+                    "--path",
+                    str(work.project),
+                    "--fixed-fps",
+                    "60",
+                    SCENE,
+                    f"--rc-job={job_file}",
+                ],
+                env=env,
+                stdout=fh,
+                stderr=subprocess.STDOUT,
+                timeout=job_timeout,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise WorkerStalled(f"worker job {name} did not finish within {job_timeout}s; see {log}") from exc
     text = log.read_text()
     if "SCRIPT ERROR" in text or "COVSEARCH_FAIL" in text:
         raise rc_run.CheckError(f"worker job {name} failed; see {log}")
@@ -89,23 +113,30 @@ def run_worker(work: rc_run.Work, name: str, job: dict) -> Path:
     return job_out
 
 
-def scan_roots(work: rc_run.Work, replays: list[str], out_path: Path) -> None:
+def scan_roots(work: rc_run.Work, replays: list[str], out_path: Path, stop_tick: int, roots_per_mirror: int) -> None:
     """Run replay_scan for each mirror, then write roots.json.
 
-    Design step 3: the match-start root, plus every decision point of each
-    mirror, found by replaying it on the live path (CovWorker.gd
-    _scan_replay). Each replay_scan run also writes its own branch and
-    legality records; scan-roots does not fold them into a coverage total
-    (the coordinator re-expands each root), so no coverage is double
-    counted and no coverage silently depends on this command having run.
+    Design step 3: the match-start root, plus up to `roots_per_mirror`
+    *genuine* decision points of each mirror (CovWorker.gd `_scan_replay`
+    only records a tick where some player is actually interruptable, not
+    just wherever a bounded replay happened to stop -- see its own
+    comment and README.md "Blocking defect"). `stop_tick` bounds how far
+    each scan replays, staying well clear of the full-replay hang
+    README.md "Known defect" names. Each replay_scan run also writes its
+    own branch and legality records; scan-roots does not fold them into a
+    coverage total (the coordinator re-expands each root), so no coverage
+    is double counted and no coverage silently depends on this command
+    having run.
     """
     roots = [{"mode": "match_start", "seed": 1}]
     for i, replay in enumerate(replays):
-        out = run_worker(work, f"scan{i}", {"base": {"mode": "replay_scan", "replay": replay}})
+        out = run_worker(work, f"scan{i}", {"base": {"mode": "replay_scan", "replay": replay, "stop_tick": stop_tick}})
+        found = 0
         for line in out.read_text().splitlines():
             rec = json.loads(line)
-            if rec["kind"] == "root_tick":
+            if rec["kind"] == "root_tick" and found < roots_per_mirror:
                 roots.append({"mode": "replay_prefix", "replay": rec["replay"], "up_to_tick": rec["tick"]})
+                found += 1
     out_path.write_text(json.dumps(roots, indent=2))
     print(f"wrote {len(roots)} roots to {out_path}")
 
@@ -121,6 +152,8 @@ def main() -> int:
     scan = sub.add_parser("scan-roots")
     scan.add_argument("--replay", action="append", required=True, dest="replays")
     scan.add_argument("--out", type=Path, required=True)
+    scan.add_argument("--stop-tick", type=int, default=200, help="bounds how far each mirror replays while scanning for genuine decision points, staying clear of the full-replay hang README.md 'Known defect' names")
+    scan.add_argument("--roots-per-mirror", type=int, default=1, help="how many of a mirror's own genuine decision points become replay_prefix roots")
     coord = sub.add_parser("coordinate")
     coord.add_argument("--out", type=Path, required=True)
     coord.add_argument("--jobs", type=int, default=4)
@@ -145,7 +178,7 @@ def main() -> int:
         print(out)
         return 0
     if args.cmd == "scan-roots":
-        scan_roots(work, args.replays, args.out)
+        scan_roots(work, args.replays, args.out, args.stop_tick, args.roots_per_mirror)
         return 0
     if args.cmd == "coordinate":
         import coordinator

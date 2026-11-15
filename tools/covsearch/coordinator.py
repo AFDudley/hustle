@@ -160,6 +160,7 @@ def run(
     total_ticks_simulated = 0  # sum of every branch's own final tick
     branch_job_seconds: list[float] = []  # one entry per branch_batch job
     branch_job_pairs: list[int] = []
+    stalled_nodes: list[dict] = []  # README.md "Blocking defect": nodes dropped after a worker stall
 
     roots = json.loads(roots_path.read_text())
     # frontier: heap of (-new_probe_count, seq, {"root":..., "choices":[...]})
@@ -184,11 +185,11 @@ def run(
             "kept_paths": len(kept_paths),
             "frontier_size": len(frontier),
             "legality_diffs": len(legality_diffs),
+            "stalled_nodes": len(stalled_nodes),
             "branches_recorded": total_branches,
             "ticks_simulated": total_ticks_simulated,
             "branches_per_second": total_branches / elapsed if elapsed > 0 else 0.0,
             "ticks_per_second": total_ticks_simulated / elapsed if elapsed > 0 else 0.0,
-            "elapsed_s": elapsed,
         }
         progress_path.write_text(json.dumps(progress, indent=2))
         now = time.monotonic()
@@ -215,7 +216,20 @@ def run(
             "base": node["root"], "choices": node["choices"],
             "action": "list_candidates", "max_per_player": max_per_player,
         }
-        list_out = run_worker(work, list_name, list_job)
+        try:
+            list_out = run_worker(work, list_name, list_job)
+        except Exception as exc:
+            if type(exc).__name__ != "WorkerStalled":
+                raise
+            # README.md "Blocking defect": driving a replay_prefix root
+            # live can stall game.gd's own tick() with no code change
+            # available in this tool's scope (committed game files are off
+            # limits). Named here, not hidden: the node is dropped, its
+            # parent's own credit stands, and the search moves on.
+            stalled_nodes.append({"node": node, "phase": "list_candidates", "reason": str(exc)})
+            if jobs_done % 10 == 0:
+                write_progress()
+            continue
         jobs_done += 1
         p1_candidates: list[dict] = []
         p2_candidates: list[dict] = []
@@ -227,6 +241,21 @@ def run(
                 p1_candidates = rec["p1"]
                 p2_candidates = rec["p2"]
         pairs = [[p1, p2] for p1 in p1_candidates for p2 in p2_candidates]
+        # A player with no real options gets one synthetic placeholder
+        # entry from CovWorker.gd _candidates: {"action":"Continue",
+        # "extra":null}. If both players are in that state, this node is
+        # not a real decision (the fixed up_to_tick root can land on such
+        # a tick; see README.md "Known defect") and CovWorker.gd
+        # _apply_pair_live already refuses to send that placeholder as an
+        # input -- so branching it would add nothing. Skip it; its own
+        # coverage was already credited by the parent branch that reached
+        # it.
+        def is_placeholder(c: dict) -> bool:
+            return c.get("action") == "Continue" and c.get("extra") is None
+        if all(is_placeholder(p1) for p1 in p1_candidates) and all(is_placeholder(p2) for p2 in p2_candidates):
+            if jobs_done % 10 == 0:
+                write_progress()
+            continue
         if not pairs:
             if jobs_done % 10 == 0:
                 write_progress()
@@ -244,12 +273,17 @@ def run(
                 "action": "branch_batch", "pairs": batch,
             }
             fut = executor.submit(run_worker, work, name, job)
-            futures[fut] = (name, len(batch))
+            futures[fut] = (name, len(batch), batch)
         for fut in concurrent.futures.as_completed(futures):
-            name, batch_size = futures[fut]
-            job_start_unused = None  # wall time is measured per batch below
+            name, batch_size, batch = futures[fut]
             t0 = time.monotonic()
-            out_path = fut.result()
+            try:
+                out_path = fut.result()
+            except Exception as exc:
+                if type(exc).__name__ != "WorkerStalled":
+                    raise
+                stalled_nodes.append({"node": node, "phase": "branch_batch", "pairs": batch, "reason": str(exc)})
+                continue
             branch_job_seconds.append(time.monotonic() - t0)
             branch_job_pairs.append(batch_size)
             jobs_done += 1
@@ -316,6 +350,7 @@ def run(
         "unreachable_count": len(missing),
         "unreachable": {str(pid): {"reason": unreachable[pid], **probes[pid]} for pid in sorted(missing)},
         "legality_diffs": legality_diffs,
+        "stalled_nodes": stalled_nodes,
         "kept_paths": len(kept_paths),
         "frontier_remaining": len(frontier),
         "branches_recorded": total_branches,
@@ -329,5 +364,5 @@ def run(
     }
     (out_dir / "report.json").write_text(json.dumps(report, indent=2))
     (out_dir / "kept_paths.json").write_text(json.dumps(kept_paths, indent=2))
-    print(json.dumps({k: v for k, v in report.items() if k not in ("unreachable", "legality_diffs")}, indent=2))
+    print(json.dumps({k: v for k, v in report.items() if k not in ("unreachable", "legality_diffs", "stalled_nodes")}, indent=2))
     return 0

@@ -124,7 +124,7 @@ func _run():
 		get_tree().quit(0)
 		return
 	if base.mode == "replay_scan":
-		yield(_scan_replay(base.replay), "completed")
+		yield(_scan_replay(base.replay, int(base.get("stop_tick", -1))), "completed")
 		out.close()
 		get_tree().quit(0)
 		return
@@ -252,17 +252,29 @@ func _verify_replay(replay_path: String):
 		"hit_ids": _hit_ids()})
 
 # replay_scan (design step 3): play one human mirror's own recorded inputs
-# on the live path from tick 0 to its end. At every decision point, run
-# the legality oracle (design step 4, cheap: two UI refreshes) and write
-# its tick as a root_tick record, so the coordinator can later re-anchor
-# a replay_prefix root at that exact tick. It does NOT run the full
-# discretized branch expansion here: run.py scan_roots only reads
-# root_tick records (every branch/candidate record would be discarded),
-# and the coordinator re-expands each root from scratch anyway, so doing
-# the full candidate cross product at every decision of a whole human
-# match was pure wasted compute -- confirmed by timing it: one replay's
-# scan passed 9,000+ JSONL records without reaching its last tick.
-func _scan_replay(replay_path: String):
+# on the live path from tick 0 to its end (or to `base.stop_tick`, if
+# given: a short prefix stays well clear of the full-replay hang README.md
+# "Known defect" names, which this tool has not root-caused). At every
+# *genuine* decision point -- `_wait_decision` returned because at least
+# one player is actually `state_interruptable`, i.e.
+# `game.is_waiting_on_player()` -- it runs the legality oracle (design
+# step 4, cheap: two UI refreshes) and writes the tick as a `root_tick`
+# record, so the coordinator can later re-anchor a `replay_prefix` root at
+# that exact tick. A tick where `_wait_decision` returns without either
+# player truly interruptable (reachable when the loop below's own
+# `_wait_decision` call lands between two players' real turns) is not
+# such a point and is skipped, not recorded: a `replay_prefix` root built
+# from a non-genuine tick has nothing to branch on and, found this
+# session, can send the live simulation into a very long or endless wait
+# for the next real decision when a branch then drives it further. It
+# does NOT run the full discretized branch expansion here: run.py
+# scan_roots only reads root_tick records (every branch/candidate record
+# would be discarded), and the coordinator re-expands each root from
+# scratch anyway, so doing the full candidate cross product at every
+# decision of a whole human match was pure wasted compute -- confirmed by
+# timing it: one replay's scan passed 9,000+ JSONL records without
+# reaching its last tick.
+func _scan_replay(replay_path: String, stop_tick: int = -1):
 	yield(get_tree(), "idle_frame")
 	match_data = ReplayManager.load_replay(replay_path)
 	recorded = ReplayManager.frames.duplicate(true)
@@ -270,6 +282,8 @@ func _scan_replay(replay_path: String):
 	for id in [1, 2]:
 		for t in recorded[id].keys():
 			last_tick = int(max(last_tick, int(t)))
+	if stop_tick >= 0:
+		last_tick = int(min(last_tick, stop_tick))
 	ReplayManager.init()
 	ReplayManager.playback = false
 	_new_game()
@@ -281,10 +295,11 @@ func _scan_replay(replay_path: String):
 		yield(_wait_decision(game), "completed")
 		if finished or game.game_finished:
 			return
-		_write({"kind": "root_tick", "replay": replay_path, "tick": game.current_tick})
-		yield(_legality_report(), "completed")
-		if finished:
-			return
+		if game.is_waiting_on_player():
+			_write({"kind": "root_tick", "replay": replay_path, "tick": game.current_tick})
+			yield(_legality_report(), "completed")
+			if finished:
+				return
 		var key = game.current_tick + 1
 		for id in [1, 2]:
 			if recorded[id].has(key):
@@ -322,14 +337,29 @@ func _start_replay_prefix(replay_path: String, up_to_tick: int):
 		_fail("start_game rejected the replay characters")
 		return
 	_make_panels()
+	# Each loop iteration applies one recorded decision and lets the
+	# simulation resolve it, but `_wait_resolved` alone can leave
+	# `current_tick` on a transient post-resolution frame, not a genuine
+	# decision (found this session: a `_wait_decision` call is the only
+	# thing that lands on one -- see `game.is_waiting_on_player()` in
+	# game.gd). One final `_wait_decision` after the loop lands this root
+	# on the next real decision point, the same guarantee `_apply_pair_live`
+	# already gives every branch. Without it, `_candidates` here can see
+	# neither player interruptable (README.md "Blocking defect": applying
+	# a synthetic input at such a tick stalled a branch for a long time).
 	while game.current_tick < up_to_tick and !finished:
 		yield(_wait_decision(game), "completed")
+		if finished or game.game_finished:
+			return
 		var key = game.current_tick + 1
 		for id in [1, 2]:
 			if recorded[id].has(key):
 				var input = recorded[id][key]
 				game.get_player(id).on_action_selected(input["action"], input["data"], input["extra"])
 		yield(_wait_resolved(game), "completed")
+		if finished or game.game_finished:
+			return
+	yield(_wait_decision(game), "completed")
 
 func _rejected(result) -> bool:
 	return typeof(result) == TYPE_BOOL and result == false
@@ -528,11 +558,26 @@ func _list_candidates():
 # runs its pairs this way one after another, never two Games at once --
 # the brief's named optimisation for amortising one process's startup
 # cost over several branches, measured in README.md "Cost measurement".
+#
+# `_apply_pair_live` only calls `on_action_selected` for a player who is
+# actually `state_interruptable` at that moment. `_candidates` (design
+# step 5) returns a single synthetic `{"action":"Continue","extra":null}`
+# entry for a non-interruptable player -- a placeholder so the cross
+# product still has one entry for that side, not a real choice -- and
+# calling `on_action_selected` on a non-interruptable fighter is not a
+# real input the game ever offers through the real ActionButtons UI. A
+# fixed `up_to_tick` root (README.md "Known defect") can land on a tick
+# where neither player is truly interruptable; calling
+# `on_action_selected` there regardless hung the process (found and
+# fixed this session, not the two-Game defect: a single-Game branch of
+# this exact root reproduced it).
 
 func _apply_pair_live(g, p1in: Dictionary, p2in: Dictionary):
 	yield(get_tree(), "idle_frame")
-	g.get_player(1).on_action_selected(p1in.action, p1in.data, p1in.extra)
-	g.get_player(2).on_action_selected(p2in.action, p2in.data, p2in.extra)
+	if g.get_player(1).state_interruptable:
+		g.get_player(1).on_action_selected(p1in.action, p1in.data, p1in.extra)
+	if g.get_player(2).state_interruptable:
+		g.get_player(2).on_action_selected(p2in.action, p2in.data, p2in.extra)
 	yield(_wait_resolved(g), "completed")
 	if finished or g.game_finished:
 		return
