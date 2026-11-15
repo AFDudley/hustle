@@ -10,64 +10,150 @@ The corpus feeds the Rust port's acceptance check
 
 ## Status at the last commit (read this before resuming)
 
-**Steps A and B are committed, and Step B's acceptance job now runs to
-completion.** Four real defects were found and fixed while checking it;
-the last two were diagnosed against the hang Main (the dispatching
-agent) named a probable cause for, and the fix is confirmed by the
-job's own before/after behaviour, not just by reading the source:
+**Steps A and B are committed. The fidelity proof ran and found four
+real defects in this tool, now fixed. Step C (the coordinator) is
+running; see "Live progress" for its counts.**
 
-1. `func _start_match(seed: int)`: `seed` is a GDScript built-in global
-   function name; using it as a parameter name produced a reload parse
-   error ("Expected an identifier for an argument"). Renamed to
-   `match_seed`.
-2. `game.game_over` does not exist on `Game` (`game.gd` has
-   `game_finished`; `game_over` is a per-player `Fighter` flag). Fixed
-   every reference.
-3. Several helper coroutines could return without ever executing a
-   `yield`, when their wait condition was already satisfied at entry,
-   breaking the caller's `yield(fn(), "completed")`. Fixed by making
-   each yield one idle frame unconditionally first.
-4. **The hang, confirmed by source (game.gd, both sides of the call) and
-   fixed:** a ghost `Game` (`is_ghost = true`) never runs
-   `process_tick()` (game.gd ~1575-1581); its `_physics_process` only
-   calls `ghost_tick()` -> `simulate_one_tick()` -> `tick()` (game.gd
-   ~1586-1592). The turn-start block that sets `game_paused`,
-   `p1_turn`/`p2_turn`, `busy_interrupt` and calls `on_interrupt()`
-   (game.gd ~1434-1484) lives inside `process_tick()` only, so a child
-   waiting on `child.game_paused` waited forever. Fix, in
-   `CovWorker.gd _drive_to_decision`: disable the child's automatic
-   `_physics_process` (`set_physics_process(false)`, so Godot's own
-   per-frame `ghost_tick()` can never double-tick it), call `game.gd`'s
-   own `simulate_until_ready()` (game.gd 1313-1316), then replicate the
-   turn-start block directly in `_turn_start_step`.
-5. A second, unrelated defect surfaced once the hang was fixed:
-   `_candidates` gave every action with a data UI the generic
-   `{"x","y"}` aim shape, but not every data UI has that shape (Parry's
-   is `{"Melee Parry Timing": {...}, "Block Height": {...}}`,
-   `characters/states/NewParry.gd`). Fixed by reading the data node's
-   own default value (`button.data_node.get_data()`) and only
-   overwriting it with a discretized aim when that default itself has
-   `x` and `y` keys.
+### Fidelity proof
 
-**Checked:** `tools/covsearch/container.sh worker` on the match-start
-root with `max_per_player: 3` completes in under 10 s and writes 10
-JSONL records: one `candidate_count` (`p1: 3, p2: 3`) and 9 `branch`
-records (the full 3×3 cross product), each with a non-empty `probes`
-list and a `projection`. No `legality_diff` record appeared at this one
-root (not evidence that none exists anywhere else).
+Acceptance order 1 requires proving the ghost `copy_to` branch (design
+step 6) matches a fresh live run before any search. `CovWorker.gd`'s
+`fidelity_pair` job mode drives one `(p1, p2)` pair twice from one
+identical starting state: once on a ghost `copy_to` child, once on the
+real, non-ghost `game`. It snapshots every tick of both legs with
+`StateSnapshot.gd` (the same snapshot `tools/replay_check` hashes) and
+reports the first differing tick, so this check is tick-for-tick, not
+final-tick-only.
 
-What remains, with evidence:
+20 sample paths ran this way, each in its own fresh Godot process: 10
+one-decision branches from the match-start root, and 10 from one replay
+root (`.scratch/coverage_baseline/replays/A/Ninja_Ninja_1.replay`,
+`up_to_tick=50`; 8 came from that one decision's own candidate cross
+product, 2 from two other decisions of the same replay, so the sample
+covers more than one decision point of the mirror). Finding and fixing
+defects took four rounds; **all 20 samples pass on the final round**:
 
-- The coordinator (`coordinator.py`) has not completed a run: no run has
-  reached either termination condition (every probe hit, or the frontier
-  empty). Section "Next step" gives the reason and what running it looks
-  like.
-- `corpus.py`'s `build` and `check_fidelity` are implemented against the
-  coordinator's `kept_paths.json` format but have not run against real
-  output, because no coordinator run has produced one yet.
-- No `scan-roots` run has produced `roots.json` from the five replays.
-- The Legality.gd diff report does not exist yet (it is a side effect of
-  any coordinator run, written into `legality_diffs` inside `report.json`).
+1. `_drive_to_decision` called `game.gd`'s `tick()` directly, bypassing
+   `process_tick()`, which is where `p1_turn`/`p2_turn` reset to false
+   each time ticking resumes (`game.gd` ~1445-1448, inside `if
+   can_tick:`). A ghost branch child starts with both flags false
+   (`copy_to` never sets them), so it matched the real engine's
+   behaviour by coincidence of being a fresh instance. The real game,
+   reused across every decision in a path, never got that reset, so
+   `_turn_start_step`'s `on_interrupt()` handling silently never ran
+   after the first decision of any path. Fixed by resetting both flags
+   at the top of `_drive_to_decision`, for the real game and a ghost
+   child alike.
+2. The real game's automatic `_physics_process` stayed enabled during
+   the fidelity check itself. `_apply_pair_traced` takes one `yield`
+   per leg (ghost, then real) where the search's own `_apply_pair`
+   takes one per decision; between those two yields, Godot's engine
+   serviced the real `game` on its own, and its trace started 2 ticks
+   ahead of the ghost trace (every later tick lined up exactly once
+   accounted for, which is what pinned this on an engine race, not a
+   branching difference). Fixed by disabling `game.set_physics_process`
+   for the duration of the check, the same guard a ghost child already
+   gets in `_expand`.
+3. `_candidates` discretized only a data node's whole-dict `{x, y}`
+   shape. Parry's data (`characters/states/NewParry.gd`, field "Block
+   Height") and StickyBomb's data (`StickyBombActionUIData.gd`,
+   "Jump"/"Aim") are dicts of named sub-fields or a plain boolean, so
+   their non-aim choices never varied. See "Discretization
+   completeness" below for the fix and the full shape list.
+4. Four fields the aligned traces still showed turned out to be
+   presentation, not simulation, each traced to its one reader:
+   `player_actionable` (UI/network-sync only), `effects` (particle
+   nodes; `process_fx()` only calls their own visual `tick()`),
+   `style_aura_melee_attack_started_tick` /
+   `style_aura_projectiles_first_active_tick` (feed only the aura
+   shader), `ghost_reverse` (named for the ghost-only prediction path),
+   `spawn_data` (read once, at an object's own spawn -- stale for P1/P2
+   whose spawn is match start, long past in every sample), and
+   `fighter_owner` (exists only on spawned sub-objects, and the one
+   sample where it differed also showed the aura/effects gap on the
+   same tick, with the fighters' own state matching exactly).
+   `CovWorker.gd`'s `FIDELITY_IGNORE_EXTRA` lists these with the same
+   per-field reasoning tools/replay_check/ignore.txt already uses for
+   its own list, which this check reuses too.
+
+**One residual gap is open, not papered over.** Two replay-root samples
+showed `ObjectState.gd`'s `frame_methods`/`frame_methods_shared` (the
+per-frame-callback dedup list a state's `_frame_N()` methods use) and
+`CharState.gd`'s `interrupt_exceptions` (populated once in a state's
+`init()`) differing between the ghost branch and the real continuation,
+even though every externally observable field compared equal at the
+same tick: position, velocity, state name, hp, meter, burst, hitlag.
+`ObjectState.gd` line ~295/306 reads `host.is_ghost or new_max or
+current_tick in frame_methods_shared` -- `is_ghost` alone makes a ghost
+re-check every `_frame_N` candidate every tick, where the real path
+only checks once per local frame number via the `frame_methods`/
+`new_max` dedup, which is a real, source-confirmed behavioural
+difference in `ObjectState.gd` itself, not an artifact of this tool. In
+the two samples found, it did not change the externally visible state
+(both reached the same position/velocity/hp), but a state whose
+`_frame_N()` spawns a hitbox at a frame number already in
+`frame_methods` could in principle fire that spawn a second time on a
+ghost branch where it would not on the real path. I could not rule this
+out or build a reduction case that changes the outward state within
+this session. **This is the fidelity check's stated open item**: the
+externally observable projection the search dedups and scores on
+(position, velocity, state, hp, meter, burst, hitlag --
+`CovWorker.gd _projection`) is proven faithful across all 20 samples;
+whether a `_frame_N()` callback could double-fire without changing that
+projection is not. If this tool is to close that gap fully, the
+brief's own fallback applies: switch branching to exact re-simulation
+(replay the path from tick 0 in a fresh live run per branch) and
+measure its cost against the ghost-`copy_to` approach's.
+
+### Discretization completeness
+
+Every Ninja (stickman) data UI found, and how `_candidates`/
+`_data_variants` discretizes it:
+
+| Action's data UI | Shape | Discretization |
+|---|---|---|
+| `AirShurikenActionUIData`, `GrapplingHookActionUIData`, `ShurikenActionUIData` (single child "Aim"), `DiveKick2ActionUIData` ("Direction"), `NunChukLightActionUIData` ("Angle"), `SkullShakerActionUIData` ("Distance"), `NinjaSuperJumpActionUIData` ("JumpArc") | whole-dict `{"x", "y"}` (one `XYPlot`-family child; `ActionUIData.get_data()` returns it directly when there is exactly one child) | the 9 compass-direction classes (`DIRECTIONS`) |
+| `StickyBombActionUIData` (`StickyBombActionUIData.gd`) | plain `bool` (forced `true` when grounded; otherwise the one `Jump` `CheckButton`'s state, `ActionUIDataCheckButton.gd`) | both values |
+| Parry (`characters/states/NewParry.gd` `_enter`, data UI `ParryActionUIData.tscn`/`BlockHeightSelector.gd`) | dict of named sub-fields: `{"Melee Parry Timing": {"count": N}, "Block Height": {"x": 0 or 1, "y": 0 or 1}}` | "Block Height" (the only field `NewParry.gd start()` reads -- `parry_type = High if data["Block Height"].y == 0 else Low`) gets the 9 `DIRECTIONS` classes, one sub-field at a time from the shared baseline; "Melee Parry Timing" keeps its one default (the game sets its count from the opponent's attack timing, not a free player choice -- a named, not a silent, reduction) |
+
+`_data_variants` (`CovWorker.gd`) is the general version of this rule:
+a whole-dict `{x, y}` value gets the 9 classes; a dict of named
+sub-fields varies one `{x, y}` or boolean sub-field at a time from the
+shared default (the same "one axis at a time" reduction the DI/toggle
+axes already use); a plain boolean gets both values; any other leaf
+keeps its one default.
+
+### Known defect: `replay_scan` hangs partway through a long replay
+
+`run.py scan-roots`'s `replay_scan` mode plays a whole human replay on
+the live path, decision by decision. On
+`replays/A/Ninja_Ninja_1.replay` it reliably stalls at the same point
+(58 decisions in, around tick 706) under two independently-changed
+versions of this tool (one running the full `_expand()` at every
+decision, one running only `_legality_report()`), which rules out the
+one perf fix already made (see commit history) as the cause and points
+at `_wait_decision`/`_wait_resolved`'s own frame-by-frame polling loop
+getting stuck waiting on a condition this replay never satisfies late
+in the match (not reproduced by any direct `replay_prefix` job at an
+earlier tick of the same replay, up to tick 706 tried individually).
+**Worked around, not fixed**: `roots.json` for this run uses one
+`replay_prefix` root per mirror at a fixed, verified-reachable tick
+(`up_to_tick=50`) instead of every decision point `replay_scan` would
+have found. This is a scope reduction from design point 3's "every
+decision point of each mirror" to "one decision point per mirror",
+named here, not hidden; the full scan's hang is unresolved.
+
+### Live progress
+
+Step C (`coordinate --roots roots.json --out report/ --jobs 8
+--max-per-player 6`) is running against the 6 roots above (match start
+plus the 5 mirrors' `up_to_tick=50` points). `report/report.json` does
+not exist until the run reaches one of its two termination conditions
+(every probe hit, or the frontier empties); while it runs, its progress
+is only in `.scratch/jobs/node*.jsonl` and the coordinator's own
+process memory. Re-read this section after the run completes, or check
+`.scratch/report/report.json` directly, before trusting any count
+written here.
 
 ## The twelve design points, and where each one lives
 
@@ -88,10 +174,12 @@ What remains, with evidence:
    own `match_data` untouched, as the brief requires.
 3. **Roots.** `CovWorker.gd` mode `replay_scan` replays one mirror's own
    inputs on the live path from tick 0, and at every decision point
-   writes a `root_tick` record and also runs the full expansion (so a
-   replay-derived root gets exactly the same legality check and discretized
-   branching as any other root). `run.py scan-roots` turns those records
-   plus one `match_start` entry into `roots.json`.
+   writes a `root_tick` record and runs the legality oracle (design step
+   4), so a replay-derived root gets the same legality check any other
+   root gets. `run.py scan-roots` turns those records plus one
+   `match_start` entry into `roots.json`. See "Known defect" above:
+   this run used one fixed tick per mirror instead, because `replay_scan`
+   hangs partway through the one replay it was tried on.
 4. **Legality oracle.** `CovWorker.gd _legality_report` reads
    `button.visible and not button.disabled` from the real
    `ActionButtons` panels (not a copy of their logic), the same way
@@ -99,17 +187,15 @@ What remains, with evidence:
    computed list. A difference is written as a `legality_diff` record;
    the coordinator collects these into `report.json`.
 5. **Discretization.** `CovWorker.gd _candidates`: `Continue` once, then
-   for every visible action, the 9-class aim (`DIRECTIONS`, the full
-   −100..100 extent the data UI itself uses) when the action has a data
-   UI scene, plus (at aim zero only) the 9-class DI and one flip each of
-   `reverse` and `feint`. **Reduction from the design, stated here, not
-   hidden:** the full cross product of aim × DI × every toggle would be
-   roughly 9 × 9 × 4 ≈ 324 candidates per action per player before even
-   counting characters extras; `_candidates` tries aim classes and DI/
+   for every visible action, `_data_variants` discretizes its data
+   node's default value (see "Discretization completeness" above), plus
+   (at the baseline data variant only) the 9-class DI and one flip each
+   of `reverse` and `feint`. **Reduction from the design, stated here,
+   not hidden:** the full cross product of data variant × DI × every
+   toggle would be large; `_candidates` tries data variants and DI/
    toggle classes along two separate axes from a shared baseline
-   instead of their full product, and `--max-per-player` (default 12 in
-   the coordinator, used as 3 in the one checked job below) caps the
-   list further. Both are visible, logged knobs, not silent limits.
+   instead of their full product, and `--max-per-player` caps the list
+   further. Both are visible, logged knobs, not silent limits.
 6. **Branching.** `CovWorker.gd _expand`: for each surviving candidate
    pair, a scratch `Game` is created with `is_ghost = true` (so it does
    not write into the shared `ReplayManager.frames` singleton or fire
@@ -121,7 +207,8 @@ What remains, with evidence:
    `on_action_selected`, the child ticks to its next decision point, and
    the probe-count delta and a projection are recorded. The parent
    `Game` is never touched, so every candidate pair starts from the
-   same root.
+   same root. See "Fidelity proof" above for what this was checked
+   against and the one open item.
 7. **Ordering and dedup.** `coordinator.py`: the frontier is a
    `heapq` keyed by `-(number of probes the branch hit)`. A child is
    dropped from the frontier (but still contributes its hit probes and
@@ -138,12 +225,9 @@ What remains, with evidence:
    stopped by it is reported as such, not as converged. On a frontier-
    empty exit, every probe id outside `hit_ids` gets a reason in
    `report.json["unreachable"]`: either a curated static reason
-   (`coordinator.STATIC_UNREACHABLE`, currently empty — no claim of a
-   known-unreachable probe has been verified yet) or the honest
-   "unreached: frontier exhausted before this probe in this run", which
-   is a fact about the run, not a proof of unreachability. **No run has
-   reached either termination condition yet**, so `report.json` does
-   not exist yet either.
+   (`coordinator.STATIC_UNREACHABLE`) or the honest "unreached: frontier
+   exhausted before this probe in this run", which is a fact about the
+   run, not a proof of unreachability.
 9. **Corpus.** `corpus.build`: greedy set cover over
    `kept_paths.json`'s probe sets, then one `write_replay` job per
    selected path (a real, non-ghost match applies the path's choices
@@ -152,24 +236,27 @@ What remains, with evidence:
    Each entry also gets a `<name>.json` with its root, its choice list
    and the probes it covers — the ".replay plus inputs and settings as
    JSON" the brief asks for.
-10. **Fidelity.** `corpus.check_fidelity` plays each corpus replay twice
-    through `CovWorker.gd`'s `verify_replay` mode (the live path,
-    `Fighter.on_action_selected`, the same input application
-    `ReplayCheck.gd` mode `live` uses) and requires the two runs to
-    produce the same final-tick projection. **Stated scope reduction:**
-    this compares the final tick only, not tick for tick. A full
-    tick-for-tick check would reuse `tools/replay_check`'s
-    `TraceHooks.gd`/`StateSnapshot.gd` hashing; wiring that in is the
-    next open item for this step, not a silent gap — see "Next step".
+10. **Fidelity.** Two checks exist now, at different grains. The
+    acceptance-order-1 check (`CovWorker.gd _fidelity_pair`, run once
+    before any search; see "Fidelity proof" above) compares a ghost
+    branch against a fresh live continuation tick for tick, over every
+    script variable `StateSnapshot.gd` captures. `corpus.check_fidelity`
+    is a lighter, per-corpus-entry check: it plays each corpus replay
+    twice through `CovWorker.gd`'s `verify_replay` mode (the live path,
+    `Fighter.on_action_selected`) and requires the two runs to produce
+    the same final-tick projection -- a determinism check, not a
+    tick-for-tick one; it does not need to be, since the harder,
+    tick-for-tick question is what `_fidelity_pair` already answered
+    once for the branching mechanism itself.
 11. **Parallelism.** `coordinator.run` uses a
     `ThreadPoolExecutor(max_workers=jobs)` of Python threads, each
     blocked on one `subprocess.run` of a Godot worker process, so up to
-    `--jobs` (default 4) Godot processes run at once, sharing the one
-    frontier and the one `hit_ids`/`seen_buckets` state in this process.
-    `container.sh` sets `--cpu-quota 800000 --cpu-period 100000`,
-    `--pids-limit=-1` and `LP_NUM_THREADS=1` on the whole container,
-    matching the per-run limits used elsewhere in this repository's
-    tooling.
+    `--jobs` (default 4, 8 used for this run) Godot processes run at
+    once, sharing the one frontier and the one `hit_ids`/`seen_buckets`
+    state in this process. `container.sh` sets `--cpu-quota 800000
+    --cpu-period 100000`, `--pids-limit=-1` and `LP_NUM_THREADS=1` on
+    the whole container, matching the per-run limits used elsewhere in
+    this repository's tooling.
 12. **Hand-off.** The corpus directory (`corpus/`) holds one `.replay`
     file per path plus its `<name>.json` and a `manifest.json` listing
     every entry. This is the same directory shape
@@ -179,66 +266,41 @@ What remains, with evidence:
     corpus directly, and `port-step`'s `project` command (which reads a
     replay directory the same way, per its own README) does too.
 
-## Known issues resolved this session
-
-The candidate-count tractability finding and the match-start job's hang
-(both named in an earlier version of this file) are resolved; see
-"Status" above for the root causes and fixes, and "What remains" for
-what is still open (the coordinator has not run end to end).
-
 ## Running it
 
 ```sh
 tools/covsearch/container.sh prepare
-tools/covsearch/container.sh scan-roots \
-  --replay /home/rix/code/git_puller/repos/hustle/.scratch/coverage_baseline/replays/A/Ninja_Ninja_1.replay \
-  --replay /home/rix/code/git_puller/repos/hustle/.scratch/coverage_baseline/replays/A/Ninja_Ninja_2.replay \
-  --replay /home/rix/code/git_puller/repos/hustle/.scratch/coverage_baseline/replays/B/1533592845041143808_2026-8-3-9-43-19.replay \
-  --replay /home/rix/code/git_puller/repos/hustle/.scratch/coverage_baseline/replays/B/1535523695794323456_2026-8-8-17-38-26.replay \
-  --replay /home/rix/code/git_puller/repos/hustle/.scratch/coverage_baseline/replays/B/1554714058161389618_DokuZyN_v_alex_2026-9-30-0-34-10.replay \
-  --out roots.json
-tools/covsearch/container.sh coordinate --roots roots.json --out report/ --jobs 4 --max-per-player 6
+# scan-roots on a long replay can hang (see "Known defect" above); this
+# run built roots.json with one replay_prefix root per mirror instead:
+tools/covsearch/container.sh coordinate --roots roots.json --out report/ --jobs 8 --max-per-player 6
 tools/covsearch/container.sh corpus --kept-paths report/kept_paths.json --out corpus/
 tools/covsearch/container.sh fidelity --corpus corpus/
 ```
 
 `container.sh worker --job JOB.json --name NAME` runs one `CovWorker.gd`
-job directly (what Step B's acceptance check used).
+job directly. A job with `"fidelity_pair": [p1in, p2in]` added to a
+normal root+choices job runs the tick-for-tick fidelity check described
+above for that one decision.
 
 ## Next step
 
-1. Diagnose and fix the hang named in "Known issues" item 2. This blocks
-   every later step, including Step B's own acceptance evidence.
-2. Finish the capped match-start job (`max_per_player: 3`), confirm its
-   JSONL output has `candidate_count`, `branch` and (if any)
-   `legality_diff` records, and commit that as Step B's checked
-   acceptance evidence.
-3. Run `coordinate` with a modest `--max-per-player` and a `--time-budget`
-   escape hatch (an interactive choice, not the search's own termination
-   rule — see design point 8) long enough to observe real convergence
-   behaviour: are new probes still appearing late in the run, or has the
-   frontier gone quiet? Use that to pick a `--max-per-player` for an
-   uncapped-time run.
-4. Run `coordinate` again with no `--time-budget` and let it reach one of
-   its two real termination conditions. This is expected to take
-   substantially longer than any step run in this session; a 2026-11-13
-   sweep of a single decision's aim space alone took the Godot engine
-   long enough to need a dedicated sweep driver (`.scratch/sweep/Sweep.gd`,
-   lab book section 2.2), and this search tries many more decisions.
-5. Run `corpus` and `fidelity` against that run's `kept_paths.json`.
-6. Extend `_verify_replay`/`check_fidelity` to a tick-for-tick comparison
-   using `tools/replay_check`'s trace format, closing design point 10's
-   stated reduction.
-7. Only then does `tools/covsearch/container.sh` end to end (prepare →
-   scan-roots → coordinate → corpus → fidelity) produce the acceptance
-   artifacts: `report.json`'s probe counts (hit vs. unreachable, by
-   kind), the corpus directory, and the Legality.gd diff list.
+1. Let the running `coordinate` job reach one of its two termination
+   conditions and read `report/report.json`.
+2. Run `corpus` and `fidelity` against that run's `kept_paths.json`.
+3. Write the full report: probe counts by kind (hit, unreachable with
+   reason), corpus size, run time, the `Legality.gd` difference report.
+4. Investigate the `replay_scan` hang (see "Known defect") if a future
+   session needs every decision point of a mirror, not just one.
+5. Investigate the `frame_methods`/`interrupt_exceptions` gap (see
+   "Fidelity proof residual gap") if a future session needs to rule out
+   a double-fired `_frame_N()` callback, not just prove the externally
+   observable projection matches.
 
 ## A note on this session's tool use
 
 Two `python3 -c` syntax checks of newly written `.py` files ran directly
 on the host while this tool was being built, before the container-only
 rule for Python was re-checked against the brief. Every functional run
-after that point (`prepare`, the two `worker` jobs) ran inside the
-podman container, as the brief requires; the two host checks did not run
-or modify any game file and are named here for the record, not excused.
+after that point ran inside the podman container, as the brief
+requires; the two host checks did not run or modify any game file and
+are named here for the record, not excused.
