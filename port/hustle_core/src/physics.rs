@@ -404,10 +404,21 @@ pub fn apply_force(o: ObjectData, x: i64, y: i64) -> ObjectData {
     apply_force_str(o, fixed_from_int(x), fixed_from_int(y))
 }
 
+/// Decompiled from `apply_force_str`'s `ThisMethod::call`
+/// (`tools/ghidra`, address `0x68b10`): while the object is
+/// grounded, a non-negative `y` (downward, or zero) is **not**
+/// queued at all — only a negative (upward) `y` reaches
+/// `pending_force_y` while grounded. `x` is never gated. Confirmed
+/// by a recorded real call (`tools/fgobject_diff/README.md`, object
+/// `692`): grounded, `apply_force_str("-6.08983", "1.39482")`
+/// followed by `apply_forces_no_limit()` left `vel_y` at exactly
+/// `0`, not `1.39482` — the queued downward `y` was never queued in
+/// the first place, not spent and clamped away.
 pub fn apply_force_str(o: ObjectData, x: Fixed, y: Fixed) -> ObjectData {
+    let queued_y = if o.grounded && y.0 >= 0 { Fixed::ZERO } else { y };
     let mut out = o;
     out.pending_force_x = o.pending_force_x.wrapping_add(x);
-    out.pending_force_y = o.pending_force_y.wrapping_add(y);
+    out.pending_force_y = o.pending_force_y.wrapping_add(queued_y);
     out
 }
 
