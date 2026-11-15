@@ -261,60 +261,62 @@ any real call site:
 
 ## The result
 
-**1,388,604/1,388,629 calls matched exactly (99.998%).** Run
-2026-11-15: the edge-value probe plus all six census replays
-(`.scratch/census_live/replays`), through `container.sh`'s three
-stages end to end. Every one of the 25 remaining mismatches is the
-one open issue above (a value at the type's exact minimum fed through
-`apply_forces` or `apply_fric`), and every one is in `probe.jsonl`:
-**all six live replay files match every call.** First-divergence (the
-first mismatching call per object, this tool's main-loop metric):
-25 objects, 20 in `apply_forces`, 5 in `apply_fric`, all probe-only.
+**1,343,932/1,343,937 calls matched exactly.** Run 2026-11-15, from an
+empty `out/`: the edge-value probe (11,173 calls) plus all six census
+replays (`.scratch/census_live/replays`, 1,332,764 calls), through
+`container.sh`'s three stages end to end. Every one of the 5 remaining
+mismatches is the one open issue above (a force at the type's exact
+minimum fed through `apply_forces` or `apply_fric`), and every one is in
+`probe.jsonl`: **all six live replay files match every call.**
+First-divergence: 5 objects, 4 in `apply_forces`, 1 in `apply_fric`, all
+probe-only. Earlier counts (1,388,629 and 1,399,802 calls) were wrong:
+`container.sh` did not clear `out/`, so `probe.jsonl` held several stale
+probe runs.
 
 | Method | Calls | Matched |
 |---|---:|---:|
-| add_pushback | 979 | 979 |
-| apply_force | 435 | 435 |
-| apply_force_relative | 128 | 128 |
-| apply_force_relative_str | 1,429 | 1,429 |
-| apply_force_str | 6,412 | 6,412 |
-| apply_forces | 24,377 | 24,357 |
-| apply_forces_no_limit | 6,586 | 6,586 |
-| apply_fric | 17,505 | 17,500 |
-| apply_grav | 17,420 | 17,420 |
-| apply_grav_custom | 4,242 | 4,242 |
-| apply_pushback | 19,866 | 19,866 |
-| apply_x_fric | 4,851 | 4,851 |
-| apply_y_fric | 458 | 458 |
-| copy_to | 90 | 90 |
+| add_pushback | 871 | 871 |
+| apply_force | 111 | 111 |
+| apply_force_relative | 56 | 56 |
+| apply_force_relative_str | 1,293 | 1,293 |
+| apply_force_str | 6,128 | 6,128 |
+| apply_forces | 23,237 | 23,233 |
+| apply_forces_no_limit | 6,450 | 6,450 |
+| apply_fric | 17,237 | 17,236 |
+| apply_grav | 17,308 | 17,308 |
+| apply_grav_custom | 3,890 | 3,890 |
+| apply_pushback | 19,742 | 19,742 |
+| apply_x_fric | 4,783 | 4,783 |
+| apply_y_fric | 390 | 390 |
+| copy_to | 18 | 18 |
 | get_data | 371,235 | 371,235 |
-| get_facing | 492,950 | 492,950 |
-| get_snap_to_ground | 10 | 10 |
-| get_x_vel_int | 13,749 | 13,749 |
-| is_grounded | 238,747 | 238,747 |
-| move_directly | 2,106 | 2,106 |
-| move_directly_relative | 3,168 | 3,168 |
-| move_directly_relative_str | 8,123 | 8,123 |
-| move_directly_str | 4,597 | 4,597 |
-| reset_momentum | 848 | 848 |
-| reset_pushback | 7 | 7 |
-| set_air_friction | 7,422 | 7,422 |
-| set_facing | 10,117 | 10,117 |
-| set_gravity | 7,421 | 7,421 |
-| set_gravity_modifier | 701 | 701 |
-| set_ground_friction | 7,471 | 7,471 |
-| set_grounded | 2,054 | 2,054 |
-| set_id | 556 | 556 |
-| set_max_air_speed | 7,534 | 7,534 |
-| set_max_fall_speed | 7,453 | 7,453 |
-| set_max_ground_speed | 7,500 | 7,500 |
-| set_position | 4,078 | 4,078 |
-| set_position_str | 1,555 | 1,555 |
-| set_snap_to_ground | 114 | 114 |
-| set_vel | 4,476 | 4,476 |
-| set_x | 5,120 | 5,120 |
-| set_y | 5,452 | 5,452 |
-| update_grounded | 69,287 | 69,287 |
+| get_facing | 492,926 | 492,926 |
+| get_snap_to_ground | 2 | 2 |
+| get_x_vel_int | 13,657 | 13,657 |
+| is_grounded | 238,739 | 238,739 |
+| move_directly | 1,702 | 1,702 |
+| move_directly_relative | 3,096 | 3,096 |
+| move_directly_relative_str | 7,987 | 7,987 |
+| move_directly_str | 3,441 | 3,441 |
+| reset_momentum | 780 | 780 |
+| reset_pushback | 3 | 3 |
+| set_air_friction | 1,910 | 1,910 |
+| set_facing | 9,601 | 9,601 |
+| set_gravity | 1,909 | 1,909 |
+| set_gravity_modifier | 565 | 565 |
+| set_ground_friction | 1,959 | 1,959 |
+| set_grounded | 986 | 986 |
+| set_id | 536 | 536 |
+| set_max_air_speed | 2,022 | 2,022 |
+| set_max_fall_speed | 1,941 | 1,941 |
+| set_max_ground_speed | 1,988 | 1,988 |
+| set_position | 3,234 | 3,234 |
+| set_position_str | 311 | 311 |
+| set_snap_to_ground | 66 | 66 |
+| set_vel | 2,652 | 2,652 |
+| set_x | 4,796 | 4,796 |
+| set_y | 5,128 | 5,128 |
+| update_grounded | 69,251 | 69,251 |
 
 
 ## How it works
@@ -474,11 +476,11 @@ method" section documents for `apply_x_fric`), not from probing:
 Each fix's own commit (`git log` on `port-fgobject`) cites its
 address and the exact recorded call that proved it.
 
-**Result: every live call matches.** `1,388,604/1,388,629` calls
-matched (probe plus all six live replays). First-divergence: 25
-objects, 20 in `apply_forces` and 5 in `apply_fric`, all in
-`probe.jsonl` — see "Open mismatches" above for why that residue is
-unreachable from any real call site. No live replay file has a
+**Result: every live call matches.** `1,343,932/1,343,937` calls
+matched (probe plus all six live replays, from an empty `out/`).
+First-divergence: 5 objects, 4 in `apply_forces` and 1 in `apply_fric`,
+all in `probe.jsonl` — see "Open mismatches" above for why that residue
+is unreachable from any real call site. No live replay file has a
 first-divergence of any kind.
 
 
