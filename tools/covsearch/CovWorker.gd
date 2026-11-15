@@ -124,7 +124,7 @@ func _run():
 		get_tree().quit(0)
 		return
 	if base.mode == "replay_scan":
-		yield(_scan_replay(base.replay, int(base.get("stop_tick", -1))), "completed")
+		yield(_scan_replay(base.replay), "completed")
 		out.close()
 		get_tree().quit(0)
 		return
@@ -252,9 +252,7 @@ func _verify_replay(replay_path: String):
 		"hit_ids": _hit_ids()})
 
 # replay_scan (design step 3): play one human mirror's own recorded inputs
-# on the live path from tick 0 to its end (or to `base.stop_tick`, if
-# given: a short prefix stays well clear of the full-replay hang README.md
-# "Known defect" names, which this tool has not root-caused). At every
+# on the live path from tick 0 to its own last recorded tick. At every
 # *genuine* decision point -- `_wait_decision` returned because at least
 # one player is actually `state_interruptable`, i.e.
 # `game.is_waiting_on_player()` -- it runs the legality oracle (design
@@ -274,7 +272,22 @@ func _verify_replay(replay_path: String):
 # decision of a whole human match was pure wasted compute -- confirmed by
 # timing it: one replay's scan passed 9,000+ JSONL records without
 # reaching its last tick.
-func _scan_replay(replay_path: String, stop_tick: int = -1):
+#
+# README.md "Known defect": some replays stall the single Godot process
+# at a fixed, reproducible tick deep in the match (confirmed this session:
+# a genuine, CPU-bound loop with no further output, not a wait on a
+# condition -- `_wait_decision`'s own debug print below never fires
+# during the stall). Confirmed specific to this tool's instrumented
+# project, not to the replay or the game code, by a fresh, uninstrumented
+# `tools/replay_check` "live" run of the same replay completing the whole
+# match. No committed game file may change to chase this further. This
+# function no longer takes a `stop_tick` bound (that was a workaround,
+# removed): `run.py`'s own per-job timeout already kills a job that runs
+# this long and raises `WorkerStalled`, which `scan_roots` (run.py)
+# catches and salvages -- every `root_tick` this function already wrote
+# before the kill, not a hand-picked cutoff applied to every mirror
+# up front.
+func _scan_replay(replay_path: String):
 	yield(get_tree(), "idle_frame")
 	match_data = ReplayManager.load_replay(replay_path)
 	recorded = ReplayManager.frames.duplicate(true)
@@ -282,8 +295,6 @@ func _scan_replay(replay_path: String, stop_tick: int = -1):
 	for id in [1, 2]:
 		for t in recorded[id].keys():
 			last_tick = int(max(last_tick, int(t)))
-	if stop_tick >= 0:
-		last_tick = int(min(last_tick, stop_tick))
 	ReplayManager.init()
 	ReplayManager.playback = false
 	_new_game()
@@ -383,15 +394,28 @@ func _make_panels():
 
 # Waits for game.gd's turn-start block (two frames, as in ReplayCheck.gd).
 # Parameterized by `g` so the same, single, trusted mechanism drives every
-# live Game this file ever builds.
+# live Game this file ever builds. Prints the game's own tick, game_paused
+# and the turn/interruptable flags every 30 seconds while a wait runs long
+# -- the brief's own diagnostic for a stall -- but this never fired during
+# this session's reproduction of README.md "Known defect": that stall is
+# a non-yielding native loop, not a condition this polling loop is slow
+# to satisfy, so no print from here ever sees it in flight.
 func _wait_decision(g):
 	yield(get_tree(), "idle_frame")
+	var waited_frames = 0
 	while !g.game_paused and !g.game_finished and !finished:
 		yield(get_tree(), "idle_frame")
+		waited_frames += 1
+		if waited_frames % 1800 == 0:
+			printerr("COVSEARCH_WAIT_STALL phase=wait_paused tick=%d game_paused=%s game_finished=%s p1_interruptable=%s p2_interruptable=%s" % [g.current_tick, str(g.game_paused), str(g.game_finished), str(g.p1.state_interruptable), str(g.p2.state_interruptable)])
 	if g.game_finished or finished:
 		return
+	waited_frames = 0
 	while !(g.p1_turn or !g.p1.state_interruptable) or !(g.p2_turn or !g.p2.state_interruptable):
 		yield(get_tree(), "physics_frame")
+		waited_frames += 1
+		if waited_frames % 1800 == 0:
+			printerr("COVSEARCH_WAIT_STALL phase=wait_turns tick=%d game_paused=%s p1_turn=%s p2_turn=%s p1_interruptable=%s p2_interruptable=%s" % [g.current_tick, str(g.game_paused), str(g.p1_turn), str(g.p2_turn), str(g.p1.state_interruptable), str(g.p2.state_interruptable)])
 		if g.game_finished:
 			return
 
