@@ -272,10 +272,13 @@ def run(
             _update_readme_progress(readme_path, progress, divergences)
             last_readme_write = now
 
+    termination_reason = "frontier_and_exact_queue_exhausted"
     while pending:
         if total_ids and total_ids <= hit_ids:
+            termination_reason = "all_probes_credited"
             break
         if time_budget and time.monotonic() - start > time_budget:
+            termination_reason = "time_budget_stopped"
             break
         done, _ = concurrent.futures.wait(pending, return_when=concurrent.futures.FIRST_COMPLETED)
         for fut in done:
@@ -338,13 +341,17 @@ def run(
     executor.shutdown(wait=False, cancel_futures=True)
 
     missing = total_ids - hit_ids
+    if termination_reason == "time_budget_stopped":
+        default_reason = "unreached: time budget expired before this probe in this run, with the ghost frontier or exact-verify queue still non-empty"
+    else:
+        default_reason = "unreached: frontier exhausted before this probe in this run"
     for pid in missing:
         rec = probes[pid]
         reason = None
         for substr, forced in STATIC_UNREACHABLE:
             if substr in rec["file"] and forced:
                 reason = forced
-        unreachable[pid] = reason or "unreached: frontier exhausted before this probe in this run"
+        unreachable[pid] = reason or default_reason
 
     report = {
         "probe_totals": {
@@ -359,6 +366,7 @@ def run(
         "unreachable": {str(pid): {"reason": unreachable[pid], **probes[pid]} for pid in sorted(missing)},
         "legality_diffs": legality_diffs,
         "kept_paths_ghost_proposed": ghost_kept_count,
+        "termination_reason": termination_reason,
         "kept_paths_exact_confirmed": len(exact_confirmed_paths),
         "ghost_proposed_probe_count": len(ghost_hit_union),
         "divergence_count": len(divergences),
@@ -375,9 +383,9 @@ def run(
     }
     (out_dir / "report.json").write_text(json.dumps(report, indent=2))
     (out_dir / "kept_paths.json").write_text(json.dumps(exact_confirmed_paths, indent=2))
-    summary_keys = ("probe_totals", "hit_count", "unreachable_count", "kept_paths_ghost_proposed",
-                     "kept_paths_exact_confirmed", "ghost_proposed_probe_count", "divergence_count",
-                     "exact_rerun_cost_s_per_1000_ticks", "frontier_remaining", "exact_queue_remaining",
-                     "wall_time_s")
+    summary_keys = ("termination_reason", "probe_totals", "hit_count", "unreachable_count",
+                     "kept_paths_ghost_proposed", "kept_paths_exact_confirmed", "ghost_proposed_probe_count",
+                     "divergence_count", "exact_rerun_cost_s_per_1000_ticks", "frontier_remaining",
+                     "exact_queue_remaining", "wall_time_s")
     print(json.dumps({k: report[k] for k in summary_keys}, indent=2))
     return 0
