@@ -813,9 +813,30 @@ fn decay_pushback(p: Fixed) -> Fixed {
     }
 }
 
+/// Adds `v` to the hidden pushback accumulator, but **only while the
+/// accumulator's own magnitude is still under `PUSHBACK_ADD_CAP`**
+/// (`10.0`). Decompiled from `add_pushback`'s `ThisMethod::call`
+/// (`tools/ghidra`, address `0x167450`, chased from the wrapper at
+/// `0x3a730` through `std::panicking::try` at `0x74250` and
+/// `Stateless<F>::call` at `0x12740`): after parsing the string
+/// argument, the real code reads the current accumulator
+/// (`param_4[10]`), takes its magnitude, and writes
+/// `pushback + v` back only `if (abs(pushback) < 0xa0000)`; when the
+/// accumulator is already at or past the cap, the call is a no-op —
+/// the new `v` is dropped, not added. `0xa0000` is `10 * 0x10000`,
+/// this crate's own `Fixed::ONE * 10`. Root-caused from a live
+/// mismatch: object 94 in `sick_ass_combo` (`tools/fgobject_diff`'s
+/// census replay) had a pushback already past this cap from several
+/// uncapped `add_pushback` calls in a row (a repeated hit-stun), so
+/// the port's accumulator ran far ahead of the real one by the time
+/// `apply_pushback` next consumed it.
+const PUSHBACK_ADD_CAP: Fixed = Fixed(0xa0000);
+
 pub fn add_pushback(o: ObjectData, v: Fixed) -> ObjectData {
     let mut out = o;
-    out.pushback = o.pushback.wrapping_add(v);
+    if o.pushback.abs().0 < PUSHBACK_ADD_CAP.0 {
+        out.pushback = o.pushback.wrapping_add(v);
+    }
     out
 }
 
@@ -1004,6 +1025,25 @@ mod tests {
         o.pushback = Fixed(0x8ccd);
         let after = apply_pushback(o, 1);
         assert_eq!(after.pushback, Fixed::ZERO);
+    }
+
+    #[test]
+    fn add_pushback_is_a_no_op_past_the_cap() {
+        // tools/fgobject_diff/README.md, "add_pushback": the real code
+        // (decompiled `add_pushback`'s `ThisMethod::call`) drops the
+        // new value outright once the accumulator's own magnitude
+        // reaches PUSHBACK_ADD_CAP (10.0), rather than adding past it.
+        let mut o = configured();
+        o.pushback = PUSHBACK_ADD_CAP;
+        let after = add_pushback(o, fixed(5, 0, 1));
+        assert_eq!(after.pushback, PUSHBACK_ADD_CAP);
+        let mut under_cap = configured();
+        under_cap.pushback = PUSHBACK_ADD_CAP.wrapping_sub(Fixed(1));
+        let after_under = add_pushback(under_cap, fixed(1, 0, 1));
+        assert_eq!(
+            after_under.pushback,
+            PUSHBACK_ADD_CAP.wrapping_sub(Fixed(1)).wrapping_add(fixed(1, 0, 1))
+        );
     }
 
 
