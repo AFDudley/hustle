@@ -1,57 +1,44 @@
 """The covsearch coordinator: frontier, dedup, termination, report.
 
-See tools/covsearch/README.md for the design (steps 6-9) this implements,
-and its "Decision" section for the hybrid exploration/credit split this
-module enforces: ghost `copy_to` branching only ever *proposes* a path;
-only an exact re-run of that same path, from tick 0 on the real,
-non-ghost live path, in a fresh process, earns that path's probes any
-credit.
+See tools/covsearch/README.md for the design (steps 6-9) this implements.
+Operator decision: no ghost branching. `CovWorker.gd`'s `_expand` replays
+every branch on a fresh, real (non-ghost) match, live, from tick 0, so the
+probes a branch record reports are already exact; this module credits
+them directly, with no separate ghost/exact split and no divergence check
+to run afterward.
 
 A frontier node is a *path*: a root plus the ordered list of (p1 input,
-p2 input) choices the search has already kept from that root, plus the
-chain of ghost projections recorded at each of those choices. To expand
-a node, one CovWorker.gd job replays the root plus the path (through
+p2 input) choices the search has already kept from that root. To expand a
+node, one CovWorker.gd job replays the root plus the path (through
 on_action_selected, the live path), lists the real UI's legal buttons
-there, builds the discretized candidate list, and branches each
-(candidate, candidate) pair with the engine's own `copy_to` -- one job
-answers for every candidate pair at that one decision point. The
-coordinator never asks a worker to hold state across jobs: each expansion
-is a stand-alone process (bridges the "up to 8 Godot processes" design
-goal onto simple subprocess parallelism, with the frontier and the probe
-map held once, in this process).
+there, builds the discretized candidate list, and for each (candidate,
+candidate) pair, replays the whole root-plus-path again on a brand-new
+live match before applying that pair -- one job answers for every
+candidate pair at that one decision point, but each pair itself costs a
+full re-simulation of the path so far (CovWorker.gd's cost is measured,
+not hidden; see README.md "Cost measurement"). The coordinator never asks
+a worker to hold state across jobs: each expansion is a stand-alone
+process (bridges the "up to 8 Godot processes" design goal onto simple
+subprocess parallelism, with the frontier and the probe map held once, in
+this process).
 
-Ordering (step 7): the ghost frontier is a priority queue; a node's
-priority is the number of probes its ghost branch hit. Dedup (step 7):
-a ghost child is dropped from the frontier when its bucketed projection
-(positions and velocities bucketed, state names and tick kept exact) was
-already seen; it is still queued once for an exact re-run.
-
-Exact credit: every ghost-kept path (one per distinct new bucket) is
-queued for one exact re-run -- the same path's root and choices, replayed
-from tick 0 on the real `game` in a fresh process. `jobs` worker slots
-are shared between ghost expansion and exact re-runs; an exact re-run
-takes priority when both queues have work, so credit keeps moving instead
-of piling up behind an ever-growing ghost frontier. Only the exact run's
-own cumulative probe set is added to `hit_ids`; a ghost branch's own
-probe count only ever sets its frontier priority, never a probe's credit.
-Each exact run's per-decision projection is compared against the ghost
-run's projection at the same decision (`first_divergence`); a mismatch is
-recorded with its first differing step, tick and field, and does not
-block that exact run's own probes from being credited (they are real,
-regardless of whether the ghost run that proposed the path predicted them
-correctly).
+Ordering (step 7): the frontier is a priority queue; a node's priority is
+the number of probes its branch hit that no kept path has hit yet ("new
+probes reached"). Dedup (step 7): a child is dropped when its bucketed
+projection (positions and velocities bucketed, state names and tick kept
+exact) was already seen.
 
 Termination (step 8): the run stops when every in-scope probe id (from
-probe_map.json) has exact credit, or both the ghost frontier and the
-exact-verify queue empty first. On that second kind of exit, every probe
-without exact credit gets a reason in the report: either "unreachable:
-<reason>" was supplied for it by name match (a short, curated table in
-this module -- lab book facts about what Ninja vs Ninja can and cannot
-reach), or, lacking a known reason, "unreached: frontier exhausted before
-this probe in this run" -- which is a true statement about the run, not a
-claim that the probe is unreachable. tools/covsearch/README.md records
-which case the last run left in, and that is not glossed over here: an
-"unreached, frontier exhausted" probe is an open item, not a finding.
+probe_map.json) has been hit, or the frontier empties first, or
+--time-budget expires. `report.json["termination_reason"]` names which of
+the three happened, so a time-budget stop is reported as such, not as
+converged. On a frontier-empty or time-budget exit, every unhit probe
+gets a reason in the report: either "unreachable: <reason>" was supplied
+for it by name match (a short, curated table in this module -- lab book
+facts about what Ninja vs Ninja can and cannot reach), or, lacking a
+known reason, "unreached: frontier exhausted before this probe" (or the
+time-budget equivalent) -- a true statement about the run, not a claim
+that the probe is unreachable.
 """
 
 from __future__ import annotations
@@ -103,62 +90,15 @@ def load_probe_map(work_root: Path) -> dict[int, dict]:
     return probes
 
 
+# Known static exclusions (step 8): a probe id's file/kind/detail match one
+# of these gives its written unreachable reason without spending a search
+# step on it. Each entry is (file substring, reason).
 STATIC_UNREACHABLE = [
     ("characters/stickman/", None),  # Ninja's own file: never unreachable by name alone.
 ]
 
 
-def flatten_projection(projection: dict) -> list[tuple[str, Any]]:
-    """Flatten one decision point's projection to (field, value) pairs, for
-    a field-by-field divergence comparison (not the rounded `bucket_projection`
-    dedup key, which would hide a real divergence under its own rounding)."""
-    items: list[tuple[str, Any]] = [
-        ("tick", projection.get("tick")),
-        ("game_over", projection.get("game_over")),
-        ("p1_turn", projection.get("p1_turn")),
-        ("p2_turn", projection.get("p2_turn")),
-    ]
-    for name in sorted(projection.get("objs", {})):
-        obj = projection["objs"][name]
-        for field in ("pos", "vel", "state", "hp", "meter", "burst", "hitlag", "hitstun"):
-            value = obj.get(field)
-            if isinstance(value, dict):
-                for sub in ("x", "y"):
-                    items.append((f"{name}.{field}.{sub}", value.get(sub)))
-            else:
-                items.append((f"{name}.{field}", value))
-    return items
-
-
-def first_divergence(ghost_projections: list[dict], exact_steps: list[dict]) -> dict | None:
-    """Compare a kept path's ghost-branch projection at each decision point
-    against the same path's exact re-run projection at the same point
-    (README.md "Decision": hybrid branching). Returns the first differing
-    field, with its tick, or None when every compared step matches. A
-    length mismatch (the exact run reached game-over, or a decision point,
-    at a different step than the ghost run) is itself reported, at the
-    first step past the shorter run."""
-    n = min(len(ghost_projections), len(exact_steps))
-    for i in range(n):
-        ghost_fields = dict(flatten_projection(ghost_projections[i]))
-        exact_fields = dict(flatten_projection(exact_steps[i]["projection"]))
-        for key, ghost_value in ghost_fields.items():
-            if key not in exact_fields:
-                continue
-            if ghost_value != exact_fields[key]:
-                return {
-                    "step": i, "tick": exact_steps[i]["tick"], "field": key,
-                    "ghost": ghost_value, "exact": exact_fields[key],
-                }
-    if len(ghost_projections) != len(exact_steps):
-        return {
-            "step": n, "tick": exact_steps[n]["tick"] if n < len(exact_steps) else None,
-            "field": "step_count", "ghost": len(ghost_projections), "exact": len(exact_steps),
-        }
-    return None
-
-
-def _update_readme_progress(readme_path: Path, progress: dict, divergences: list[dict]) -> None:
+def _update_readme_progress(readme_path: Path, progress: dict) -> None:
     """Rewrite the README's live-progress block in place, so a stop loses
     no progress (the brief's own requirement). Only touches the text
     between the two markers; every other word of the README is untouched.
@@ -172,14 +112,7 @@ def _update_readme_progress(readme_path: Path, progress: dict, divergences: list
     pre, rest = text.split(begin, 1)
     _, post = rest.split(end, 1)
     body = json.dumps(progress, indent=2)
-    extra = ""
-    if divergences:
-        extra = (
-            f"\n\nGhost/live projection divergences found so far: {len(divergences)}. "
-            "The first one (root, choices, first differing step/tick/field):\n"
-            f"```json\n{json.dumps(divergences[0], indent=2)}\n```"
-        )
-    readme_path.write_text(f"{pre}{begin}\n```json\n{body}\n```{extra}\n{end}{post}")
+    readme_path.write_text(f"{pre}{begin}\n```json\n{body}\n```\n{end}{post}")
 
 
 def run(
@@ -195,57 +128,34 @@ def run(
     out_dir.mkdir(parents=True, exist_ok=True)
     probes = load_probe_map(work.root)
     total_ids = set(probes.keys())
-    hit_ids: set[int] = set()  # exact-confirmed credit only (README.md "Decision")
-    ghost_hit_union: set[int] = set()  # probes any ghost branch proposed, for the report
+    hit_ids: set[int] = set()
     seen_buckets: set[Bucket] = set()
     legality_diffs: list[dict] = []
-    divergences: list[dict] = []
-    exact_costs: list[float] = []  # seconds per 1000 ticks, one entry per exact job
-    exact_confirmed_paths: list[dict] = []  # the only thing written to kept_paths.json
-    ghost_kept_count = 0
+    kept_paths: list[dict] = []  # {"root": ..., "choices": [...], "probes": [...]}
     unreachable: dict[int, str] = {}
+    total_branches = 0
+    total_ticks_simulated = 0  # sum of every branch child's own final tick
 
     roots = json.loads(roots_path.read_text())
-    # Ghost frontier: a heap of (-new_probe_count, seq, node). `node` carries
-    # its own ghost-branch projection chain, so an exact-queue entry built
-    # from it can be compared tick-for-tick against its exact re-run later.
+    # frontier: heap of (-new_probe_count, seq, {"root":..., "choices":[...]})
     frontier: list[tuple[int, int, dict]] = []
     for i, root in enumerate(roots):
-        heapq.heappush(frontier, (-(10**9), i, {"root": root, "choices": [], "ghost_projections": []}))
-    # Exact-verify queue: one entry per distinct ghost-kept path, FIFO.
-    # Scheduling gives this queue priority over the ghost frontier (README.md
-    # "queue each kept path for an exact re-run, batch them across the 8
-    # processes"), so exact credit keeps moving instead of piling up behind
-    # an ever-growing ghost frontier.
-    exact_queue: list[dict] = []
+        heapq.heappush(frontier, (-(10**9), i, {"root": root, "choices": []}))
 
     start = time.monotonic()
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=jobs)
     pending: dict[concurrent.futures.Future, dict] = {}
 
-    def submit_ghost(node: dict):
+    def submit(node: dict):
         name = f"node{next(_counter)}"
         job = {"base": node["root"], "choices": node["choices"], "max_per_player": max_per_player}
         fut = executor.submit(run_worker, work, name, job)
-        pending[fut] = {"type": "ghost", "node": node}
+        pending[fut] = node
 
-    def submit_exact(entry: dict):
-        name = f"exact{next(_counter)}"
-        job = {"base": entry["root"], "choices": entry["choices"], "exact": True}
-        fut = executor.submit(run_worker, work, name, job)
-        pending[fut] = {"type": "exact", "entry": entry, "t0": time.monotonic()}
-
-    def refill():
-        while len(pending) < jobs:
-            if exact_queue:
-                submit_exact(exact_queue.pop(0))
-            elif frontier:
-                _, _, node = heapq.heappop(frontier)
-                submit_ghost(node)
-            else:
-                return
-
-    refill()
+    # Prime up to `jobs` expansions.
+    while frontier and len(pending) < jobs:
+        _, _, node = heapq.heappop(frontier)
+        submit(node)
 
     jobs_done = 0
     progress_path = out_dir / "progress.json"
@@ -253,88 +163,67 @@ def run(
 
     def write_progress():
         nonlocal last_readme_write
+        elapsed = time.monotonic() - start
         progress = {
             "jobs_done": jobs_done,
-            "exact_confirmed_probes": len(hit_ids),
-            "ghost_proposed_probes": len(ghost_hit_union),
+            "hit_count": len(hit_ids),
             "total_probes": len(total_ids),
-            "kept_paths_ghost_proposed": ghost_kept_count,
-            "kept_paths_exact_confirmed": len(exact_confirmed_paths),
+            "kept_paths": len(kept_paths),
             "frontier_size": len(frontier),
-            "exact_queue_size": len(exact_queue),
             "legality_diffs": len(legality_diffs),
-            "divergence_count": len(divergences),
-            "elapsed_s": time.monotonic() - start,
+            "branches_recorded": total_branches,
+            "ticks_simulated": total_ticks_simulated,
+            "branches_per_second": total_branches / elapsed if elapsed > 0 else 0.0,
+            "ticks_per_second": total_ticks_simulated / elapsed if elapsed > 0 else 0.0,
+            "elapsed_s": elapsed,
         }
         progress_path.write_text(json.dumps(progress, indent=2))
         now = time.monotonic()
         if readme_path is not None and now - last_readme_write >= 90.0:
-            _update_readme_progress(readme_path, progress, divergences)
+            _update_readme_progress(readme_path, progress)
             last_readme_write = now
 
-    termination_reason = "frontier_and_exact_queue_exhausted"
+    termination_reason = "frontier_exhausted"
     while pending:
         if total_ids and total_ids <= hit_ids:
-            termination_reason = "all_probes_credited"
+            termination_reason = "all_probes_hit"
             break
         if time_budget and time.monotonic() - start > time_budget:
             termination_reason = "time_budget_stopped"
             break
         done, _ = concurrent.futures.wait(pending, return_when=concurrent.futures.FIRST_COMPLETED)
         for fut in done:
-            item = pending.pop(fut)
+            node = pending.pop(fut)
             jobs_done += 1
             out_path = fut.result()
-            if item["type"] == "ghost":
-                node = item["node"]
-                for line in out_path.read_text().splitlines():
-                    rec = json.loads(line)
-                    if rec["kind"] == "legality_diff":
-                        legality_diffs.append(rec)
-                        continue
-                    if rec["kind"] != "branch":
-                        continue
-                    ghost_hit_union.update(rec["probes"])
-                    bucket = bucket_projection(rec["projection"])
-                    is_new_state = bucket not in seen_buckets
-                    if is_new_state:
-                        seen_buckets.add(bucket)
-                    child = {
-                        "root": node["root"],
-                        "choices": node["choices"] + [[rec["p1_input"], rec["p2_input"]]],
-                        "ghost_projections": node["ghost_projections"] + [rec["projection"]],
-                    }
-                    if is_new_state:
-                        ghost_kept_count += 1
-                        exact_queue.append(child)
-                        if not rec["projection"].get("game_over"):
-                            score = len(rec["probes"])
-                            heapq.heappush(frontier, (-score, next(_counter), child))
-            else:  # "exact": one re-run of a ghost-kept path on the real live path
-                entry = item["entry"]
-                exact_steps = []
-                exact_result = None
-                for line in out_path.read_text().splitlines():
-                    rec = json.loads(line)
-                    if rec["kind"] == "exact_step":
-                        exact_steps.append(rec)
-                    elif rec["kind"] == "exact_result":
-                        exact_result = rec
-                if exact_result is None:
-                    raise RuntimeError(f"exact re-run produced no exact_result; see {out_path}")
-                hit_ids.update(exact_result["hit_ids"])
-                exact_confirmed_paths.append({
-                    "root": entry["root"], "choices": entry["choices"],
-                    "probes": exact_result["hit_ids"],
-                })
-                final_tick = exact_result["final_tick"]
-                if final_tick > 0:
-                    exact_costs.append((time.monotonic() - item["t0"]) / final_tick * 1000.0)
-                divergence = first_divergence(entry["ghost_projections"], exact_steps)
-                if divergence is not None:
-                    divergences.append({"root": entry["root"], "choices": entry["choices"], **divergence})
-        if not (total_ids and total_ids <= hit_ids) and not (time_budget and time.monotonic() - start > time_budget):
-            refill()
+            for line in out_path.read_text().splitlines():
+                rec = json.loads(line)
+                if rec["kind"] == "legality_diff":
+                    legality_diffs.append(rec)
+                    continue
+                if rec["kind"] != "branch":
+                    continue
+                total_branches += 1
+                total_ticks_simulated += int(rec["projection"].get("tick", 0))
+                for pid in rec["probes"]:
+                    hit_ids.add(pid)
+                bucket = bucket_projection(rec["projection"])
+                is_new_state = bucket not in seen_buckets
+                if is_new_state:
+                    seen_buckets.add(bucket)
+                child = {
+                    "root": node["root"],
+                    "choices": node["choices"] + [[rec["p1_input"], rec["p2_input"]]],
+                }
+                score = len(rec["probes"])
+                if is_new_state and not rec["projection"].get("game_over"):
+                    heapq.heappush(frontier, (-score, next(_counter), child))
+                if is_new_state:
+                    kept_paths.append({**child, "probes": rec["probes"]})
+            # refill
+            if frontier and (not time_budget or time.monotonic() - start <= time_budget) and not (total_ids and total_ids <= hit_ids):
+                _, _, nxt = heapq.heappop(frontier)
+                submit(nxt)
         if jobs_done % 10 == 0:
             write_progress()
     write_progress()
@@ -342,7 +231,7 @@ def run(
 
     missing = total_ids - hit_ids
     if termination_reason == "time_budget_stopped":
-        default_reason = "unreached: time budget expired before this probe in this run, with the ghost frontier or exact-verify queue still non-empty"
+        default_reason = "unreached: time budget expired before this probe in this run, with the frontier still non-empty"
     else:
         default_reason = "unreached: frontier exhausted before this probe in this run"
     for pid in missing:
@@ -353,7 +242,9 @@ def run(
                 reason = forced
         unreachable[pid] = reason or default_reason
 
+    elapsed = time.monotonic() - start
     report = {
+        "termination_reason": termination_reason,
         "probe_totals": {
             "line": sum(1 for r in probes.values() if r["kind"] == "line"),
             "branch": sum(1 for r in probes.values() if r["kind"] in ("branch_true", "branch_false")),
@@ -365,27 +256,15 @@ def run(
         "unreachable_count": len(missing),
         "unreachable": {str(pid): {"reason": unreachable[pid], **probes[pid]} for pid in sorted(missing)},
         "legality_diffs": legality_diffs,
-        "kept_paths_ghost_proposed": ghost_kept_count,
-        "termination_reason": termination_reason,
-        "kept_paths_exact_confirmed": len(exact_confirmed_paths),
-        "ghost_proposed_probe_count": len(ghost_hit_union),
-        "divergence_count": len(divergences),
-        "divergences": divergences,
-        "exact_rerun_cost_s_per_1000_ticks": {
-            "n": len(exact_costs),
-            "mean": sum(exact_costs) / len(exact_costs) if exact_costs else None,
-            "min": min(exact_costs) if exact_costs else None,
-            "max": max(exact_costs) if exact_costs else None,
-        },
+        "kept_paths": len(kept_paths),
         "frontier_remaining": len(frontier),
-        "exact_queue_remaining": len(exact_queue),
-        "wall_time_s": time.monotonic() - start,
+        "branches_recorded": total_branches,
+        "ticks_simulated": total_ticks_simulated,
+        "branches_per_second": total_branches / elapsed if elapsed > 0 else 0.0,
+        "ticks_per_second": total_ticks_simulated / elapsed if elapsed > 0 else 0.0,
+        "wall_time_s": elapsed,
     }
     (out_dir / "report.json").write_text(json.dumps(report, indent=2))
-    (out_dir / "kept_paths.json").write_text(json.dumps(exact_confirmed_paths, indent=2))
-    summary_keys = ("termination_reason", "probe_totals", "hit_count", "unreachable_count",
-                     "kept_paths_ghost_proposed", "kept_paths_exact_confirmed", "ghost_proposed_probe_count",
-                     "divergence_count", "exact_rerun_cost_s_per_1000_ticks", "frontier_remaining",
-                     "exact_queue_remaining", "wall_time_s")
-    print(json.dumps({k: report[k] for k in summary_keys}, indent=2))
+    (out_dir / "kept_paths.json").write_text(json.dumps(kept_paths, indent=2))
+    print(json.dumps({k: v for k, v in report.items() if k not in ("unreachable", "legality_diffs")}, indent=2))
     return 0

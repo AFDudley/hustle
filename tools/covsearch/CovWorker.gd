@@ -6,6 +6,12 @@ extends Node
 # against (design step 4), and `game.gd`'s turn-start block runs over two
 # frames (the same wait as ReplayCheck.gd _on_live_actionable).
 #
+# Operator decision: no ghost branching. LIVE is the only simulation path
+# this tool uses, both to explore and to credit coverage -- see "---
+# branching ---" below. There is no separate "exact re-run" pass either:
+# every branch this worker records already is a fresh, real match replayed
+# from tick 0, so its own coverage and projection need no further check.
+#
 # One job = one root (a decision point). The job names either:
 #   {"mode": "match_start", "seed": N}
 #     A fresh tournament-settings match (design step 2), Ninja vs Ninja.
@@ -22,17 +28,17 @@ extends Node
 #  1. Reads the real ActionButtons legal-button lists for both players and
 #     the Legality.gd computed lists; records every difference.
 #  2. Builds a discretized candidate-input list per player (design step 5).
-#  3. For each (p1 candidate, p2 candidate) pair: duplicates the paused Game
-#     with its own copy_to (design step 6, "the engine's own copy path", as
-#     main.gd's ghost game does with _start_ghost), applies the pair through
-#     on_action_selected on the copy, ticks the copy to its next decision
-#     point (or match end), and records the probe-count delta and a
-#     projection of the resulting state. Then frees the copy; the original
-#     paused Game is untouched, so the next pair starts from the same root.
+#  3. For each (p1 candidate, p2 candidate) pair: replays `base` plus the
+#     job's own `choices` on a brand-new, real (non-ghost) Game in this
+#     same process (`_build_child`), applies the pair through
+#     on_action_selected, waits for the next decision point (or match
+#     end) the same way `tools/replay_check`'s "live" mode does, and
+#     records the probe-count delta and a projection of the resulting
+#     state. The reference `game` built once at the top of this job is
+#     never touched, so every candidate pair starts from the same root.
 # Output: one JSON object per line to job.out: legality diffs, then one
 # record per branched child.
 const Legality = preload("res://tools/replay_check/Legality.gd")
-const StateSnapshot = preload("res://tools/replay_check/StateSnapshot.gd")
 const GAME_SCENE = preload("res://Game.tscn")
 const ACTION_BUTTONS_SCENE = preload("res://ui/ActionSelector/ActionButtons.tscn")
 const SETTINGS_SCENE = preload("res://ui/GameSettingsPanelContainer.tscn")
@@ -119,45 +125,10 @@ func _run():
 			return
 	if finished:
 		return
-	# Hybrid branching (README.md "Decision"): exploration above already
-	# replayed `base` plus every already-kept `choice` on the real, non-ghost
-	# `game` (on_action_selected, the live path), so this point in the
-	# function already *is* an exact re-run of the path from tick 0 -- the
-	# ghost `copy_to` branching only ever runs inside `_expand()`, below,
-	# never here. A job with "exact": true stops right here, after writing
-	# one "exact_step" record per choice (so the coordinator can compare
-	# each decision's exact projection against the ghost projection that
-	# proposed it) and one "exact_result" record with the full cumulative
-	# probe id set this live process has hit since tick 0 -- the only
-	# source of probe credit the hybrid design allows (README.md decision).
-	var exact_mode = bool(job.get("exact", false))
-	if exact_mode:
-		var step_i = 0
-		var before = _probe_snapshot()
-		for choice in job.get("choices", []):
-			yield(_apply_pair(game, choice[0], choice[1]), "completed")
-			if finished:
-				return
-			var after = _probe_snapshot()
-			_write({"kind": "exact_step", "step": step_i, "tick": game.current_tick,
-				"projection": _projection(game), "probes": _probe_delta(before, after)})
-			before = after
-			step_i += 1
-		_write({"kind": "exact_result", "final_tick": game.current_tick,
-			"game_over": game.game_finished, "projection": _projection(game),
-			"hit_ids": _hit_ids()})
-		out.close()
-		get_tree().quit(0)
-		return
 	for choice in job.get("choices", []):
-		yield(_apply_pair(game, choice[0], choice[1]), "completed")
+		yield(_apply_pair_live(game, choice[0], choice[1]), "completed")
 		if finished:
 			return
-	if job.has("fidelity_pair"):
-		yield(_fidelity_pair(job.fidelity_pair[0], job.fidelity_pair[1]), "completed")
-		out.close()
-		get_tree().quit(0)
-		return
 	if job.has("write_replay"):
 		_write_replay(job.write_replay)
 		out.close()
@@ -177,22 +148,16 @@ func _write_replay(name: String):
 	var path = OS.get_user_data_dir() + "/replay/" + file_name
 	_write({"kind": "replay_written", "path": path, "tick": game.current_tick})
 
-# Fidelity check (design step 10). Loads a corpus replay and plays its
+# Determinism check (design step 10). Loads a corpus replay and plays its
 # recorded inputs on the live path, exactly as tools/replay_check/
 # ReplayCheck.gd mode "live" does, applying each input through
 # Fighter.on_action_selected. Fails if the game ever disagrees with the
 # replay about who acts, same rule ReplayCheck.gd _on_live_actionable
-# enforces. Reports the final-tick projection, which run.py's caller
-# compares against the branched search's own recorded projection for
-# that path, and runs this twice to compare the two live runs against each
-# other (determinism). Also reports the full cumulative probe id set this
-# live process has hit since tick 0 (`_hit_ids`), so corpus.py's
-# determinism check compares probe hits as well as the final-tick
-# projection, as the brief's corpus determinism check requires. A full
-# tick-for-tick comparison would additionally need tools/replay_check/
-# TraceHooks.gd's per-tick hashing; this check compares the final tick's
-# projection and the cumulative probe set only -- see README.md,
-# "Fidelity", for why that is a stated scope reduction, not a silent one.
+# enforces. Reports the final-tick projection and the full cumulative
+# probe id set this live process has hit since tick 0 (`_hit_ids`), which
+# run.py's caller compares between two independent runs of the same
+# replay (corpus.check_fidelity): identical projection and identical
+# probe hits is the determinism check the brief asks for.
 func _verify_replay(replay_path: String):
 	yield(get_tree(), "idle_frame")
 	match_data = ReplayManager.load_replay(replay_path)
@@ -208,7 +173,7 @@ func _verify_replay(replay_path: String):
 		_fail("start_game rejected the replay characters")
 		return
 	while game.current_tick < last_tick and !finished and !game.game_finished:
-		yield(_wait_decision(), "completed")
+		yield(_wait_decision(game), "completed")
 		if finished or game.game_finished:
 			break
 		var key = game.current_tick + 1
@@ -221,7 +186,7 @@ func _verify_replay(replay_path: String):
 			if has_input:
 				var input = recorded[id][key]
 				fighter.on_action_selected(input["action"], input["data"], input["extra"])
-		yield(_wait_resolved(), "completed")
+		yield(_wait_resolved(game), "completed")
 	_write({"kind": "verify_result", "final_tick": game.current_tick,
 		"game_over": game.game_finished, "projection": _projection(game),
 		"hit_ids": _hit_ids()})
@@ -233,8 +198,8 @@ func _verify_replay(replay_path: String):
 # a replay_prefix root at that exact tick. It does NOT run the full
 # discretized branch expansion here: run.py scan_roots only reads
 # root_tick records (every branch/candidate record would be discarded),
-# and the coordinator re-expands each root from scratch anyway, so the
-# full ghost-copy_to cross product at every decision of a whole human
+# and the coordinator re-expands each root from scratch anyway, so doing
+# the full candidate cross product at every decision of a whole human
 # match was pure wasted compute -- confirmed by timing it: one replay's
 # scan passed 9,000+ JSONL records without reaching its last tick.
 func _scan_replay(replay_path: String):
@@ -253,7 +218,7 @@ func _scan_replay(replay_path: String):
 		return
 	_make_panels()
 	while game.current_tick < last_tick and !finished and !game.game_finished:
-		yield(_wait_decision(), "completed")
+		yield(_wait_decision(game), "completed")
 		if finished or game.game_finished:
 			return
 		_write({"kind": "root_tick", "replay": replay_path, "tick": game.current_tick})
@@ -265,7 +230,7 @@ func _scan_replay(replay_path: String):
 			if recorded[id].has(key):
 				var input = recorded[id][key]
 				game.get_player(id).on_action_selected(input["action"], input["data"], input["extra"])
-		yield(_wait_resolved(), "completed")
+		yield(_wait_resolved(game), "completed")
 
 func _start_match(match_seed: int):
 	yield(get_tree(), "idle_frame")
@@ -286,7 +251,7 @@ func _start_match(match_seed: int):
 		_fail("start_game rejected Ninja/Ninja")
 		return
 	_make_panels()
-	yield(_wait_decision(), "completed")
+	yield(_wait_decision(game), "completed")
 
 func _start_replay_prefix(replay_path: String, up_to_tick: int):
 	yield(get_tree(), "idle_frame")
@@ -300,13 +265,13 @@ func _start_replay_prefix(replay_path: String, up_to_tick: int):
 		return
 	_make_panels()
 	while game.current_tick < up_to_tick and !finished:
-		yield(_wait_decision(), "completed")
+		yield(_wait_decision(game), "completed")
 		var key = game.current_tick + 1
 		for id in [1, 2]:
 			if recorded[id].has(key):
 				var input = recorded[id][key]
 				game.get_player(id).on_action_selected(input["action"], input["data"], input["extra"])
-		yield(_wait_resolved(), "completed")
+		yield(_wait_resolved(game), "completed")
 
 func _rejected(result) -> bool:
 	return typeof(result) == TYPE_BOOL and result == false
@@ -328,20 +293,23 @@ func _make_panels():
 	panels[1].init(game, 2)
 
 # Waits for game.gd's turn-start block (two frames, as in ReplayCheck.gd).
-func _wait_decision():
+# Parameterized by `g` so the same, single, trusted mechanism drives the
+# job's own root/reference `game` and every live branch child alike --
+# there is no second, custom tick-driving loop in this file any more.
+func _wait_decision(g):
 	yield(get_tree(), "idle_frame")
-	while !game.game_paused and !game.game_finished and !finished:
+	while !g.game_paused and !g.game_finished and !finished:
 		yield(get_tree(), "idle_frame")
-	if game.game_finished or finished:
+	if g.game_finished or finished:
 		return
-	while !(game.p1_turn or !game.p1.state_interruptable) or !(game.p2_turn or !game.p2.state_interruptable):
+	while !(g.p1_turn or !g.p1.state_interruptable) or !(g.p2_turn or !g.p2.state_interruptable):
 		yield(get_tree(), "physics_frame")
-		if game.game_finished:
+		if g.game_finished:
 			return
 
-func _wait_resolved():
+func _wait_resolved(g):
 	yield(get_tree(), "idle_frame")
-	while !finished and !game.game_finished and game.is_waiting_on_player():
+	while !finished and !g.game_finished and g.is_waiting_on_player():
 		yield(get_tree(), "physics_frame")
 
 # --- legality oracle (design step 4) ------------------------------------
@@ -468,70 +436,69 @@ func _candidates(player_id: int) -> Array:
 						out_candidates.append({"action": action_name, "data": data, "extra": e3})
 	return out_candidates
 
-# --- branching (design step 6) -------------------------------------------
-
-# A ghost Game (is_ghost = true) never runs game.gd's turn-start block:
-# _physics_process only calls ghost_tick() -> simulate_one_tick() -> tick()
-# for a ghost (game.gd ~1586-1592), never process_tick() (game.gd
-# ~1575-1581), which is where game_paused, p1_turn/p2_turn, busy_interrupt
-# and on_interrupt() are set (game.gd ~1434-1484). A child driven by
-# waiting on those frame-by-frame signals therefore hangs forever: this
-# was the cause of the match-start job's hang (confirmed by reading
-# game.gd's _physics_process and process_tick side by side with the ones
-# CovWorker.gd _wait_decision/_wait_decision_on depended on).
+# --- branching (design step 6, live-only) ---------------------------------
 #
-# Fix: drive the child synchronously instead. Disable its automatic
-# _physics_process (so Godot's own per-frame ghost_tick() never fires and
-# double-ticks it) and call game.gd's own simulate_until_ready()
-# (game.gd 1313-1316: `while !is_waiting_on_player(): tick()`), then
-# replicate the turn-start block (game.gd 1452-1484) directly, since that
-# block normally runs inside process_tick(), which a ghost never calls.
-func _apply_pair(g, p1in: Dictionary, p2in: Dictionary):
+# Operator decision: no ghost branching. LIVE is the only path this tool
+# uses, both to explore and to credit coverage. `_apply_pair_live` applies
+# one (p1, p2) input pair and waits for the next decision point exactly
+# the way `_start_match`/`_start_replay_prefix` already drive the root,
+# and the way tools/replay_check's "live" mode drives a whole match:
+# ReplayManager.playback = false, Fighter.on_action_selected, then
+# `_wait_resolved`/`_wait_decision`. `_build_child` replays a path's own
+# root and already-kept choices on a brand-new Game node, in this same
+# Godot process (so a branch pays only simulation cost, not a new OS
+# process's startup cost), live, from tick 0 -- the construction `_run()`
+# already does once for the job's own reference `game`, factored out so
+# `_expand` can redo it once per candidate pair. There is no "ghost" or
+# "exact" distinction left to reconcile: every branch already is the path
+# a real match would take. See README.md "Ghost branching, historical
+# note" for what this replaced and what it found.
+
+func _apply_pair_live(g, p1in: Dictionary, p2in: Dictionary):
 	yield(get_tree(), "idle_frame")
 	g.get_player(1).on_action_selected(p1in.action, p1in.data, p1in.extra)
 	g.get_player(2).on_action_selected(p2in.action, p2in.data, p2in.extra)
-	_drive_to_decision(g)
-
-# A real Game left over from the previous decision keeps p1_turn/p2_turn
-# true (set when it paused). game.gd's own process_tick() resets both to
-# false every time it resumes ticking (game.gd ~1445-1448, inside "if
-# can_tick:"), but _drive_to_decision calls tick() directly and skips
-# process_tick() entirely, so that reset must be replicated here too.
-# Found by the fidelity check (README.md "Fidelity proof"): without this
-# reset, a ghost child (whose p1_turn/p2_turn start false, copy_to never
-# sets them) and the real game it was copied from disagreed at tick 0 of
-# every sampled pair, and on the real game the missing reset additionally
-# skipped _turn_start_step's on_interrupt() handling on every decision
-# after the first one in any path, because the stale true/true already
-# satisfied _turn_start_step's loop condition.
-func _drive_to_decision(g):
-	g.p1_turn = false
-	g.p2_turn = false
-	g.simulate_until_ready()
-	if g.game_finished:
+	yield(_wait_resolved(g), "completed")
+	if finished or g.game_finished:
 		return
-	while !(g.p1_turn or !g.p1.state_interruptable) or !(g.p2_turn or !g.p2.state_interruptable):
-		_turn_start_step(g)
-	g.game_paused = true
+	yield(_wait_decision(g), "completed")
 
-# One pass of game.gd's turn-start block (game.gd 1452-1484), the part
-# that normally runs once per physics frame inside process_tick() and
-# sets at most one player's turn flag per call (note the `elif`) -- the
-# same reason ReplayCheck.gd and CovWorker.gd's root-level waits need two
-# frames. Looped by _drive_to_decision until both sides are settled.
-func _turn_start_step(g):
-	if g.p1.state_interruptable and !g.p1_turn:
-		g.p2.busy_interrupt = (!g.p2.state_interruptable and !(g.p2.current_state().interruptible_on_opponent_turn or g.p2.feinting or g.negative_on_hit(g.p2)))
-		if !g.p2.busy_interrupt:
-			g.p2.current_state().on_interrupt()
-		g.p2.state_interruptable = true
-		g.p1_turn = true
-	elif g.p2.state_interruptable and !g.p2_turn:
-		g.p1.busy_interrupt = (!g.p1.state_interruptable and !(g.p1.current_state().interruptible_on_opponent_turn or g.p1.feinting or g.negative_on_hit(g.p1)))
-		if !g.p1.busy_interrupt:
-			g.p1.current_state().on_interrupt()
-		g.p1.state_interruptable = true
-		g.p2_turn = true
+func _build_child(base: Dictionary, choices: Array):
+	var g = GAME_SCENE.instance()
+	add_child(g)
+	if _rejected(g.start_game(true, match_data)):
+		_fail("start_game rejected (branch child)")
+		return null
+	if base.mode == "replay_prefix":
+		var up_to_tick = int(base.up_to_tick)
+		while g.current_tick < up_to_tick and !finished:
+			yield(_wait_decision(g), "completed")
+			if finished:
+				return null
+			if g.game_finished:
+				_fail("branch child's own root replay ended before tick %d, but the job's reference game reached it; non-determinism, not an expected path end" % up_to_tick)
+				return null
+			var key = g.current_tick + 1
+			for id in [1, 2]:
+				if recorded[id].has(key):
+					var input = recorded[id][key]
+					g.get_player(id).on_action_selected(input["action"], input["data"], input["extra"])
+			yield(_wait_resolved(g), "completed")
+	else:
+		yield(_wait_decision(g), "completed")
+	if finished:
+		return null
+	if g.game_finished:
+		_fail("branch child's own root replay ended unexpectedly, but the job's reference game reached a decision point; non-determinism, not an expected path end")
+		return null
+	for choice in choices:
+		yield(_apply_pair_live(g, choice[0], choice[1]), "completed")
+		if finished:
+			return null
+		if g.game_finished:
+			_fail("branch child's own choice replay ended unexpectedly, but the job's reference game reached a further decision point; non-determinism, not an expected path end")
+			return null
+	return g
 
 func _probe_snapshot() -> Array:
 	return __COV__.h.duplicate()
@@ -544,9 +511,9 @@ func _probe_delta(before: Array, after: Array) -> Array:
 	return hit
 
 # The full cumulative set of probe ids this process has hit since it
-# started (tick 0 of the job's root), used only by exact-mode jobs
-# (README.md "Decision") and _verify_replay's determinism check: the
-# one and only source of probe credit the hybrid design allows.
+# started (tick 0 of the job's root). Used only by _verify_replay's
+# determinism check (corpus.check_fidelity compares this set between two
+# independent live runs of the same corpus replay).
 func _hit_ids() -> Array:
 	var ids = []
 	var h = __COV__.h
@@ -591,19 +558,15 @@ func _expand():
 		p2_candidates = p2_candidates.slice(0, cap - 1)
 	_write({"kind": "candidate_count", "tick": game.current_tick,
 		"p1": p1_candidates.size(), "p2": p2_candidates.size()})
+	var base = job.get("base", job)
+	var prior_choices = job.get("choices", [])
 	for p1in in p1_candidates:
 		for p2in in p2_candidates:
+			var child = yield(_build_child(base, prior_choices), "completed")
+			if finished:
+				return
 			var before = _probe_snapshot()
-			var child = GAME_SCENE.instance()
-			child.is_ghost = true
-			add_child(child)
-			# Only _drive_to_decision ticks this child; Godot's own
-			# _physics_process must not also call ghost_tick() on it (that
-			# would double-tick nondeterministically).
-			child.set_physics_process(false)
-			child.start_game(true, match_data)
-			game.copy_to(child)
-			yield(_apply_pair(child, p1in, p2in), "completed")
+			yield(_apply_pair_live(child, p1in, p2in), "completed")
 			var after = _probe_snapshot()
 			_write({
 				"kind": "branch", "tick": game.current_tick,
@@ -615,150 +578,3 @@ func _expand():
 			child.free()
 			if finished:
 				return
-
-# --- fidelity proof (acceptance order 1) ---------------------------------
-#
-# Drives the same (p1, p2) pair twice from one identical starting state --
-# once on a ghost copy_to child (the search's own branching, design step
-# 6), once directly on the real, non-ghost `game` -- and compares every
-# tick's full simulation snapshot (StateSnapshot.gd, the same snapshot
-# tools/replay_check hashes). Both runs use the same manual tick loop
-# _drive_to_decision already uses, so no behaviour changes for the search
-# itself; this only adds snapshot capture per tick, gated by job
-# "fidelity_pair". See README.md "Fidelity proof" for how run.py drives
-# this across 20 sample paths from two different roots.
-# The ignore list is the same one tools/replay_check/ignore.txt documents
-# (presentation/wall-clock/playback variables that do not feed the
-# simulation), plus fields that are definitionally different between a
-# ghost and the real game and so would always "differ" without being a
-# fidelity defect: is_ghost itself, game_paused (a ghost child never
-# reaches the real pause/turn UI state), ghost_time (ghost real-time
-# pacing, game.gd tick(), presentation only), and super_freeze_ticks/
-# super_active/p1_super/p2_super. game.gd's own _on_super_started
-# returns at once "if is_ghost", so a ghost branch never sets these; its
-# only other reader, process_tick() ("if super_freeze_ticks > 0: ...
-# return", game.gd ~1397-1405), is the real-frame pacing loop
-# _drive_to_decision bypasses for both the ghost child and the real
-# game, and no character state file reads these four names (checked:
-# only main.gd's speed-line UI effect does). So this is a known,
-# presentation-only gap in game.gd's own ghost support, not a defect in
-# this tool's branching.
-const FIDELITY_IGNORE_EXTRA = ["is_ghost", "game_paused", "ghost_time",
-	"super_freeze_ticks", "super_active", "p1_super", "p2_super",
-	# Found by the replay-root fidelity samples. "player_actionable"
-	# (game.gd) only drives network-turn-sync and the UI action menu
-	# (main.gd _on_player_actionable), not the simulation. "effects"
-	# (game.gd) holds particle-effect nodes; process_fx() only calls
-	# their own tick(), a visual animation, never gameplay state.
-	# "style_aura_melee_attack_started_tick"/
-	# "style_aura_projectiles_first_active_tick" (BaseChar.gd) feed only
-	# the aura-particle shader (_update_style_aura_trackers sets
-	# "particle.style_aura_*", never reads it back for combat).
-	# "ghost_reverse" (BaseChar.gd) is itself named for a ghost-only
-	# prediction path, so a ghost/real difference is definitional.
-	# "spawn_data" (obj/BaseObj.gd) is read once, at an object's own
-	# spawn ("state_machine.init('', spawn_data)"); for P1/P2 that spawn
-	# is the match start, long past in every sampled pair, so a stale
-	# leftover value from the ghost child's own start_game() never feeds
-	# anything again. "fighter_owner" only exists on spawned sub-objects
-	# (P1/P2 are fighters, not owned by one); the one sampled pair where
-	# it differed also showed a "style_aura_*" difference on the same
-	# tick, consistent with the aura/effects spawn-count gap above
-	# shifting which generated object name a presentation vs. gameplay
-	# spawn lands on -- the fighters' own positions, velocities, states
-	# and hp matched exactly in that same sample.
-	"player_actionable", "effects", "style_aura_melee_attack_started_tick",
-	"style_aura_projectiles_first_active_tick", "ghost_reverse",
-	"spawn_data", "fighter_owner"]
-var _fidelity_ignore_cache = null
-
-func _fidelity_ignore() -> Dictionary:
-	if _fidelity_ignore_cache != null:
-		return _fidelity_ignore_cache
-	var out = {}
-	for name in FIDELITY_IGNORE_EXTRA:
-		out[name] = true
-	var f = File.new()
-	if f.open("res://tools/replay_check/ignore.txt", File.READ) == OK:
-		while !f.eof_reached():
-			var line = f.get_line().split("#")[0].strip_edges()
-			if line != "":
-				out[line] = true
-		f.close()
-	_fidelity_ignore_cache = out
-	return out
-
-func _snapshot(g) -> Dictionary:
-	return StateSnapshot.game_state(g, _fidelity_ignore())
-
-func _apply_pair_traced(g, p1in: Dictionary, p2in: Dictionary, trace: Array):
-	yield(get_tree(), "idle_frame")
-	g.p1_turn = false
-	g.p2_turn = false
-	g.get_player(1).on_action_selected(p1in.action, p1in.data, p1in.extra)
-	g.get_player(2).on_action_selected(p2in.action, p2in.data, p2in.extra)
-	while !g.is_waiting_on_player():
-		g.tick()
-		trace.append(_snapshot(g))
-	if g.game_finished:
-		return
-	while !(g.p1_turn or !g.p1.state_interruptable) or !(g.p2_turn or !g.p2.state_interruptable):
-		_turn_start_step(g)
-	g.game_paused = true
-
-func _fidelity_pair(p1in: Dictionary, p2in: Dictionary):
-	# Found by this fidelity check: with the real `game`'s automatic
-	# _physics_process still enabled, the two separate yields this
-	# function and _apply_pair_traced each take (one per leg, where
-	# _apply_pair/_drive_to_decision -- the search's own, single-leg,
-	# single-yield code -- takes only one) let Godot's engine service
-	# `game` on its own between them. The real trace then started 2
-	# ticks ahead of the ghost trace even though every later tick lined
-	# up exactly, which pins the cause on those extra engine frames, not
-	# on a real branching difference. Disabling physics_process on
-	# `game` here, the same guard _expand already gives a ghost child,
-	# removes the race; the job ends right after, so it is never
-	# re-enabled.
-	game.set_physics_process(false)
-	var child = GAME_SCENE.instance()
-	child.is_ghost = true
-	add_child(child)
-	child.set_physics_process(false)
-	child.start_game(true, match_data)
-	game.copy_to(child)
-	var ghost_trace = []
-	yield(_apply_pair_traced(child, p1in, p2in, ghost_trace), "completed")
-	var ghost_projection = _projection(child)
-	remove_child(child)
-	child.free()
-
-	var real_trace = []
-	yield(_apply_pair_traced(game, p1in, p2in, real_trace), "completed")
-	var real_projection = _projection(game)
-
-	var n = min(ghost_trace.size(), real_trace.size())
-	var diff_tick = -1
-	for i in range(n):
-		if JSON.print(ghost_trace[i]) != JSON.print(real_trace[i]):
-			diff_tick = i
-			break
-	if diff_tick == -1 and ghost_trace.size() != real_trace.size():
-		diff_tick = n
-	var result_ghost_seq = []
-	for s in ghost_trace:
-		result_ghost_seq.append(s["game"]["current_tick"])
-	var result_real_seq = []
-	for s in real_trace:
-		result_real_seq.append(s["game"]["current_tick"])
-	var result = {
-		"kind": "fidelity_pair_result",
-		"ghost_ticks": ghost_trace.size(), "real_ticks": real_trace.size(),
-		"ghost_tick_seq": result_ghost_seq, "real_tick_seq": result_real_seq,
-		"match": diff_tick == -1,
-		"first_diff_tick": diff_tick,
-		"ghost_projection": ghost_projection, "real_projection": real_projection,
-	}
-	if diff_tick != -1:
-		result["ghost_snapshot_at_diff"] = ghost_trace[diff_tick] if diff_tick < ghost_trace.size() else null
-		result["real_snapshot_at_diff"] = real_trace[diff_tick] if diff_tick < real_trace.size() else null
-	_write(result)
