@@ -202,16 +202,17 @@ comparing.
   call moved an already-grounded object to `y = -1` and it stayed grounded,
   which the bidirectional `apply_forces` rule would have cleared.
 - **`add_pushback(v)`** adds `v` to a hidden `pushback` accumulator, not
-  exposed by `get_data()`, and marks it "not yet decayed".
-  **`apply_pushback(dir)`** moves `position_x` by `pushback * dir` (`dir`
-  applied directly, with no dependence on the object's own facing), then,
-  **only on the first `apply_pushback` since the last `add_pushback`**,
-  decays `pushback` by a constant factor and marks it "decayed": three
-  consecutive `apply_pushback` calls with no new `add_pushback` between
-  them moved the object by the full pushback, then by `≈0.8` times that,
-  then by the *same* decayed amount again, not a further-decayed one.
-  **`reset_pushback()`** zeroes the accumulator and clears the decayed
-  flag.
+  exposed by `get_data()`, but only while `|pushback| < 10.0`
+  (`PUSHBACK_ADD_CAP` in `physics.rs`): past that magnitude the call is
+  a no-op, the new `v` is dropped. Decompiled from `add_pushback`'s
+  `ThisMethod::call` (`tools/ghidra`, address `0x167450`); see "Live
+  stage" below for the chase from the registration table to that
+  address, and for `apply_pushback`'s own decompiled decay rule (every
+  call decays the accumulator by a fixed step, with no "already
+  decayed" flag — this file's own earlier, probe-only belief in such a
+  flag was wrong). `apply_pushback(dir)` moves `position_x` by
+  `pushback * dir` (`dir` applied directly, with no dependence on the
+  object's own facing). `reset_pushback()` zeroes the accumulator.
 - **`copy_to(target)`** overwrites the target's entire state with the
   source's, field for field (including the hidden force accumulator and
   pushback state): probed by copying a source that had queued a pending
@@ -230,95 +231,91 @@ open mismatch remains, reported, not hidden, the same policy
 `tools/fixedmath_diff` follows for its own two open mismatches
 (`angle_dist`, `sign`):
 
-**`apply_forces` with a pathological `gravity_modifier`.** The type's
-minimum value, fed through `apply_grav` then `apply_forces`, produced a
-huge position change with `vel_y` left at `0` in the real game; the
-port's formula (multiply, then integrate normally) changes both instead
-— an overflow-wrapping difference in the engine's own clamp code (which
-normalizes-and-rescales a value that is "too big" via a division, rather
-than a plain comparison-clamp, for reasons not traced in the time this
-task had). This is reported, not fixed, because the triggering input is
-unreachable from any real call site: `gravity_modifier` is set only by
-`game.gd`'s two `set_gravity_modifier(global_gravity_modifier)` calls
-(`game.gd:322,462-463`), fed only by the default `"1.0"`
-(`game.gd:113`) or by the settings UI's `GravityModifier` slider, which
-is bounded `0.1` to `5.0` in `ui/GameSettingsPanelContainer.tscn`. A
-second, smaller instance of the same overflow class remains in
-`apply_fric`, at `vel_x`/`vel_y` exactly at the type's minimum — also
-unreachable (the stage is at most 1000 pixels wide, and every speed cap
-in the game's own data is under 25; velocity never approaches `2^47`).
+**`apply_forces`/`apply_fric` with a value at the type's exact minimum
+(`-140737488355328`).** The probe drives every argument to its edge
+values, including this one: a force queued directly at the type's
+minimum (`apply_force_str`/`apply_force_relative_str`), or a velocity
+set directly to it (`set_vel`), then fed through `apply_forces` or
+`apply_fric`. The real engine's own clamp code overflow-wraps on this
+exact input (it normalizes-and-rescales a value that is "too big" via
+a division, rather than a plain comparison-clamp, for reasons not
+traced in the time this task had): `apply_forces` leaves `vel_y` at
+`0` where the port's plain multiply-then-integrate changes it, and
+`apply_fric` flips `vel_x`'s sign where the port does not. This is
+reported, not fixed, because the triggering input is unreachable from
+any real call site:
+- No GDScript call site passes a force/velocity literal anywhere near
+  this magnitude. Every `apply_force`/`apply_force_relative` call
+  (and `_str` sibling) in `characters/`, `obj/`, and `mechanics/`
+  passes a value built from a hitbox's `knockback` or a small
+  per-character constant, run through `fixed.mul`/`fixed.div` by a
+  modifier under `10`; none is a bare extreme literal.
+- `set_vel` is never called with a literal anywhere near this
+  magnitude either; every real caller passes a velocity already
+  bounded by `max_ground_speed`/`max_air_speed`/`max_fall_speed`
+  (every speed cap in the game's own data is under `25`), or a value
+  copied from another object's own `get_vel()`.
+- The stage itself is at most `1000` pixels wide, so even an
+  accumulated position never approaches this magnitude from repeated
+  small moves.
 
 ## The result
 
-**Edge-value probe: 11,147/11,173 calls matched exactly (99.76%).** Run
-2026-11-15 after the `tools/ghidra`-confirmed fixes. The 26 remaining
-mismatches are the one open issue above: 25 in `apply_forces` (the
-`gravity_modifier`-overflow case, one call per probed grounded/airborne
-combination) and 1 in `apply_fric` (`vel_x`/`vel_y` at the type's exact
-minimum). Every other method, including `apply_fric`, `apply_x_fric`,
-and `apply_y_fric` on every other probed value, matched every probed
-call, including the full edge-value sweep on every setter and every
-integer-argument boundary.
+**1,388,604/1,388,629 calls matched exactly (99.998%).** Run
+2026-11-15: the edge-value probe plus all six census replays
+(`.scratch/census_live/replays`), through `container.sh`'s three
+stages end to end. Every one of the 25 remaining mismatches is the
+one open issue above (a value at the type's exact minimum fed through
+`apply_forces` or `apply_fric`), and every one is in `probe.jsonl`:
+**all six live replay files match every call.** First-divergence (the
+first mismatching call per object, this tool's main-loop metric):
+25 objects, 20 in `apply_forces`, 5 in `apply_fric`, all probe-only.
 
-| Method | Probe calls | Matched |
+| Method | Calls | Matched |
 |---|---:|---:|
-| add_pushback | 17 | 17 |
-| apply_force | 81 | 81 |
-| apply_force_relative | 18 | 18 |
-| apply_force_relative_str | 34 | 34 |
-| apply_force_str | 17 | 17 |
-| apply_forces | 285 | 260 |
-| apply_forces_no_limit | 17 | 17 |
-| apply_fric | 67 | 66 |
-| apply_grav | 102 | 102 |
-| apply_grav_custom | 90 | 90 |
-| apply_pushback | 31 | 31 |
-| apply_x_fric | 17 | 17 |
-| apply_y_fric | 17 | 17 |
-| copy_to | 18 | 18 |
-| get_data | — | (checked as part of every other call's "after") |
-| get_facing | 129 | 129 |
-| get_snap_to_ground | 2 | 2 |
-| get_x_vel_int | 23 | 23 |
-| is_grounded | 2 | 2 |
-| move_directly | 101 | 101 |
-| move_directly_relative | 18 | 18 |
-| move_directly_relative_str | 34 | 34 |
-| move_directly_str | 289 | 289 |
-| reset_momentum | 17 | 17 |
-| reset_pushback | 17 | 17 |
-| set_air_friction | 17 | 17 |
-| set_facing | 129 | 129 |
-| set_gravity | 17 | 17 |
-| set_gravity_modifier | 17 | 17 |
-| set_ground_friction | 17 | 17 |
-| set_grounded | 267 | 267 |
-| set_id | 5 | 5 |
-| set_max_air_speed | 17 | 17 |
-| set_max_fall_speed | 17 | 17 |
-| set_max_ground_speed | 17 | 17 |
-| set_position | 162 | 162 |
-| set_position_str | 311 | 311 |
-| set_snap_to_ground | 2 | 2 |
-| set_vel | 456 | 456 |
-| set_x | 2 | 2 |
-| set_y | 2 | 2 |
-| update_grounded | 8 | 8 |
+| add_pushback | 979 | 979 |
+| apply_force | 435 | 435 |
+| apply_force_relative | 128 | 128 |
+| apply_force_relative_str | 1,429 | 1,429 |
+| apply_force_str | 6,412 | 6,412 |
+| apply_forces | 24,377 | 24,357 |
+| apply_forces_no_limit | 6,586 | 6,586 |
+| apply_fric | 17,505 | 17,500 |
+| apply_grav | 17,420 | 17,420 |
+| apply_grav_custom | 4,242 | 4,242 |
+| apply_pushback | 19,866 | 19,866 |
+| apply_x_fric | 4,851 | 4,851 |
+| apply_y_fric | 458 | 458 |
+| copy_to | 90 | 90 |
+| get_data | 371,235 | 371,235 |
+| get_facing | 492,950 | 492,950 |
+| get_snap_to_ground | 10 | 10 |
+| get_x_vel_int | 13,749 | 13,749 |
+| is_grounded | 238,747 | 238,747 |
+| move_directly | 2,106 | 2,106 |
+| move_directly_relative | 3,168 | 3,168 |
+| move_directly_relative_str | 8,123 | 8,123 |
+| move_directly_str | 4,597 | 4,597 |
+| reset_momentum | 848 | 848 |
+| reset_pushback | 7 | 7 |
+| set_air_friction | 7,422 | 7,422 |
+| set_facing | 10,117 | 10,117 |
+| set_gravity | 7,421 | 7,421 |
+| set_gravity_modifier | 701 | 701 |
+| set_ground_friction | 7,471 | 7,471 |
+| set_grounded | 2,054 | 2,054 |
+| set_id | 556 | 556 |
+| set_max_air_speed | 7,534 | 7,534 |
+| set_max_fall_speed | 7,453 | 7,453 |
+| set_max_ground_speed | 7,500 | 7,500 |
+| set_position | 4,078 | 4,078 |
+| set_position_str | 1,555 | 1,555 |
+| set_snap_to_ground | 114 | 114 |
+| set_vel | 4,476 | 4,476 |
+| set_x | 5,120 | 5,120 |
+| set_y | 5,452 | 5,452 |
+| update_grounded | 69,287 | 69,287 |
 
-
-**Real play: not completed in this task.** `container.sh`'s stage 2
-(`driver_live.py`, the 6 census replays at
-`.scratch/census_live/replays` in the main repo) was run against the real
-game: it recorded over 100,000 `FGObject` calls from the first of the six
-replays (`1521683218758111383_silent_ninja`) before this task's time
-budget ran out, and the run was stopped before the Rust comparator saw
-that data or the other five replays ran. The pipeline itself is complete
-and was observed recording correctly (one JSON line per call, growing
-steadily); what is missing is the final match count against
-`hustle_core::physics`. Running `tools/fgobject_diff/container.sh` to
-completion is the next step, and it is the one this tool's acceptance
-criterion depends on most: the probe set is edge cases by construction,
-real matches are not.
 
 ## How it works
 
@@ -405,7 +402,7 @@ writes `report.json` directly.
 ## Limits
 
 - The probe set is large but finite; see "Open mismatches" above for the
-  three cases it could not resolve.
+  one case it could not resolve.
 - `tools/replay_check`'s own `ignore.txt`/trace format are not reused
   here: this tool's recording is at the `FGObject` call level, independent
   of `tools/replay_check`'s own per-tick state hashes. A call that matches
@@ -420,15 +417,15 @@ writes `report.json` directly.
 
 ## Live stage: six real matches, and the first-divergence loop
 
-`container.sh`'s stage 2 is complete: six census replays, recorded
-against `localhost/hustle-replay-check`'s own live path, run through
-stage 3's comparator alongside the probe. The comparator's main loop
-for this work is `report.json`'s `first_mismatches` (also printed to
-the console): the first mismatching call per object, not every
-mismatch, since once one object's state diverges, most of its later
-calls mismatch too for the same root cause.
+`container.sh`'s stage 2 recorded six census replays, against
+`localhost/hustle-replay-check`'s own live path, run through stage
+3's comparator alongside the probe. The comparator's main loop for
+this work is `report.json`'s `first_mismatches` (also printed to the
+console): the first mismatching call per object, not every mismatch,
+since once one object's state diverges, most of its later calls
+mismatch too for the same root cause.
 
-Six formulas were wrong, each root-caused from a decompiled
+Seven formulas were wrong, each root-caused from a decompiled
 `ThisMethod::call` body (`tools/ghidra`, chasing the dispatch chain
 from `nativeclass_register` the same way this file's "Reconstruction
 method" section documents for `apply_x_fric`), not from probing:
@@ -460,31 +457,28 @@ method" section documents for `apply_x_fric`), not from probing:
   non-negative (downward or zero) `y` force outright while the
   object is grounded; only a negative (upward) `y` is queued while
   grounded. Found from the live replay's own first-divergence data
-  (object `692`), after the first five fixes above had already
-  eliminated every other method's first-divergence; `physics.rs`
-  carries this fix, but the next `container.sh` run (the one that
-  would confirm it) did not complete before this task's session
-  ended.
+  (object `692`).
+- `add_pushback` (`ThisMethod::call` `0x167450`, chased from the
+  wrapper `0x3a730` through `std::panicking::try` `0x74250` and
+  `Stateless<F>::call` `0x12740`, since `nativeclass_register`'s own
+  registration order does not match the linker's symbol-table order
+  for the 41 `ThisMethod::call` bodies `nm -C` lists): adds `v` to the
+  accumulator only while `|pushback| < 10.0`; past that magnitude the
+  call is a no-op. Found from the live replay's own first-divergence
+  data (object `94` in `sick_ass_combo`, `apply_pushback(-1)` at line
+  `39507`): several uncapped `add_pushback` calls in a row (a repeated
+  hit-stun) ran the port's accumulator past what the real engine's
+  capped one reached, so the next `apply_pushback` moved the object
+  too far (`position_x` `810` against the engine's `804`).
 
 Each fix's own commit (`git log` on `port-fgobject`) cites its
 address and the exact recorded call that proved it.
 
-**Result, before the sixth fix (`apply_force_str`):**
-`1,356,455/1,377,456` calls matched (probe plus six live replays).
-First-divergence: 33 objects across 4 methods (21 `apply_forces`, 7
-`apply_forces_no_limit`, 4 `apply_fric`, 1 `apply_pushback`) — of
-these, only 5 `apply_forces`, 7 `apply_forces_no_limit`, and 1
-`apply_pushback` were from the live replays; every `apply_fric`
-first-divergence was probe-only.
+**Result: every live call matches.** `1,388,604/1,388,629` calls
+matched (probe plus all six live replays). First-divergence: 25
+objects, 20 in `apply_forces` and 5 in `apply_fric`, all in
+`probe.jsonl` — see "Open mismatches" above for why that residue is
+unreachable from any real call site. No live replay file has a
+first-divergence of any kind.
 
-**Not done**: rerun `container.sh` after the `apply_force_str` fix
-(it is expected to close most of the remaining live
-`apply_forces`/`apply_forces_no_limit` divergences, by this file's
-own evidence — a grounded object's spurious small `vel_y` the real
-engine left at `0`), diagnose whatever the live stage still shows
-after that, and prove every remaining probe-only mismatch
-unreachable from a real call site the same way the
-`gravity_modifier`/`apply_fric` edge cases already are. `cargo test`
-and `tools/lean_check/podman/translate.sh` were not run this
-session either. See this task's final report for the exact commands.
 
