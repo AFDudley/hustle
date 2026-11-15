@@ -356,10 +356,22 @@ pub fn position_pixels(o: ObjectData) -> (i32, i32) {
     ((x as i32), (y as i32))
 }
 
+/// Clears the velocity and the pending-force accumulator.
+///
+/// A census replay proved the accumulator clear: one object queued a
+/// force with `apply_force_str`, then called `reset_momentum` before
+/// any `apply_forces` call spent the queued force. The next
+/// `apply_forces` in the recording left velocity at `0`, matching
+/// neither a spend of the queued force nor a clamp of it: the real
+/// engine had already dropped it. A `reset_momentum` that cleared
+/// only velocity, as an earlier version of this function did, carried
+/// the queued force forward and diverged at that exact call.
 pub fn reset_momentum(o: ObjectData) -> ObjectData {
     let mut out = o;
     out.vel_x = Fixed::ZERO;
     out.vel_y = Fixed::ZERO;
+    out.pending_force_x = Fixed::ZERO;
+    out.pending_force_y = Fixed::ZERO;
     out
 }
 
@@ -879,6 +891,20 @@ mod tests {
         let o = add_pushback(configured(), fixed(5, 0, 1));
         let after = apply_pushback(reset_pushback(o), 1);
         assert_eq!(after.position_x, Fixed::ZERO);
+    }
+
+    #[test]
+    fn reset_momentum_drops_a_queued_force() {
+        // A census replay (1521683218758111383_silent_ninja, around the
+        // object's reset_momentum call at line 1315) queued a force
+        // with apply_force_str, then called reset_momentum before any
+        // apply_forces call spent it. The next apply_forces in the
+        // recording left velocity at 0: reset_momentum must drop the
+        // queued force, not just the velocity.
+        let o = apply_force_str(configured(), fixed(1, 0, 1), fixed(1, 0, 1));
+        let after = apply_forces(reset_momentum(o));
+        assert_eq!(after.vel_x, Fixed::ZERO);
+        assert_eq!(after.vel_y, Fixed::ZERO);
     }
 
     #[test]

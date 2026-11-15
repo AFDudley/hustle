@@ -11,10 +11,23 @@ extends Reference
 # as it does with the real class. The only side effect is one JSON
 # line per call, appended to the path named by the environment
 # variable FGOBJECT_DIFF_OUT:
-#   {"method", "args", "before", "after", "result"}
+#   {"obj", "method", "args", "before", "after", "result"}
 # "before" and "after" are the real object's own get_data() output,
 # read right before and right after the call. `copy_to` writes a
 # different shape; see its own method below.
+#
+# "obj" is a permanent, process-wide sequence number, read-incremented
+# from a counter file next to FGOBJECT_DIFF_OUT, not
+# `get_instance_id()`. A real match frees and creates projectiles
+# throughout a replay, and Godot reuses a freed object's instance ID
+# for a later one: a first comparator pass kept one `ObjectData` per
+# `get_instance_id()` across a whole file and found the state of a
+# projectile freed mid-replay bleeding into an unrelated later one
+# that reused its ID, as soon as the first one's hidden state (the
+# pending-force accumulator) was not exactly zero at the moment of
+# reuse. The counter file makes every created object's tag unique for
+# the life of the whole recording, matching the real object's own
+# fresh-state guarantee at `FGObject.new()`.
 #
 # GDScript's `_set`/`_get` intercept the one plain property write the
 # game uses, `chara.id = id` (obj/BaseObj.gd:228), which is not one of
@@ -22,9 +35,23 @@ extends Reference
 
 var real = FGObject.new()
 var out_path: String = ""
+var obj_tag: int = -1
 
 func _init():
 	out_path = OS.get_environment("FGOBJECT_DIFF_OUT")
+	if out_path.empty():
+		return
+	var counter_path = out_path + ".counter"
+	var f = File.new()
+	var next_id = 0
+	if f.file_exists(counter_path) and f.open(counter_path, File.READ) == OK:
+		next_id = int(f.get_as_text())
+		f.close()
+	obj_tag = next_id
+	if f.open(counter_path, File.WRITE) == OK:
+		f.store_string(str(next_id + 1))
+		f.close()
+
 
 func _set(property, value):
 	if property == "id":
@@ -67,7 +94,7 @@ func _write(method: String, args: Array, before, after, result):
 		return
 	f.seek_end()
 	var line = {
-		"obj": get_instance_id(),
+		"obj": obj_tag,
 		"method": method,
 		"args": to_json_value(args),
 		"before": to_json_value(before),
@@ -234,10 +261,10 @@ func copy_to(target):
 		return
 	f.seek_end()
 	var line = {
-		"obj": get_instance_id(),
+		"obj": obj_tag,
 		"method": "copy_to",
 		"args": [],
-		"target_obj": target.get_instance_id(),
+		"target_obj": target.obj_tag,
 		"source_before": to_json_value(source_before),
 		"target_before": to_json_value(target_before),
 		"target_after": to_json_value(target_after),
