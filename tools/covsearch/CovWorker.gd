@@ -32,6 +32,7 @@ extends Node
 # Output: one JSON object per line to job.out: legality diffs, then one
 # record per branched child.
 const Legality = preload("res://tools/replay_check/Legality.gd")
+const StateSnapshot = preload("res://tools/replay_check/StateSnapshot.gd")
 const GAME_SCENE = preload("res://Game.tscn")
 const ACTION_BUTTONS_SCENE = preload("res://ui/ActionSelector/ActionButtons.tscn")
 const SETTINGS_SCENE = preload("res://ui/GameSettingsPanelContainer.tscn")
@@ -122,6 +123,11 @@ func _run():
 		yield(_apply_pair(game, choice[0], choice[1]), "completed")
 		if finished:
 			return
+	if job.has("fidelity_pair"):
+		yield(_fidelity_pair(job.fidelity_pair[0], job.fidelity_pair[1]), "completed")
+		out.close()
+		get_tree().quit(0)
+		return
 	if job.has("write_replay"):
 		_write_replay(job.write_replay)
 		out.close()
@@ -508,3 +514,67 @@ func _expand():
 			child.free()
 			if finished:
 				return
+
+# --- fidelity proof (acceptance order 1) ---------------------------------
+#
+# Drives the same (p1, p2) pair twice from one identical starting state --
+# once on a ghost copy_to child (the search's own branching, design step
+# 6), once directly on the real, non-ghost `game` -- and compares every
+# tick's full simulation snapshot (StateSnapshot.gd, the same snapshot
+# tools/replay_check hashes). Both runs use the same manual tick loop
+# _drive_to_decision already uses, so no behaviour changes for the search
+# itself; this only adds snapshot capture per tick, gated by job
+# "fidelity_pair". See README.md "Fidelity proof" for how run.py drives
+# this across 20 sample paths from two different roots.
+func _snapshot(g) -> Dictionary:
+	return StateSnapshot.game_state(g, {})
+
+func _apply_pair_traced(g, p1in: Dictionary, p2in: Dictionary, trace: Array):
+	yield(get_tree(), "idle_frame")
+	g.get_player(1).on_action_selected(p1in.action, p1in.data, p1in.extra)
+	g.get_player(2).on_action_selected(p2in.action, p2in.data, p2in.extra)
+	while !g.is_waiting_on_player():
+		g.tick()
+		trace.append(_snapshot(g))
+	if g.game_finished:
+		return
+	while !(g.p1_turn or !g.p1.state_interruptable) or !(g.p2_turn or !g.p2.state_interruptable):
+		_turn_start_step(g)
+	g.game_paused = true
+
+func _fidelity_pair(p1in: Dictionary, p2in: Dictionary):
+	var child = GAME_SCENE.instance()
+	child.is_ghost = true
+	add_child(child)
+	child.set_physics_process(false)
+	child.start_game(true, match_data)
+	game.copy_to(child)
+	var ghost_trace = []
+	yield(_apply_pair_traced(child, p1in, p2in, ghost_trace), "completed")
+	var ghost_projection = _projection(child)
+	remove_child(child)
+	child.free()
+
+	var real_trace = []
+	yield(_apply_pair_traced(game, p1in, p2in, real_trace), "completed")
+	var real_projection = _projection(game)
+
+	var n = min(ghost_trace.size(), real_trace.size())
+	var diff_tick = -1
+	for i in range(n):
+		if JSON.print(ghost_trace[i]) != JSON.print(real_trace[i]):
+			diff_tick = i
+			break
+	if diff_tick == -1 and ghost_trace.size() != real_trace.size():
+		diff_tick = n
+	var result = {
+		"kind": "fidelity_pair_result",
+		"ghost_ticks": ghost_trace.size(), "real_ticks": real_trace.size(),
+		"match": diff_tick == -1,
+		"first_diff_tick": diff_tick,
+		"ghost_projection": ghost_projection, "real_projection": real_projection,
+	}
+	if diff_tick != -1:
+		result["ghost_snapshot_at_diff"] = ghost_trace[diff_tick] if diff_tick < ghost_trace.size() else null
+		result["real_snapshot_at_diff"] = real_trace[diff_tick] if diff_tick < real_trace.size() else null
+	_write(result)
