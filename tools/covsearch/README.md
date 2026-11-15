@@ -11,8 +11,9 @@ The corpus feeds the Rust port's acceptance check
 ## Status at the last commit (read this before resuming)
 
 **Steps A and B are committed. The fidelity proof ran and found four
-real defects in this tool, now fixed. Step C (the coordinator) is
-running; see "Live progress" for its counts.**
+real defects in this tool, now fixed. Step C (the coordinator) ran
+partway and was stopped at session end, not converged; see "Live
+progress" for its last counts and what resuming it looks like.**
 
 ### Fidelity proof
 
@@ -143,17 +144,40 @@ have found. This is a scope reduction from design point 3's "every
 decision point of each mirror" to "one decision point per mirror",
 named here, not hidden; the full scan's hang is unresolved.
 
-### Live progress
+### Live progress -- stopped at session end, not converged
 
 Step C (`coordinate --roots roots.json --out report/ --jobs 8
---max-per-player 6`) is running against the 6 roots above (match start
-plus the 5 mirrors' `up_to_tick=50` points). `report/report.json` does
-not exist until the run reaches one of its two termination conditions
-(every probe hit, or the frontier empties); while it runs, its progress
-is only in `.scratch/jobs/node*.jsonl` and the coordinator's own
-process memory. Re-read this section after the run completes, or check
-`.scratch/report/report.json` directly, before trusting any count
-written here.
+--max-per-player 6`) ran against the 6 roots above (match start plus
+the 5 mirrors' `up_to_tick=50` points). It was stopped (not killed on
+an error) at the end of this session, before reaching either real
+termination condition (every probe hit, or the frontier empty), so
+**`report/report.json` does not exist and Steps D and E (corpus,
+fidelity, final report) have not run.** Its last `progress.json`
+(`coordinator.run` writes this every 10 finished worker jobs):
+
+```json
+{
+  "jobs_done": 100,
+  "hit_count": 3884,
+  "total_probes": 8728,
+  "kept_paths": 216,
+  "frontier_size": 116,
+  "legality_diffs": 0,
+  "elapsed_s": 135.0
+}
+```
+
+3,884 of 8,728 in-scope probes (line, branch, value-class) were hit by
+100 worker jobs in 135 s of coordinator wall time, with 216 kept paths
+and 116 nodes still on the frontier -- the frontier was still growing,
+not quiet, so continuing this run is expected to find more probes, not
+converge immediately. Resume it with the same command; it starts over
+(no checkpoint/resume of the frontier itself exists yet), but each run
+is deterministic in which roots and candidates it tries first, so a
+fresh run from the same `roots.json` retraces this one's early jobs.
+**Next session: run `coordinate` uncapped (no `--time-budget`) to one
+of its two real termination conditions, then `corpus` and `fidelity`
+against its `kept_paths.json`, then write Step E's full report.**
 
 ## The twelve design points, and where each one lives
 
