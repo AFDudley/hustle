@@ -7,37 +7,50 @@ extends Node
 # frames (the same wait as ReplayCheck.gd _on_live_actionable).
 #
 # Operator decision: no ghost branching. LIVE is the only simulation path
-# this tool uses, both to explore and to credit coverage -- see "---
-# branching ---" below. There is no separate "exact re-run" pass either:
-# every branch this worker records already is a fresh, real match replayed
-# from tick 0, so its own coverage and projection need no further check.
+# this tool uses, both to explore and to credit coverage.
 #
-# One job = one root (a decision point). The job names either:
+# Operator decision (this session): never run two live `Game` nodes in one
+# process. An earlier version built a second, real `Game` inside the same
+# process as the job's own reference `game` to save process-startup cost;
+# a `replay_prefix`-rooted child then froze (README.md's "Blocking defect",
+# now fixed by removing the second Game, not by chasing the freeze). Every
+# build of a `Game` now happens through `_build_root_and_choices`, which
+# first frees any previous `Game` and its panels completely
+# (`_free_game`/`_free_panels`) and resets `ReplayManager` before building
+# the next one, so at most one live `Game` ever exists at a time in this
+# process -- matching `tools/replay_check/ReplayCheck.gd`'s own one-Game-
+# per-job shape. A `branch_batch` job runs several branches this way, one
+# after another, never concurrently (the brief's named optimisation: pay
+# the process-startup cost once per batch instead of once per branch).
+#
+# One job = one root (a decision point), named by `job.base`:
 #   {"mode": "match_start", "seed": N}
 #     A fresh tournament-settings match (design step 2), Ninja vs Ninja.
 #   {"mode": "replay_prefix", "replay": path, "up_to_tick": N}
 #     Replay a human mirror's own recorded inputs, on the live path, up to
 #     and including tick N's inputs, to reach one of its decision points
 #     (design step 3). Keeps that replay's own settings (its match_data).
-#   {"mode": "path", "base": {...as above...}, "choices": [[p1in, p2in], ...]}
-#     Replay match_start or a replay_prefix root, then apply each recorded
-#     branch choice in order (on the live path, through on_action_selected)
-#     to reach a frontier node the coordinator already decided to keep.
+# `job.choices` (optional): `[[p1in, p2in], ...]`, the path's own
+# already-kept choices, replayed after the root through on_action_selected.
 #
-# At the root, the worker:
-#  1. Reads the real ActionButtons legal-button lists for both players and
-#     the Legality.gd computed lists; records every difference.
-#  2. Builds a discretized candidate-input list per player (design step 5).
-#  3. For each (p1 candidate, p2 candidate) pair: replays `base` plus the
-#     job's own `choices` on a brand-new, real (non-ghost) Game in this
-#     same process (`_build_child`), applies the pair through
-#     on_action_selected, waits for the next decision point (or match
-#     end) the same way `tools/replay_check`'s "live" mode does, and
-#     records the probe-count delta and a projection of the resulting
-#     state. The reference `game` built once at the top of this job is
-#     never touched, so every candidate pair starts from the same root.
-# Output: one JSON object per line to job.out: legality diffs, then one
-# record per branched child.
+# `job.action` picks what this job does at that (root, choices) node:
+#   "list_candidates" (default): reads the real ActionButtons legal-button
+#     lists for both players and the Legality.gd computed lists (recording
+#     every difference), then writes the discretized candidate list for
+#     each player (design step 5). Does not branch.
+#   "branch_batch": for each pair in `job.pairs`, rebuilds the (root,
+#     choices) node on a brand-new live Game (`_build_root_and_choices`),
+#     applies that one (p1, p2) input pair through on_action_selected,
+#     waits for the next decision point (or match end) the same way
+#     `tools/replay_check`'s "live" mode does, and records the probe-count
+#     delta and a projection of the resulting state. One `branch` record
+#     per pair.
+# `job.write_replay`: builds (root, choices) once and saves the replay.
+# `base.mode` can also be "verify_replay" (determinism check, design step
+# 10) or "replay_scan" (design step 3's root finder); both are self-
+# contained and build exactly one `Game`, same as every other mode here.
+#
+# Output: one JSON object per line to job.out.
 const Legality = preload("res://tools/replay_check/Legality.gd")
 const GAME_SCENE = preload("res://Game.tscn")
 const ACTION_BUTTONS_SCENE = preload("res://ui/ActionSelector/ActionButtons.tscn")
@@ -110,33 +123,80 @@ func _run():
 		out.close()
 		get_tree().quit(0)
 		return
+	if base.mode == "replay_scan":
+		yield(_scan_replay(base.replay), "completed")
+		out.close()
+		get_tree().quit(0)
+		return
+	if job.has("write_replay"):
+		yield(_build_root_and_choices(base, job.get("choices", [])), "completed")
+		if finished:
+			return
+		_write_replay(job.write_replay)
+		out.close()
+		get_tree().quit(0)
+		return
+	var action = job.get("action", "list_candidates")
+	if action == "branch_batch":
+		yield(_branch_batch(base, job.get("choices", []), job.get("pairs", [])), "completed")
+	elif action == "list_candidates":
+		yield(_build_root_and_choices(base, job.get("choices", [])), "completed")
+		if !finished:
+			yield(_list_candidates(), "completed")
+	else:
+		_fail("unknown job action " + str(action))
+	out.close()
+	get_tree().quit(0)
+
+# Frees the current `Game` (if any) completely before a new one is built,
+# so at most one live Game ever exists in this process at a time. Mirrors
+# what a fresh `tools/replay_check` job gets for free by being a fresh
+# process: no state from the old match survives into the new one.
+func _free_game():
+	if game != null and is_instance_valid(game):
+		remove_child(game)
+		game.free()
+	game = null
+
+func _free_panels():
+	panels = []
+	var holder = get_node_or_null("Panels")
+	if holder != null:
+		remove_child(holder)
+		holder.free()
+
+# Builds one fresh, real (non-ghost) Game: the root (design step 3) plus
+# the path's own already-kept choices (through on_action_selected, the
+# live path), live, from tick 0. The single mechanism every job in this
+# file uses to reach a (root, choices) node -- `list_candidates`,
+# `branch_batch` (once per pair, see header), and `write_replay` all call
+# this. Returns the built `game`, or null on failure (`finished` is set).
+func _build_root_and_choices(base: Dictionary, choices: Array):
+	_free_game()
+	_free_panels()
+	ReplayManager.init()
+	ReplayManager.playback = false
 	match base.mode:
 		"match_start":
 			yield(_start_match(int(base.seed)), "completed")
 		"replay_prefix":
 			yield(_start_replay_prefix(base.replay, int(base.up_to_tick)), "completed")
-		"replay_scan":
-			yield(_scan_replay(base.replay), "completed")
-			out.close()
-			get_tree().quit(0)
-			return
 		_:
 			_fail("unknown base mode " + str(base.mode))
-			return
+			return null
 	if finished:
-		return
-	for choice in job.get("choices", []):
+		return null
+	if game.game_finished:
+		_fail("root replay ended before reaching a decision point")
+		return null
+	for choice in choices:
 		yield(_apply_pair_live(game, choice[0], choice[1]), "completed")
 		if finished:
-			return
-	if job.has("write_replay"):
-		_write_replay(job.write_replay)
-		out.close()
-		get_tree().quit(0)
-		return
-	yield(_expand(), "completed")
-	out.close()
-	get_tree().quit(0)
+			return null
+		if game.game_finished:
+			_fail("root replay ended before all of this path's recorded choices were applied; non-determinism, not an expected path end")
+			return null
+	return game
 
 # Corpus writer (design step 9). `game` is a real (non-ghost) match that has
 # already applied the path's choices through on_action_selected, so
@@ -244,8 +304,6 @@ func _start_match(match_seed: int):
 	match_data["singleplayer"] = true
 	match_data["selected_characters"] = {1: {"name": "Ninja"}, 2: {"name": "Ninja"}}
 	match_data["seed"] = match_seed
-	ReplayManager.init()
-	ReplayManager.playback = false
 	_new_game()
 	if _rejected(game.start_game(true, match_data)):
 		_fail("start_game rejected Ninja/Ninja")
@@ -279,6 +337,7 @@ func _rejected(result) -> bool:
 func _make_panels():
 	var holder = Node.new()
 	holder.name = "Panels"
+	panels = []
 	for id in [1, 2]:
 		var panel = ACTION_BUTTONS_SCENE.instance()
 		panel.name = "P" + str(id)
@@ -293,9 +352,8 @@ func _make_panels():
 	panels[1].init(game, 2)
 
 # Waits for game.gd's turn-start block (two frames, as in ReplayCheck.gd).
-# Parameterized by `g` so the same, single, trusted mechanism drives the
-# job's own root/reference `game` and every live branch child alike --
-# there is no second, custom tick-driving loop in this file any more.
+# Parameterized by `g` so the same, single, trusted mechanism drives every
+# live Game this file ever builds.
 func _wait_decision(g):
 	yield(get_tree(), "idle_frame")
 	while !g.game_paused and !g.game_finished and !finished:
@@ -436,23 +494,40 @@ func _candidates(player_id: int) -> Array:
 						out_candidates.append({"action": action_name, "data": data, "extra": e3})
 	return out_candidates
 
-# --- branching (design step 6, live-only) ---------------------------------
+# --- candidate listing (design step 5) ----------------------------------
+
+func _list_candidates():
+	yield(_legality_report(), "completed")
+	if finished:
+		return
+	var cap = int(job.get("max_per_player", 1000000))
+	var p1_candidates = _candidates(1)
+	var p2_candidates = _candidates(2)
+	if p1_candidates.size() > cap:
+		p1_candidates = p1_candidates.slice(0, cap - 1)
+	if p2_candidates.size() > cap:
+		p2_candidates = p2_candidates.slice(0, cap - 1)
+	_write({"kind": "candidate_count", "tick": game.current_tick,
+		"p1": p1_candidates.size(), "p2": p2_candidates.size()})
+	_write({"kind": "candidates", "tick": game.current_tick,
+		"p1": p1_candidates, "p2": p2_candidates})
+
+# --- branching (design step 6, live-only, one Game at a time) ----------
 #
-# Operator decision: no ghost branching. LIVE is the only path this tool
-# uses, both to explore and to credit coverage. `_apply_pair_live` applies
-# one (p1, p2) input pair and waits for the next decision point exactly
-# the way `_start_match`/`_start_replay_prefix` already drive the root,
-# and the way tools/replay_check's "live" mode drives a whole match:
-# ReplayManager.playback = false, Fighter.on_action_selected, then
-# `_wait_resolved`/`_wait_decision`. `_build_child` replays a path's own
-# root and already-kept choices on a brand-new Game node, in this same
-# Godot process (so a branch pays only simulation cost, not a new OS
-# process's startup cost), live, from tick 0 -- the construction `_run()`
-# already does once for the job's own reference `game`, factored out so
-# `_expand` can redo it once per candidate pair. There is no "ghost" or
-# "exact" distinction left to reconcile: every branch already is the path
-# a real match would take. See README.md "Ghost branching, historical
-# note" for what this replaced and what it found.
+# Operator decision: no ghost branching, and no second live Game
+# coexisting with another one in this process (see header comment and
+# README.md "Blocking defect", now closed by this design). For each
+# candidate pair, `_build_root_and_choices` frees whatever Game this
+# process built last and builds a fresh one: the job's own root plus its
+# already-kept choices, live, from tick 0 -- the same construction
+# `_list_candidates`'s own root uses. `_apply_pair_live` then applies the
+# candidate pair and waits for the next decision point
+# (`_wait_decision`/`_wait_resolved`, the single, shared wait mechanism
+# every live drive in this file uses). The probe-count delta and a
+# projection of the resulting state are recorded. A `branch_batch` job
+# runs its pairs this way one after another, never two Games at once --
+# the brief's named optimisation for amortising one process's startup
+# cost over several branches, measured in README.md "Cost measurement".
 
 func _apply_pair_live(g, p1in: Dictionary, p2in: Dictionary):
 	yield(get_tree(), "idle_frame")
@@ -463,42 +538,25 @@ func _apply_pair_live(g, p1in: Dictionary, p2in: Dictionary):
 		return
 	yield(_wait_decision(g), "completed")
 
-func _build_child(base: Dictionary, choices: Array):
-	var g = GAME_SCENE.instance()
-	add_child(g)
-	if _rejected(g.start_game(true, match_data)):
-		_fail("start_game rejected (branch child)")
-		return null
-	if base.mode == "replay_prefix":
-		var up_to_tick = int(base.up_to_tick)
-		while g.current_tick < up_to_tick and !finished:
-			yield(_wait_decision(g), "completed")
-			if finished:
-				return null
-			if g.game_finished:
-				_fail("branch child's own root replay ended before tick %d, but the job's reference game reached it; non-determinism, not an expected path end" % up_to_tick)
-				return null
-			var key = g.current_tick + 1
-			for id in [1, 2]:
-				if recorded[id].has(key):
-					var input = recorded[id][key]
-					g.get_player(id).on_action_selected(input["action"], input["data"], input["extra"])
-			yield(_wait_resolved(g), "completed")
-	else:
-		yield(_wait_decision(g), "completed")
-	if finished:
-		return null
-	if g.game_finished:
-		_fail("branch child's own root replay ended unexpectedly, but the job's reference game reached a decision point; non-determinism, not an expected path end")
-		return null
-	for choice in choices:
-		yield(_apply_pair_live(g, choice[0], choice[1]), "completed")
+func _branch_batch(base: Dictionary, choices: Array, pairs: Array):
+	for pair in pairs:
+		var g = yield(_build_root_and_choices(base, choices), "completed")
 		if finished:
-			return null
-		if g.game_finished:
-			_fail("branch child's own choice replay ended unexpectedly, but the job's reference game reached a further decision point; non-determinism, not an expected path end")
-			return null
-	return g
+			return
+		var root_tick = g.current_tick
+		var before = _probe_snapshot()
+		yield(_apply_pair_live(g, pair[0], pair[1]), "completed")
+		if finished:
+			return
+		var after = _probe_snapshot()
+		_write({
+			"kind": "branch", "tick": root_tick,
+			"p1_input": pair[0], "p2_input": pair[1],
+			"probes": _probe_delta(before, after),
+			"projection": _projection(g),
+		})
+	_free_game()
+	_free_panels()
 
 func _probe_snapshot() -> Array:
 	return __COV__.h.duplicate()
@@ -543,57 +601,3 @@ func _projection(g) -> Dictionary:
 		"tick": g.current_tick, "game_over": g.game_finished,
 		"p1_turn": g.p1_turn, "p2_turn": g.p2_turn, "objs": objs,
 	}
-
-func _expand():
-	yield(get_tree(), "idle_frame")
-	yield(_legality_report(), "completed")
-	if finished:
-		return
-	var cap = int(job.get("max_per_player", 1000000))
-	var p1_candidates = _candidates(1)
-	var p2_candidates = _candidates(2)
-	if p1_candidates.size() > cap:
-		p1_candidates = p1_candidates.slice(0, cap - 1)
-	if p2_candidates.size() > cap:
-		p2_candidates = p2_candidates.slice(0, cap - 1)
-	_write({"kind": "candidate_count", "tick": game.current_tick,
-		"p1": p1_candidates.size(), "p2": p2_candidates.size()})
-	# The job's own reference `game` has nothing left to do once branching
-	# starts (this job ends right after `_expand` returns), but its
-	# automatic physics_process would otherwise keep calling
-	# `process_tick()` every frame regardless of `game_paused` (game.gd
-	# `process_tick`'s own `can_tick` never reads `game_paused`), ticking
-	# `game` forward in the background while a branch child's own
-	# `_wait_decision`/`_wait_resolved` wait on *their* frame signals.
-	# This removes one source of contention between the two live Game
-	# instances now coexisting in one process, but it did NOT fix the
-	# open hang README.md "Known defect" now also names: a
-	# replay_prefix-rooted branch child's own `current_tick` stays frozen
-	# (traced directly -- `is_waiting_on_player()` never clears,
-	# `GhostStartTimer.is_stopped()` is true, `is_physics_processing()` is
-	# true, so neither of those gates it) even with `game` stopped here.
-	# Kept because it is still correct and harmless on its own terms --
-	# `game` truly has nothing left to do -- not because it is the fix.
-	# It is not an `is_ghost` change (the reference game was never a
-	# ghost, and still is not).
-	game.set_physics_process(false)
-	var base = job.get("base", job)
-	var prior_choices = job.get("choices", [])
-	for p1in in p1_candidates:
-		for p2in in p2_candidates:
-			var child = yield(_build_child(base, prior_choices), "completed")
-			if finished:
-				return
-			var before = _probe_snapshot()
-			yield(_apply_pair_live(child, p1in, p2in), "completed")
-			var after = _probe_snapshot()
-			_write({
-				"kind": "branch", "tick": game.current_tick,
-				"p1_input": p1in, "p2_input": p2in,
-				"probes": _probe_delta(before, after),
-				"projection": _projection(child),
-			})
-			remove_child(child)
-			child.free()
-			if finished:
-				return

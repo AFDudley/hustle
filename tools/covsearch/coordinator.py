@@ -1,26 +1,40 @@
 """The covsearch coordinator: frontier, dedup, termination, report.
 
 See tools/covsearch/README.md for the design (steps 6-9) this implements.
-Operator decision: no ghost branching. `CovWorker.gd`'s `_expand` replays
+Operator decision: no ghost branching. `CovWorker.gd`'s branch jobs replay
 every branch on a fresh, real (non-ghost) match, live, from tick 0, so the
 probes a branch record reports are already exact; this module credits
 them directly, with no separate ghost/exact split and no divergence check
 to run afterward.
 
 A frontier node is a *path*: a root plus the ordered list of (p1 input,
-p2 input) choices the search has already kept from that root. To expand a
-node, one CovWorker.gd job replays the root plus the path (through
-on_action_selected, the live path), lists the real UI's legal buttons
-there, builds the discretized candidate list, and for each (candidate,
-candidate) pair, replays the whole root-plus-path again on a brand-new
-live match before applying that pair -- one job answers for every
-candidate pair at that one decision point, but each pair itself costs a
-full re-simulation of the path so far (CovWorker.gd's cost is measured,
-not hidden; see README.md "Cost measurement"). The coordinator never asks
-a worker to hold state across jobs: each expansion is a stand-alone
-process (bridges the "up to 8 Godot processes" design goal onto simple
-subprocess parallelism, with the frontier and the probe map held once, in
-this process).
+p2 input) choices the search has already kept from that root. Expanding a
+node is two kinds of CovWorker.gd job, never two live Games at once in one
+process (operator decision, see CovWorker.gd header comment):
+
+1. One `list_candidates` job replays the root plus the path (through
+   on_action_selected, the live path) once, lists the real UI's legal
+   buttons there, and writes the discretized candidate list for each
+   player (design step 5).
+2. The (p1 candidate, p2 candidate) pairs this produces are split into up
+   to `--jobs` batches. Each batch runs as one `branch_batch` job: a
+   single Godot process that, for each of its pairs in turn, rebuilds the
+   whole root-plus-path from scratch on a fresh Game, applies that one
+   pair, and records the probe delta and a projection -- one Game at a
+   time, never two concurrently, the old Game freed completely before the
+   next one is built (CovWorker.gd `_build_root_and_choices`). The
+   batches run in parallel, up to `--jobs` Godot processes at once; a
+   batch's own pairs run strictly in sequence inside that one process
+   (the brief's named optimisation for amortising process-startup cost
+   over several branches -- see README.md "Cost measurement").
+
+The coordinator processes one frontier node at a time (so the `--jobs`
+Godot processes all serve that node's own candidate pairs), not several
+frontier nodes in parallel: this keeps the one frontier and the one
+hit_ids/seen_buckets state in this process free of any cross-node race,
+at the cost of not overlapping one node's list_candidates job with
+another node's branch_batch jobs. Each node's own fan-out already uses
+every core, which is where the parallelism budget goes.
 
 Ordering (step 7): the frontier is a priority queue; a node's priority is
 the number of probes its branch hit that no kept path has hit yet ("new
@@ -115,6 +129,15 @@ def _update_readme_progress(readme_path: Path, progress: dict) -> None:
     readme_path.write_text(f"{pre}{begin}\n```json\n{body}\n```\n{end}{post}")
 
 
+def _chunks(items: list, n: int) -> list[list]:
+    """Split `items` into at most `n` nearly-equal, non-empty chunks."""
+    if not items:
+        return []
+    n = max(1, min(n, len(items)))
+    size = -(-len(items) // n)  # ceil division
+    return [items[i:i + size] for i in range(0, len(items), size)]
+
+
 def run(
     work,
     roots_path: Path,
@@ -134,7 +157,9 @@ def run(
     kept_paths: list[dict] = []  # {"root": ..., "choices": [...], "probes": [...]}
     unreachable: dict[int, str] = {}
     total_branches = 0
-    total_ticks_simulated = 0  # sum of every branch child's own final tick
+    total_ticks_simulated = 0  # sum of every branch's own final tick
+    branch_job_seconds: list[float] = []  # one entry per branch_batch job
+    branch_job_pairs: list[int] = []
 
     roots = json.loads(roots_path.read_text())
     # frontier: heap of (-new_probe_count, seq, {"root":..., "choices":[...]})
@@ -144,18 +169,6 @@ def run(
 
     start = time.monotonic()
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=jobs)
-    pending: dict[concurrent.futures.Future, dict] = {}
-
-    def submit(node: dict):
-        name = f"node{next(_counter)}"
-        job = {"base": node["root"], "choices": node["choices"], "max_per_player": max_per_player}
-        fut = executor.submit(run_worker, work, name, job)
-        pending[fut] = node
-
-    # Prime up to `jobs` expansions.
-    while frontier and len(pending) < jobs:
-        _, _, node = heapq.heappop(frontier)
-        submit(node)
 
     jobs_done = 0
     progress_path = out_dir / "progress.json"
@@ -183,24 +196,65 @@ def run(
             _update_readme_progress(readme_path, progress)
             last_readme_write = now
 
+    def time_up() -> bool:
+        return bool(time_budget) and time.monotonic() - start > time_budget
+
     termination_reason = "frontier_exhausted"
-    while pending:
+    while frontier:
         if total_ids and total_ids <= hit_ids:
             termination_reason = "all_probes_hit"
             break
-        if time_budget and time.monotonic() - start > time_budget:
+        if time_up():
             termination_reason = "time_budget_stopped"
             break
-        done, _ = concurrent.futures.wait(pending, return_when=concurrent.futures.FIRST_COMPLETED)
-        for fut in done:
-            node = pending.pop(fut)
-            jobs_done += 1
+        _, _, node = heapq.heappop(frontier)
+
+        # Phase 1: list this node's candidates (one Godot process, one Game).
+        list_name = f"list{next(_counter)}"
+        list_job = {
+            "base": node["root"], "choices": node["choices"],
+            "action": "list_candidates", "max_per_player": max_per_player,
+        }
+        list_out = run_worker(work, list_name, list_job)
+        jobs_done += 1
+        p1_candidates: list[dict] = []
+        p2_candidates: list[dict] = []
+        for line in list_out.read_text().splitlines():
+            rec = json.loads(line)
+            if rec["kind"] == "legality_diff":
+                legality_diffs.append(rec)
+            elif rec["kind"] == "candidates":
+                p1_candidates = rec["p1"]
+                p2_candidates = rec["p2"]
+        pairs = [[p1, p2] for p1 in p1_candidates for p2 in p2_candidates]
+        if not pairs:
+            if jobs_done % 10 == 0:
+                write_progress()
+            continue
+
+        # Phase 2: branch every pair, batched across up to `jobs` processes,
+        # each batch's own pairs run strictly one Game at a time in sequence
+        # (CovWorker.gd `_branch_batch`; see module docstring).
+        batches = _chunks(pairs, jobs)
+        futures = {}
+        for batch in batches:
+            name = f"branch{next(_counter)}"
+            job = {
+                "base": node["root"], "choices": node["choices"],
+                "action": "branch_batch", "pairs": batch,
+            }
+            fut = executor.submit(run_worker, work, name, job)
+            futures[fut] = (name, len(batch))
+        for fut in concurrent.futures.as_completed(futures):
+            name, batch_size = futures[fut]
+            job_start_unused = None  # wall time is measured per batch below
+            t0 = time.monotonic()
             out_path = fut.result()
+            branch_job_seconds.append(time.monotonic() - t0)
+            branch_job_pairs.append(batch_size)
+            jobs_done += 1
             for line in out_path.read_text().splitlines():
                 rec = json.loads(line)
-                if rec["kind"] == "legality_diff":
-                    legality_diffs.append(rec)
-                    continue
                 if rec["kind"] != "branch":
                     continue
                 total_branches += 1
@@ -220,12 +274,12 @@ def run(
                     heapq.heappush(frontier, (-score, next(_counter), child))
                 if is_new_state:
                     kept_paths.append({**child, "probes": rec["probes"]})
-            # refill
-            if frontier and (not time_budget or time.monotonic() - start <= time_budget) and not (total_ids and total_ids <= hit_ids):
-                _, _, nxt = heapq.heappop(frontier)
-                submit(nxt)
         if jobs_done % 10 == 0:
             write_progress()
+        if time_up():
+            termination_reason = "time_budget_stopped"
+            break
+
     write_progress()
     executor.shutdown(wait=False, cancel_futures=True)
 
@@ -243,6 +297,12 @@ def run(
         unreachable[pid] = reason or default_reason
 
     elapsed = time.monotonic() - start
+    seconds_per_branch_job = (
+        sum(branch_job_seconds) / len(branch_job_seconds) if branch_job_seconds else 0.0
+    )
+    seconds_per_branch = (
+        sum(branch_job_seconds) / sum(branch_job_pairs) if branch_job_pairs else 0.0
+    )
     report = {
         "termination_reason": termination_reason,
         "probe_totals": {
@@ -262,6 +322,9 @@ def run(
         "ticks_simulated": total_ticks_simulated,
         "branches_per_second": total_branches / elapsed if elapsed > 0 else 0.0,
         "ticks_per_second": total_ticks_simulated / elapsed if elapsed > 0 else 0.0,
+        "branch_batch_jobs": len(branch_job_seconds),
+        "seconds_per_branch_batch_job": seconds_per_branch_job,
+        "seconds_per_branch": seconds_per_branch,
         "wall_time_s": elapsed,
     }
     (out_dir / "report.json").write_text(json.dumps(report, indent=2))
