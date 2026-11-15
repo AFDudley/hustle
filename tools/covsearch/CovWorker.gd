@@ -345,6 +345,52 @@ func _idle_frames(count: int):
 
 # --- discretization (design step 5) -------------------------------------
 
+# Builds the discrete value classes for one data node's default value
+# (design step 5, extended per README.md "Discretization completeness").
+# A whole-dict {"x","y"} value (most actions' aim plot) becomes the 9
+# compass-direction classes. A dict of named sub-fields -- for example
+# Parry's "Melee Parry Timing"/"Block Height" (NewParry.gd _enter) or
+# StickyBomb's "Jump"/"Aim" (StickyBombActionUIData.gd) -- varies one
+# sub-field at a time from the shared default: each {"x","y"} sub-field
+# gets the 9 classes, each boolean sub-field gets both values. This is
+# the same "one axis at a time from a shared baseline" reduction the
+# DI/toggle axes already use, not a full cross product. A plain boolean
+# data value (none found on Ninja, kept for completeness) gets both
+# values. Any other leaf (for example "Melee Parry Timing"'s own
+# {"count": N}, which the game sets from the opponent's attack timing,
+# not a free player choice) keeps its one default value -- a named, not
+# a silent, reduction.
+func _data_variants(default_data) -> Array:
+	if default_data == null:
+		return [null]
+	if typeof(default_data) == TYPE_BOOL:
+		return [true, false]
+	if typeof(default_data) != TYPE_DICTIONARY:
+		return [default_data]
+	if default_data.has("x") and default_data.has("y"):
+		var out = []
+		for dir in DIRECTIONS:
+			var d = default_data.duplicate(true)
+			d["x"] = str(dir[0])
+			d["y"] = str(dir[1])
+			out.append(d)
+		return out
+	var variants = [default_data.duplicate(true)]
+	for key in default_data.keys():
+		var value = default_data[key]
+		if typeof(value) == TYPE_DICTIONARY and value.has("x") and value.has("y"):
+			for dir in DIRECTIONS:
+				var d = default_data.duplicate(true)
+				d[key] = value.duplicate(true)
+				d[key]["x"] = str(dir[0])
+				d[key]["y"] = str(dir[1])
+				variants.append(d)
+		elif typeof(value) == TYPE_BOOL:
+			var d2 = default_data.duplicate(true)
+			d2[key] = !value
+			variants.append(d2)
+	return variants
+
 func _candidates(player_id: int) -> Array:
 	var fighter = game.get_player(player_id)
 	var out_candidates = []
@@ -359,29 +405,18 @@ func _candidates(player_id: int) -> Array:
 		var action_name = button.state.state_name if button.state else str(button.name)
 		var has_aim = button.data_node != null
 		var default_data = button.data_node.get_data() if has_aim else null
-		var is_xy = has_aim and typeof(default_data) == TYPE_DICTIONARY and default_data.has("x") and default_data.has("y")
-		# Only the x/y (aim) data shape is discretized (design step 5). A
-		# data UI with a different shape (for example Parry's "Melee Parry
-		# Timing"/"Block Height" dict, NewParry.gd _enter/start) keeps its
-		# node's own default value: not every action's data UI is an aim
-		# plot, and guessing a shape for one that is not produced
-		# "Invalid get index" script errors instead of a legal state. This
-		# is a stated scope reduction, recorded in README.md.
-		var aims = DIRECTIONS if is_xy else [null]
-		for dir in aims:
+		var data_variants = _data_variants(default_data) if has_aim else [null]
+		for i in range(data_variants.size()):
+			var data = data_variants[i]
 			var extra = base_extra.duplicate(true)
-			var data = default_data
-			if dir != null:
-				data = default_data.duplicate(true)
-				data["x"] = str(dir[0])
-				data["y"] = str(dir[1])
 			out_candidates.append({"action": action_name, "data": data, "extra": extra})
 			# One DI class per direction, one toggle flip each, independent
-			# of the aim loop (design step 5: "each extra toggle on/off,
-			# feint on/off"), tried once at DI zero to bound the candidate
-			# count: this is a deliberate reduction from the full cross
-			# product, recorded in tools/covsearch/README.md.
-			if dir == DIRECTIONS[0]:
+			# of the data-variant loop (design step 5: "each extra toggle
+			# on/off, feint on/off"), tried once at the baseline data
+			# variant to bound the candidate count: this is a deliberate
+			# reduction from the full cross product, recorded in
+			# tools/covsearch/README.md.
+			if i == 0:
 				for di in DIRECTIONS:
 					var e2 = base_extra.duplicate(true)
 					e2["DI"] = {"x": str(di[0]), "y": str(di[1])}
@@ -417,7 +452,21 @@ func _apply_pair(g, p1in: Dictionary, p2in: Dictionary):
 	g.get_player(2).on_action_selected(p2in.action, p2in.data, p2in.extra)
 	_drive_to_decision(g)
 
+# A real Game left over from the previous decision keeps p1_turn/p2_turn
+# true (set when it paused). game.gd's own process_tick() resets both to
+# false every time it resumes ticking (game.gd ~1445-1448, inside "if
+# can_tick:"), but _drive_to_decision calls tick() directly and skips
+# process_tick() entirely, so that reset must be replicated here too.
+# Found by the fidelity check (README.md "Fidelity proof"): without this
+# reset, a ghost child (whose p1_turn/p2_turn start false, copy_to never
+# sets them) and the real game it was copied from disagreed at tick 0 of
+# every sampled pair, and on the real game the missing reset additionally
+# skipped _turn_start_step's on_interrupt() handling on every decision
+# after the first one in any path, because the stale true/true already
+# satisfied _turn_start_step's loop condition.
 func _drive_to_decision(g):
+	g.p1_turn = false
+	g.p2_turn = false
 	g.simulate_until_ready()
 	if g.game_finished:
 		return
