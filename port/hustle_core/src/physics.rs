@@ -562,21 +562,43 @@ pub fn apply_forces_no_limit(o: ObjectData) -> ObjectData {
 // friction
 // ============================================================================
 
-/// `v - v * fric`, with no clamp: a `fric` above 1 can flip the sign
-/// (confirmed by probing: `apply_x_fric("2.5")` from `vel_x = "5"`
-/// gave `-7.5 = 5 * (1 - 2.5)`, not a value clamped to `0`).
+/// `vel_x - vel_x * fric`, but **only while `fric < |vel_x|`**
+/// (decompiled `_<<FGObject as NativeClassMethods>::nativeclass_register::ThisMethod
+/// as StaticArgsMethod<FGObject>>::call` for the `apply_x_fric` slot,
+/// via `tools/ghidra`: the real function computes
+/// `vel_x - wrapping_mul(fric, vel_x)` — subtract-after-multiply, not
+/// a `1 - fric` multiplier computed first; the two orders round
+/// differently, the same lesson `tools/fixedmath_diff/README.md`
+/// documents for `lerp_string` — and only stores that result when
+/// `fric` is negative (unconditionally) or `fric < |vel_x|` (a
+/// positive `fric` at or past the current speed leaves `vel_x`
+/// unchanged, not clamped to `0`). Both conditions collapse to the
+/// single comparison below: a negative `fric` is always less than
+/// the non-negative `|vel_x|`. Confirmed by probing: `fric = "2.5"`
+/// from `vel_x = "5"` applies (`2.5 < 5`) and gives `-7.5`; `fric =
+/// "10"`, `"15"`, `"100"` from the same `vel_x = "5"` do not apply
+/// (`10, 15, 100` are not `< 5`) and leave `vel_x` at `5`.
 pub fn apply_x_fric(o: ObjectData, fric: Fixed) -> ObjectData {
-    let mut out = o;
-    let keep = Fixed::ONE.wrapping_sub(fric);
-    out.vel_x = o.vel_x.wrapping_mul(keep);
-    out
+    if fric.0 < o.vel_x.abs().0 {
+        let mut out = o;
+        let decrement = o.vel_x.wrapping_mul(fric);
+        out.vel_x = o.vel_x.wrapping_sub(decrement);
+        out
+    } else {
+        o
+    }
 }
 
+/// Same rule as `apply_x_fric`, on `vel_y`.
 pub fn apply_y_fric(o: ObjectData, fric: Fixed) -> ObjectData {
-    let mut out = o;
-    let keep = Fixed::ONE.wrapping_sub(fric);
-    out.vel_y = o.vel_y.wrapping_mul(keep);
-    out
+    if fric.0 < o.vel_y.abs().0 {
+        let mut out = o;
+        let decrement = o.vel_y.wrapping_mul(fric);
+        out.vel_y = o.vel_y.wrapping_sub(decrement);
+        out
+    } else {
+        o
+    }
 }
 
 /// Decrements `vel_x` by `(|vel_x| / max_speed) * friction`, signed to
