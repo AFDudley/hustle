@@ -154,6 +154,7 @@ func _write_replay(name: String):
 # compares the final tick's projection only -- see README.md, "Fidelity",
 # for why that is a stated scope reduction, not a silent one.
 func _verify_replay(replay_path: String):
+	yield(get_tree(), "idle_frame")
 	match_data = ReplayManager.load_replay(replay_path)
 	recorded = ReplayManager.frames.duplicate(true)
 	var last_tick = -1
@@ -166,9 +167,9 @@ func _verify_replay(replay_path: String):
 	if _rejected(game.start_game(true, match_data)):
 		_fail("start_game rejected the replay characters")
 		return
-	while game.current_tick < last_tick and !finished and !game.game_over:
+	while game.current_tick < last_tick and !finished and !game.game_finished:
 		yield(_wait_decision(), "completed")
-		if finished or game.game_over:
+		if finished or game.game_finished:
 			break
 		var key = game.current_tick + 1
 		for id in [1, 2]:
@@ -182,7 +183,7 @@ func _verify_replay(replay_path: String):
 				fighter.on_action_selected(input["action"], input["data"], input["extra"])
 		yield(_wait_resolved(), "completed")
 	_write({"kind": "verify_result", "final_tick": game.current_tick,
-		"game_over": game.game_over, "projection": _projection(game)})
+		"game_over": game.game_finished, "projection": _projection(game)})
 
 # replay_scan (design step 3): play one human mirror's own recorded inputs
 # on the live path from tick 0 to its end. At every decision point, expand
@@ -191,6 +192,7 @@ func _verify_replay(replay_path: String):
 # re-anchor a replay_prefix root at that exact tick. Then apply the
 # replay's own recorded input (not a search choice) and continue.
 func _scan_replay(replay_path: String):
+	yield(get_tree(), "idle_frame")
 	match_data = ReplayManager.load_replay(replay_path)
 	recorded = ReplayManager.frames.duplicate(true)
 	var last_tick = -1
@@ -204,9 +206,9 @@ func _scan_replay(replay_path: String):
 		_fail("start_game rejected the replay characters")
 		return
 	_make_panels()
-	while game.current_tick < last_tick and !finished and !game.game_over:
+	while game.current_tick < last_tick and !finished and !game.game_finished:
 		yield(_wait_decision(), "completed")
-		if finished or game.game_over:
+		if finished or game.game_finished:
 			return
 		_write({"kind": "root_tick", "replay": replay_path, "tick": game.current_tick})
 		yield(_expand(), "completed")
@@ -219,7 +221,8 @@ func _scan_replay(replay_path: String):
 				game.get_player(id).on_action_selected(input["action"], input["data"], input["extra"])
 		yield(_wait_resolved(), "completed")
 
-func _start_match(seed: int):
+func _start_match(match_seed: int):
+	yield(get_tree(), "idle_frame")
 	var settings = SETTINGS_SCENE.instance()
 	add_child(settings)
 	match_data = settings.get_data()
@@ -229,7 +232,7 @@ func _start_match(seed: int):
 		match_data[key] = TOURNAMENT_OVERRIDE[key]
 	match_data["singleplayer"] = true
 	match_data["selected_characters"] = {1: {"name": "Ninja"}, 2: {"name": "Ninja"}}
-	match_data["seed"] = seed
+	match_data["seed"] = match_seed
 	ReplayManager.init()
 	ReplayManager.playback = false
 	_new_game()
@@ -240,6 +243,7 @@ func _start_match(seed: int):
 	yield(_wait_decision(), "completed")
 
 func _start_replay_prefix(replay_path: String, up_to_tick: int):
+	yield(get_tree(), "idle_frame")
 	match_data = ReplayManager.load_replay(replay_path)
 	recorded = ReplayManager.frames.duplicate(true)
 	ReplayManager.init()
@@ -279,22 +283,25 @@ func _make_panels():
 
 # Waits for game.gd's turn-start block (two frames, as in ReplayCheck.gd).
 func _wait_decision():
-	while !game.game_paused and !game.game_over and !finished:
+	yield(get_tree(), "idle_frame")
+	while !game.game_paused and !game.game_finished and !finished:
 		yield(get_tree(), "idle_frame")
-	if game.game_over or finished:
+	if game.game_finished or finished:
 		return
 	while !(game.p1_turn or !game.p1.state_interruptable) or !(game.p2_turn or !game.p2.state_interruptable):
 		yield(get_tree(), "physics_frame")
-		if game.game_over:
+		if game.game_finished:
 			return
 
 func _wait_resolved():
-	while !finished and !game.game_over and game.is_waiting_on_player():
+	yield(get_tree(), "idle_frame")
+	while !finished and !game.game_finished and game.is_waiting_on_player():
 		yield(get_tree(), "physics_frame")
 
 # --- legality oracle (design step 4) ------------------------------------
 
 func _legality_report():
+	yield(get_tree(), "idle_frame")
 	for id in [1, 2]:
 		var fighter = game.get_player(id)
 		if !fighter.state_interruptable:
@@ -304,8 +311,8 @@ func _legality_report():
 		yield(_idle_frames(3), "completed")
 		var ui_visible = []
 		for button in panel.buttons:
-			if is_instance_valid(button) and button.visible and !button.disabled:
-				ui_visible.append(button.action if button.has_method("get") else str(button.name))
+			if is_instance_valid(button) and button.visible and !button.get_disabled():
+				ui_visible.append(button.action_name)
 		var extra = panel.get_extra()
 		var computed = Legality.legal_actions(fighter, extra)
 		var ui_set = {}
@@ -372,23 +379,25 @@ func _candidates(player_id: int) -> Array:
 # --- branching (design step 6) -------------------------------------------
 
 func _apply_pair(g, p1in: Dictionary, p2in: Dictionary):
+	yield(get_tree(), "idle_frame")
 	g.get_player(1).on_action_selected(p1in.action, p1in.data, p1in.extra)
 	g.get_player(2).on_action_selected(p2in.action, p2in.data, p2in.extra)
 	var ticks = 0
-	while !finished and !g.game_over and g.is_waiting_on_player() and ticks < 100000:
+	while !finished and !g.game_finished and g.is_waiting_on_player() and ticks < 100000:
 		yield(get_tree(), "physics_frame")
 		ticks += 1
-	if !g.game_over:
+	if !g.game_finished:
 		yield(_wait_decision_on(g), "completed")
 
 func _wait_decision_on(g):
-	while !g.game_paused and !g.game_over:
+	yield(get_tree(), "idle_frame")
+	while !g.game_paused and !g.game_finished:
 		yield(get_tree(), "idle_frame")
-	if g.game_over:
+	if g.game_finished:
 		return
 	while !(g.p1_turn or !g.p1.state_interruptable) or !(g.p2_turn or !g.p2.state_interruptable):
 		yield(get_tree(), "physics_frame")
-		if g.game_over:
+		if g.game_finished:
 			return
 
 func _probe_snapshot() -> Array:
@@ -419,11 +428,12 @@ func _projection(g) -> Dictionary:
 			entry["hitstun"] = o.get("hitstun_ticks") if o.get("hitstun_ticks") != null else 0
 		objs[str(name)] = entry
 	return {
-		"tick": g.current_tick, "game_over": g.game_over,
+		"tick": g.current_tick, "game_over": g.game_finished,
 		"p1_turn": g.p1_turn, "p2_turn": g.p2_turn, "objs": objs,
 	}
 
 func _expand():
+	yield(get_tree(), "idle_frame")
 	yield(_legality_report(), "completed")
 	if finished:
 		return
