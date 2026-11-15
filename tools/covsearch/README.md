@@ -384,24 +384,23 @@ listing all 16.
 `fidelity --corpus corpus/` plays each of the 16 entries' replay twice
 through `CovWorker.gd`'s `verify_replay` mode (design step 10) and
 requires the two runs to agree on the final-tick projection and the
-cumulative probe-hit set. This command was still running when this
-session's time ran out; its own `corpus/fidelity_report.json` (written
-on completion) has the per-entry pass/fail a future session should read
-before trusting the corpus is deterministic.
+cumulative probe-hit set. **Result: 16/16 entries deterministic**
+(`corpus/fidelity_report.json`, `"pass": true`) -- every corpus path this
+session produced is reproducible.
+`container.sh`'s mount list needed one addition for this command:
+`--corpus` joined `--out`/`--roots` in the read-write mount case, so
+`fidelity_report.json` can be written next to the replays it checks.
 
 ## Next step
 
-1. Read `corpus/fidelity_report.json` (see "Final report" above) and
-   confirm all 16 entries pass; re-run `fidelity` if the file is missing
-   or stale.
-3. A longer `--time-budget` (or none) on the same `roots.json` would
+1. A longer `--time-budget` (or none) on the same `roots.json` would
    explore the 29 nodes this run's frontier left, and likely hit more of
    the 5,759 probes this run reported as time-budget-unreached rather
    than proven unreachable.
-4. Investigate the `replay_scan` full-replay hang past roughly tick 700
+2. Investigate the `replay_scan` full-replay hang past roughly tick 700
    (see "Known defect") if a future session needs every decision point
    of a mirror, not a `stop_tick`-bounded prefix.
-5. `coordinator.py`'s one-node-at-a-time scheduling under-uses the 8
+3. `coordinator.py`'s one-node-at-a-time scheduling under-uses the 8
    processes between a node's own `list_candidates` job and its
    `branch_batch` fan-out (see "Cost measurement"); overlapping
    `list_candidates` across frontier nodes would raise the aggregate

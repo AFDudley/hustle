@@ -29,7 +29,7 @@ while (($#)); do
       work="$(realpath -m "$2")"
       shift 2
       ;;
-    --out | --roots)
+    --out | --roots | --corpus)
       target="$(realpath -m "$2")"
       mkdir -p "$(dirname "$target")"
       mounts+=(-v "$(dirname "$target"):$(dirname "$target")")
