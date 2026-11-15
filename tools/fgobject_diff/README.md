@@ -51,16 +51,41 @@ dependencies only (bundled for panic backtraces), not
 `turn_based_fighting_game_lib`'s own types or functions. `nm -C lib/tbfg.so`
 keeps only three of the crate's own functions unlinked
 (`BaseObject::get_data`, `BaseObject::apply_fric`,
-`BaseObject::apply_forces`); every other method is inlined into its own
-GDNative call-closure in a release build, so disassembly gives the
-instruction sequence but not a labeled formula. The struct field offsets
-read from that disassembly turned out not to match the methods' own
-observed behaviour (see "apply_fric" below): byte-level reverse engineering
-of a release build is unreliable without a decompiler, so this task used it
-only to find the method list and get_data()'s own output shape
-(`FGObjectDiff.gd`'s predecessor probe, since deleted; its findings are
-recorded here), and used black-box probing in Godot for every method's
-actual formula, the same way `tools/fixedmath_diff` did for `FixedMath`.
+`BaseObject::apply_forces`); every other method is inlined into generic
+gdnative dispatch machinery (`method_wrapper<F>`, `Stateless<F>::call`,
+`ThisMethod::call`), one monomorphized instance per method, none of them
+named after the method they belong to.
+
+Every method's formula is confirmed one of two ways, both read from the
+binary, not guessed from matching decimal displays:
+
+- **A plain, non-inlined `BaseObject::*` method** (`apply_fric`,
+  `apply_forces`, `get_data`): `tools/ghidra/container.sh` decompiles it by
+  name directly.
+- **A method inlined into the generic dispatch chain** (every other
+  method, including `apply_x_fric`/`apply_y_fric`): found by following the
+  chain one call at a time, each one resolved from the previous
+  function's own disassembly (`objdump -d`, read for the one `call`
+  instruction `tools/ghidra`'s decompiled C does not show a concrete
+  address for), then decompiled: `nativeclass_register` (found by name)
+  gives the registration order and each method's `method_wrapper`
+  address; that wrapper's disassembly names `std::panicking::try`, itself
+  monomorphized per method; `try`'s own disassembly names
+  `Stateless<F>::call`; and that function's disassembly names the
+  method-specific `ThisMethod::call`, which is the real method body
+  (confirmed by its own `"FGObject :: <name>"` panic string). For
+  `apply_x_fric`: `nativeclass_register` (`0x63b00`) → wrapper
+  `0x32530` → `std::panicking::try` (`0x773f0`) → `Stateless<F>::call`
+  (`0xfe80`) → `ThisMethod::call` (`0x69f00`, the real body). Every
+  address is a file offset; Ghidra loads this binary at `+0x100000` (its
+  own default base for a PIE/shared object), so `tools/ghidra/container.sh`
+  was called with each address plus that offset.
+
+Black-box probing in headless Godot (the same method `tools/fixedmath_diff`
+used for `FixedMath`) filled in what decompilation does not show directly:
+`get_data()`'s own output shape, and which stored field holds which
+configuration value (the decompiled code reads raw struct offsets, not
+field names).
 
 ### `get_data()`'s shape
 
@@ -135,22 +160,38 @@ comparing.
   recomputes `grounded` both ways** — a recorded real call left an
   already-grounded object airborne (`grounded = false`) after it moved to
   `y = -195` with no landing involved.
-- **`apply_fric`** applies an effective friction to `vel_x` **only**: a
-  probed call with `vel_x = "5"`, `vel_y = "-3"` changed `vel_x` and left
-  `vel_y` exactly at `-3`, for every probed friction and speed-cap
-  combination. The effective friction is `ground_friction /
-  max_ground_speed` when grounded, `air_friction / max_air_speed`
-  otherwise; two independent configurations (`2.5`/`15` grounded, `0.2`/`10`
-  airborne) matched this ratio within a couple of raw units (see "Open
-  mismatches" below). A zero `max_ground_speed`/`max_air_speed` is a
-  division by zero in the real library, caught as Nil, with the object
-  left unchanged.
-- **`apply_x_fric(fric)`/`apply_y_fric(fric)`** compute `v * (1 - fric)`
-  directly on the one axis named, with no clamp: `apply_x_fric("2.5")` from
-  `vel_x = "5"` gave `-7.5 = 5 * (1 - 2.5)`, a sign flip, not a value
-  clamped to `0`. A large *positive* `fric` (probed: `10`, `15`, `100`, and
-  the type's maximum) left the object unchanged instead — see "Open
-  mismatches".
+- **`apply_fric`** (decompiled directly, `BaseObject::apply_fric`) divides
+  `|vel_x|` by `max_speed` first (`max_ground_speed` when grounded,
+  `max_air_speed` otherwise — this is `max_speed`, not `friction`: the
+  decompiled code checks *this* field for zero before dividing by it,
+  panicking on zero the same as a `Fixed::wrapping_div` by zero would),
+  then multiplies that quotient by the matching `friction`
+  (`ground_friction`/`air_friction`), then subtracts the signed result
+  from `vel_x`. `vel_y` is untouched: a probed call with `vel_x = "5"`,
+  `vel_y = "-3"` changed only `vel_x`. This division-then-multiply order
+  is not the same as computing a ratio `friction / max_speed` once and
+  multiplying `vel_x` by `1 - ratio`: the two are the same real number,
+  but round differently at each step (the same lesson
+  `tools/fixedmath_diff/README.md` documents for `lerp_string`'s
+  formula) — only the decompiled order reproduces the engine's raw value
+  exactly (`vel_x = "5"`, `ground_friction = "2.5"`,
+  `max_ground_speed = "15"` gives raw `273068`, the ratio-first order
+  gave `273070`). A zero `max_ground_speed`/`max_air_speed` is a division
+  by zero in the real library, caught as Nil, with the object left
+  unchanged.
+- **`apply_x_fric(fric)`/`apply_y_fric(fric)`** (decompiled by chasing the
+  dispatch chain to the method's own `ThisMethod::call`, see
+  "Reconstruction method" above) compute `vel_x - wrapping_mul(fric,
+  vel_x)` directly on the one axis named (the same formula as `v * (1 -
+  fric)`, but subtract-after-multiply, not a precomputed `1 - fric`
+  factor — another rounding-order difference), **but only store that
+  result when `fric < 0` or `fric < |vel_x|`**: a positive `fric` at or
+  past the current speed leaves the velocity unchanged, not clamped to
+  `0`. Confirmed by probing against this exact rule: `fric = "2.5"` from
+  `vel_x = "5"` applies (`2.5 < 5`) and gives `-7.5`; `fric = "10"`,
+  `"15"`, `"100"` from the same `vel_x = "5"` do not (none is `< 5`) and
+  leave `vel_x` at `5`; a negative `fric` of any magnitude, including the
+  type's minimum, always applies.
 - **`move_directly`/`move_directly_relative`** (and their `_str` siblings)
   add the given delta straight to the position (scaled by facing for the
   `_relative` pair, the same as `apply_force_relative`), then apply a
@@ -181,50 +222,43 @@ comparing.
 
 ## Open mismatches
 
-Both are reported, not hidden, the same policy `tools/fixedmath_diff`
-follows for its own two open mismatches (`angle_dist`, `sign`). Neither has
-a live call site anywhere close to the triggering values.
+`apply_x_fric`/`apply_y_fric`'s gate and `apply_fric`'s rounding order
+(the two largest mismatch classes in the first pass of this tool) were
+root-caused with `tools/ghidra` and fixed in `port/hustle_core/src/physics.rs`;
+see the per-method notes above for each one's decompiled evidence. One
+open mismatch remains, reported, not hidden, the same policy
+`tools/fixedmath_diff` follows for its own two open mismatches
+(`angle_dist`, `sign`):
 
-1. **`apply_fric`'s exact raw value is off by about 2 of 65536 units on
-   some configurations.** The ratio `friction / max_speed` and the formula
-   `vel_x * (1 - ratio)` reproduce the *decimal display* of every probed
-   case to 5 digits in most configurations, but not all: one probed case
-   (`friction = "2.5"`, `max_ground_speed = "15"`, `vel_x = "5"`) computed
-   raw `273070`, the game's own raw value is `273068`. This is a genuine
-   rounding-order difference (the same class `tools/fixedmath_diff/README.md`
-   documents for `lerp_string`'s formula), not resolved: the port's formula
-   is the simplest one that reproduces every other probed case exactly.
-2. **`apply_x_fric`/`apply_y_fric` do nothing for a large *positive*
-   `fric` argument.** Probed: `fric = "2.5"` (and every value below it,
-   including negative values of any magnitude, even the type's minimum)
-   applies the formula normally; `fric = "10"`, `"15"`, `"100"`, and the
-   type's maximum leave the object unchanged, as if the call panicked. No
-   boundary between `2.5` and `10` was probed, and no candidate rule (a
-   fixed constant, a comparison against `max_ground_speed`/`max_air_speed`,
-   a comparison against the current velocity) fit every probed point at
-   once. The port applies the formula unconditionally for every `fric`.
-3. **`apply_forces` with a pathological `gravity_modifier`** (the type's
-   minimum, fed through `apply_grav` then `apply_forces`) produced a huge
-   position change with `vel_y` left at `0` in the real game; the port's
-   formula (multiply, then integrate normally) instead changes both. This
-   is an overflow-wrapping difference at an input no real gameplay value
-   approaches (`gravity_modifier` is always a small positive multiplier in
-   the game's own data).
-
-None of the three affects any call observed on the six real matches (see
-"The result" below): every live replay call matched.
+**`apply_forces` with a pathological `gravity_modifier`.** The type's
+minimum value, fed through `apply_grav` then `apply_forces`, produced a
+huge position change with `vel_y` left at `0` in the real game; the
+port's formula (multiply, then integrate normally) changes both instead
+— an overflow-wrapping difference in the engine's own clamp code (which
+normalizes-and-rescales a value that is "too big" via a division, rather
+than a plain comparison-clamp, for reasons not traced in the time this
+task had). This is reported, not fixed, because the triggering input is
+unreachable from any real call site: `gravity_modifier` is set only by
+`game.gd`'s two `set_gravity_modifier(global_gravity_modifier)` calls
+(`game.gd:322,462-463`), fed only by the default `"1.0"`
+(`game.gd:113`) or by the settings UI's `GravityModifier` slider, which
+is bounded `0.1` to `5.0` in `ui/GameSettingsPanelContainer.tscn`. A
+second, smaller instance of the same overflow class remains in
+`apply_fric`, at `vel_x`/`vel_y` exactly at the type's minimum — also
+unreachable (the stage is at most 1000 pixels wide, and every speed cap
+in the game's own data is under 25; velocity never approaches `2^47`).
 
 ## The result
 
-**Edge-value probe: 11,115/11,173 calls matched exactly (99.5%).** Run
-2026-11-14 against a fresh build. The 58 mismatches are exactly the three
-open issues above: `apply_fric` (25 of 67, the raw-value rounding
-difference, present on every grounded/airborne combination it was probed
-with), `apply_x_fric`/`apply_y_fric` (4 of 17 each, the large-positive-`fric`
-no-op), and `apply_forces` (25 of 285, all from the one pathological
-`gravity_modifier` value fed through `apply_grav`). Every other method
-matched every probed call, including the full edge-value sweep on every
-setter and every integer-argument boundary.
+**Edge-value probe: 11,147/11,173 calls matched exactly (99.76%).** Run
+2026-11-15 after the `tools/ghidra`-confirmed fixes. The 26 remaining
+mismatches are the one open issue above: 25 in `apply_forces` (the
+`gravity_modifier`-overflow case, one call per probed grounded/airborne
+combination) and 1 in `apply_fric` (`vel_x`/`vel_y` at the type's exact
+minimum). Every other method, including `apply_fric`, `apply_x_fric`,
+and `apply_y_fric` on every other probed value, matched every probed
+call, including the full edge-value sweep on every setter and every
+integer-argument boundary.
 
 | Method | Probe calls | Matched |
 |---|---:|---:|
@@ -235,12 +269,12 @@ setter and every integer-argument boundary.
 | apply_force_str | 17 | 17 |
 | apply_forces | 285 | 260 |
 | apply_forces_no_limit | 17 | 17 |
-| apply_fric | 67 | 42 |
+| apply_fric | 67 | 66 |
 | apply_grav | 102 | 102 |
 | apply_grav_custom | 90 | 90 |
 | apply_pushback | 31 | 31 |
-| apply_x_fric | 17 | 13 |
-| apply_y_fric | 17 | 13 |
+| apply_x_fric | 17 | 17 |
+| apply_y_fric | 17 | 17 |
 | copy_to | 18 | 18 |
 | get_data | — | (checked as part of every other call's "after") |
 | get_facing | 129 | 129 |
@@ -270,6 +304,7 @@ setter and every integer-argument boundary.
 | set_x | 2 | 2 |
 | set_y | 2 | 2 |
 | update_grounded | 8 | 8 |
+
 
 **Real play: not completed in this task.** `container.sh`'s stage 2
 (`driver_live.py`, the 6 census replays at
