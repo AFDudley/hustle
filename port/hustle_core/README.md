@@ -163,9 +163,12 @@ carries zero axioms end to end.
   `tools/rng_diff/README.md`.
 - `tools/fgobject_diff` runs the game's native `FGObject` object physics
   against `physics.rs` on a large edge-value probe set and on six real
-  matches played through the live path: the probe set matched
-  11,115/11,173 calls (99.5%; the three open mismatches are documented
-  there). See `tools/fgobject_diff/README.md`.
+  matches played through the live path: as of this crate's last
+  completed run, 1,356,455/1,377,456 calls matched (probe plus six
+  live replays), with 33 objects' first mismatching call left open
+  across 4 methods. See `tools/fgobject_diff/README.md`, "Live stage",
+  for the exact count, the six decompile-derived fixes this task made,
+  and what is not yet done.
 - `tools/lean_check` runs Charon (MIR extraction) and Aeneas (LLBC → Lean
   translation) on this crate, then `lake build` on the result
   (`HustleCorePort` in `tools/lean_check/generated/`): 0 Aeneas errors,

@@ -417,3 +417,74 @@ writes `report.json` directly.
   `hustle_core` could complete end to end; see `port/hustle_core/README.md`
   and this task's final report for how `physics.rs` itself was verified
   instead, and for the exact blocking error.
+
+## Live stage: six real matches, and the first-divergence loop
+
+`container.sh`'s stage 2 is complete: six census replays, recorded
+against `localhost/hustle-replay-check`'s own live path, run through
+stage 3's comparator alongside the probe. The comparator's main loop
+for this work is `report.json`'s `first_mismatches` (also printed to
+the console): the first mismatching call per object, not every
+mismatch, since once one object's state diverges, most of its later
+calls mismatch too for the same root cause.
+
+Six formulas were wrong, each root-caused from a decompiled
+`ThisMethod::call` body (`tools/ghidra`, chasing the dispatch chain
+from `nativeclass_register` the same way this file's "Reconstruction
+method" section documents for `apply_x_fric`), not from probing:
+
+- `move_directly_str`/`move_directly_relative_str` (`ThisMethod::call`
+  `0x6de00`/`0x6d960`): touch only `position_x`/`position_y`; they
+  never zero `vel_y` or change `grounded`.
+- `apply_forces_no_limit` (`ThisMethod::call` `0x68760`): `grounded`
+  reads `position_y` from **before** this call's own move, not after.
+- `apply_forces` (`BaseObject::apply_forces`, `nm` symbol): `vel_y`
+  zeroes on landing only when the velocity that produced it was
+  downward; a minimum-speed rule zeroes both `vel_x` and `vel_y`
+  outright when `Fixed::vec_len(vel_x, vel_y)` is `6` raw units or
+  less; a `vec_len` overflow (the previously-open
+  pathological-`gravity_modifier` mismatch) leaves position and
+  velocity already committed but the pending force uncleared.
+- `apply_grav`/`apply_grav_custom` (`ThisMethod::call`
+  `0x6a7a0`/`0x6ab30`): `apply_grav` is `apply_grav_custom` with the
+  object's own `gravity`/`max_fall_speed`; neither gates on
+  `gravity_modifier`'s sign, and `apply_grav_custom` also scales its
+  `grav` argument by `gravity_modifier` (this crate's own earlier
+  belief that it does not was a probe artifact: every probe left
+  `gravity_modifier` at its default `1.0`).
+- `apply_pushback` (`ThisMethod::call` `0x678b0`): decays the
+  pushback accumulator by a fixed step on **every** call, with no
+  "already decayed" flag; also re-applies the position-Y snap on
+  every call.
+- `apply_force_str` (`ThisMethod::call` `0x68b10`): drops a
+  non-negative (downward or zero) `y` force outright while the
+  object is grounded; only a negative (upward) `y` is queued while
+  grounded. Found from the live replay's own first-divergence data
+  (object `692`), after the first five fixes above had already
+  eliminated every other method's first-divergence; `physics.rs`
+  carries this fix, but the next `container.sh` run (the one that
+  would confirm it) did not complete before this task's session
+  ended.
+
+Each fix's own commit (`git log` on `port-fgobject`) cites its
+address and the exact recorded call that proved it.
+
+**Result, before the sixth fix (`apply_force_str`):**
+`1,356,455/1,377,456` calls matched (probe plus six live replays).
+First-divergence: 33 objects across 4 methods (21 `apply_forces`, 7
+`apply_forces_no_limit`, 4 `apply_fric`, 1 `apply_pushback`) — of
+these, only 5 `apply_forces`, 7 `apply_forces_no_limit`, and 1
+`apply_pushback` were from the live replays; every `apply_fric`
+first-divergence was probe-only.
+
+**Not done**: rerun `container.sh` after the `apply_force_str` fix
+(it is expected to close most of the remaining live
+`apply_forces`/`apply_forces_no_limit` divergences, by this file's
+own evidence — a grounded object's spurious small `vel_y` the real
+engine left at `0`), diagnose whatever the live stage still shows
+after that, and prove every remaining probe-only mismatch
+unreachable from a real call site the same way the
+`gravity_modifier`/`apply_fric` edge cases already are. `cargo test`
+and `tools/lean_check/podman/translate.sh` were not run this
+session either. See this task's final report for the exact commands.
+
