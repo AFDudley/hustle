@@ -558,6 +558,25 @@ func _expand():
 		p2_candidates = p2_candidates.slice(0, cap - 1)
 	_write({"kind": "candidate_count", "tick": game.current_tick,
 		"p1": p1_candidates.size(), "p2": p2_candidates.size()})
+	# The job's own reference `game` has nothing left to do once branching
+	# starts (this job ends right after `_expand` returns), but its
+	# automatic physics_process would otherwise keep calling
+	# `process_tick()` every frame regardless of `game_paused` (game.gd
+	# `process_tick`'s own `can_tick` never reads `game_paused`), ticking
+	# `game` forward in the background while a branch child's own
+	# `_wait_decision`/`_wait_resolved` wait on *their* frame signals.
+	# This removes one source of contention between the two live Game
+	# instances now coexisting in one process, but it did NOT fix the
+	# open hang README.md "Known defect" now also names: a
+	# replay_prefix-rooted branch child's own `current_tick` stays frozen
+	# (traced directly -- `is_waiting_on_player()` never clears,
+	# `GhostStartTimer.is_stopped()` is true, `is_physics_processing()` is
+	# true, so neither of those gates it) even with `game` stopped here.
+	# Kept because it is still correct and harmless on its own terms --
+	# `game` truly has nothing left to do -- not because it is the fix.
+	# It is not an `is_ghost` change (the reference game was never a
+	# ghost, and still is not).
+	game.set_physics_process(false)
 	var base = job.get("base", job)
 	var prior_choices = job.get("choices", [])
 	for p1in in p1_candidates:

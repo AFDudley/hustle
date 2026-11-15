@@ -14,10 +14,15 @@ The corpus feeds the Rust port's acceptance check
 ghost `copy_to` branching for speed; its fidelity proof found a real,
 unresolved gap ("Ghost branching, historical note" below), so the
 operator's decision replaced it: LIVE is the only path this tool uses now,
-both to explore and to credit coverage -- see design point 6. "Cost
-measurement" below has the live-only branching's own measured cost. Step
-C (the coordinator) runs on this live-only design; see "Live progress"
-for its current counts.**
+both to explore and to credit coverage -- see design point 6. That
+rewrite works for a `match_start` root (tested at depth 1 and 2), but a
+`replay_prefix`-rooted branch hangs -- see "Blocking defect" below, found
+and traced this session, not resolved. **Step C (the coordinator) has
+not run to completion under the live-only design**: 5 of this run's 6
+roots are `replay_prefix` roots, so the search cannot proceed past them
+until this defect is fixed. No cost measurement or search results exist
+yet for the live-only design beyond the isolated `match_start` test
+named above.
 
 ### Ghost branching, historical note
 
@@ -76,6 +81,47 @@ earlier tick of the same replay, up to tick 706 tried individually).
 have found. This is a scope reduction from design point 3's "every
 decision point of each mirror" to "one decision point per mirror",
 named here, not hidden; the full scan's hang is unresolved.
+
+### Blocking defect: a `replay_prefix`-rooted branch child never ticks
+
+**This blocks the live-only design from running to completion and is
+not resolved.** `_build_child` (design point 6) replays a path's root on
+a brand-new, second `Game` node, live, in the same process as the job's
+own reference `game`. For a `match_start` root this works (tested at
+depth 1 and depth 2: `_expand` produces correct `branch` records). For a
+`replay_prefix` root it does not: the child's own `current_tick` freezes
+partway through replaying the root's recorded inputs (observed at the
+root's own last recorded tick, 53, one past `up_to_tick=50`) and never
+advances again. Traced directly, not guessed: `_wait_resolved`'s
+`physics_frame` signal keeps firing (confirmed by its own counter
+advancing past 6000+), so the engine's own frame loop is running, but
+`g.is_waiting_on_player()` (`p1.state_interruptable or
+p2.state_interruptable`) never clears, meaning the child's own
+`_physics_process`/`process_tick()`/`tick()` chain stops advancing the
+simulation. Two causes were checked and ruled out by direct
+measurement, not assumption: `$GhostStartTimer.is_stopped()` is `true`
+(so game.gd's own `if !$GhostStartTimer.is_stopped(): return` guard, in
+`_physics_process`, is not what blocks it) and `g.is_physics_processing()`
+is `true` (so the engine is still calling it). Disabling the reference
+`game`'s own `physics_process` while branching (added this session, see
+`_expand`) removes one real source of contention between the two live
+Game instances now coexisting in one process, but did not fix this
+hang -- confirmed by retesting after that change. The remaining cause is
+inside `game.gd`/`tick()`'s own per-frame logic, which this tool must
+not modify (committed game files are out of scope to change), so closing
+this defect needs either a non-committed-file workaround this session
+did not find in time, or an operator decision on how a second live Game
+instance is allowed to coexist with the job's reference `game`
+(candidate directions, not evaluated: track whichever Game instance's
+`tick()` genuinely needs to be "the" one `Global.current_game`/similar
+per-match singletons point to and swap it per branch, since `game.gd`
+line 464-465 unconditionally does `if !is_ghost: Global.current_game =
+self` on `start_game()`, so the second instance's `start_game()`
+silently repoints that singleton away from the reference `game` while
+`_expand` still reads `game.current_tick`/etc. directly, not through
+that singleton -- whether anything the child's own tick path reads
+*through* that singleton is the actual blocker was not checked before
+this session's time ran out).
 
 ### Cost measurement
 
