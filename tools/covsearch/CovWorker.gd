@@ -52,6 +52,8 @@ extends Node
 #
 # Output: one JSON object per line to job.out.
 const Legality = preload("res://tools/replay_check/Legality.gd")
+const StateSnapshot = preload("res://tools/replay_check/StateSnapshot.gd")
+const TraceHooks = preload("res://tools/replay_check/TraceHooks.gd")
 const GAME_SCENE = preload("res://Game.tscn")
 const ACTION_BUTTONS_SCENE = preload("res://ui/ActionSelector/ActionButtons.tscn")
 const SETTINGS_SCENE = preload("res://ui/GameSettingsPanelContainer.tscn")
@@ -78,6 +80,15 @@ var panels = []
 var recorded = {}
 var match_data = {}
 var finished = false
+# Twin verification (operator decision): an optional per-tick trace, the
+# same hash format tools/replay_check/TraceHooks.gd and StateSnapshot.gd
+# produce. Only `_verify_replay` (job.trace set) writes one: it is how
+# run.py's twin check proves an instrumented run and its uninstrumented
+# twin agree, tick for tick, not just at the final tick, before any
+# probe hit is credited. Absent `job.trace`, this file's cost and output
+# are unchanged.
+var trace = File.new()
+var ignore = {}
 
 func _ready():
 	OS.vsync_enabled = false
@@ -87,6 +98,12 @@ func _ready():
 	if out.open(job.out, File.WRITE) != OK:
 		_fail("cannot write " + str(job.out))
 		return
+	if job.has("trace"):
+		if trace.open(job.trace, File.WRITE) != OK:
+			_fail("cannot write " + str(job.trace))
+			return
+	for var_name in job.get("ignore", []):
+		ignore[var_name] = true
 	_run()
 
 func _read_job() -> Dictionary:
@@ -112,20 +129,43 @@ func _write(line: Dictionary):
 
 func _new_game():
 	game = GAME_SCENE.instance()
+	if trace.is_open():
+		var hooks = game.get_node("Hooks")
+		hooks.set_script(TraceHooks)
+		hooks.listener = funcref(self, "_on_post_tick")
 	add_child(game)
 
+# Same hash formula as tools/replay_check/ReplayCheck.gd _on_post_tick, so
+# a trace this file writes compares directly against one ReplayCheck.gd
+# writes for the same replay on the uninstrumented twin project.
+func _on_post_tick():
+	if finished or !trace.is_open():
+		return
+	var snap = StateSnapshot.game_state(game, ignore)
+	var obj_hashes = {}
+	for obj_name in snap.objs:
+		obj_hashes[obj_name] = JSON.print(snap.objs[obj_name], "", true).sha256_text()
+	var game_hash = JSON.print(snap.game, "", true).sha256_text()
+	var tick_hash = (game_hash + JSON.print(obj_hashes, "", true)).sha256_text()
+	trace.store_line(JSON.print({"t": game.current_tick, "h": tick_hash, "g": game_hash, "o": obj_hashes}, "", true))
+
 # --- root construction -------------------------------------------------
+
+func _close_outputs():
+	out.close()
+	if trace.is_open():
+		trace.close()
 
 func _run():
 	var base = job.get("base", job)
 	if base.mode == "verify_replay":
 		yield(_verify_replay(base.replay), "completed")
-		out.close()
+		_close_outputs()
 		get_tree().quit(0)
 		return
 	if base.mode == "replay_scan":
 		yield(_scan_replay(base.replay), "completed")
-		out.close()
+		_close_outputs()
 		get_tree().quit(0)
 		return
 	if job.has("write_replay"):
@@ -133,7 +173,7 @@ func _run():
 		if finished:
 			return
 		_write_replay(job.write_replay)
-		out.close()
+		_close_outputs()
 		get_tree().quit(0)
 		return
 	var action = job.get("action", "list_candidates")
@@ -145,7 +185,7 @@ func _run():
 			yield(_list_candidates(), "completed")
 	else:
 		_fail("unknown job action " + str(action))
-	out.close()
+	_close_outputs()
 	get_tree().quit(0)
 
 # Frees the current `Game` (if any) completely before a new one is built,
@@ -218,35 +258,66 @@ func _write_replay(name: String):
 # run.py's caller compares between two independent runs of the same
 # replay (corpus.check_fidelity): identical projection and identical
 # probe hits is the determinism check the brief asks for.
+#
+# Driven by game.gd's own "player_actionable" signal, one connection for
+# the whole match -- the same structure ReplayCheck.gd's "live" mode uses
+# -- not a top-level coroutine that chains a fresh
+# yield(_wait_decision(...), "completed") once per decision. README.md
+# "Closed: the real cause of the tick-~706 stall" has the evidence: the
+# chained-coroutine version hung, reproducibly, on a long match (200+
+# decisions), with or without any instrumentation at all, so
+# instrument.py was never the cause; this signal-based structure, driving
+# the same instrumented game code the same way ReplayCheck.gd does, does
+# not.
+var _live_turn_active = false
+var _live_done = false
+var _live_last_tick = -1
+
+func _on_live_actionable():
+	if _live_turn_active or finished or _live_done:
+		return
+	_live_turn_active = true
+	while !game.game_paused:
+		yield(get_tree(), "idle_frame")
+	while !(game.p1_turn or !game.p1.state_interruptable) or !(game.p2_turn or !game.p2.state_interruptable):
+		yield(get_tree(), "physics_frame")
+	var key = game.current_tick + 1
+	for id in [1, 2]:
+		var fighter = game.get_player(id)
+		var has_input = recorded[id].has(key)
+		if fighter.state_interruptable != has_input:
+			_fail("live path diverged at tick %d: player %d interruptable=%s, replay input=%s" % [game.current_tick, id, str(fighter.state_interruptable), str(has_input)])
+			return
+		if has_input:
+			var input = recorded[id][key]
+			fighter.on_action_selected(input["action"], input["data"], input["extra"])
+	while !finished and game.is_waiting_on_player():
+		yield(get_tree(), "physics_frame")
+	if game.current_tick >= _live_last_tick:
+		_live_done = true
+	_live_turn_active = false
+
 func _verify_replay(replay_path: String):
 	yield(get_tree(), "idle_frame")
 	match_data = ReplayManager.load_replay(replay_path)
 	recorded = ReplayManager.frames.duplicate(true)
-	var last_tick = -1
+	_live_last_tick = -1
 	for id in [1, 2]:
 		for t in recorded[id].keys():
-			last_tick = int(max(last_tick, int(t)))
+			_live_last_tick = int(max(_live_last_tick, int(t)))
 	ReplayManager.init()
 	ReplayManager.playback = false
 	_new_game()
 	if _rejected(game.start_game(true, match_data)):
 		_fail("start_game rejected the replay characters")
 		return
-	while game.current_tick < last_tick and !finished and !game.game_finished:
-		yield(_wait_decision(game), "completed")
-		if finished or game.game_finished:
-			break
-		var key = game.current_tick + 1
-		for id in [1, 2]:
-			var fighter = game.get_player(id)
-			var has_input = recorded[id].has(key)
-			if fighter.state_interruptable != has_input:
-				_fail("live path diverged at tick %d: player %d interruptable=%s, replay input=%s" % [game.current_tick, id, str(fighter.state_interruptable), str(has_input)])
-				return
-			if has_input:
-				var input = recorded[id][key]
-				fighter.on_action_selected(input["action"], input["data"], input["extra"])
-		yield(_wait_resolved(game), "completed")
+	_live_done = false
+	_live_turn_active = false
+	game.connect("player_actionable", self, "_on_live_actionable")
+	while !_live_done and !finished and !game.game_finished:
+		yield(get_tree(), "physics_frame")
+	if game.is_connected("player_actionable", self, "_on_live_actionable"):
+		game.disconnect("player_actionable", self, "_on_live_actionable")
 	_write({"kind": "verify_result", "final_tick": game.current_tick,
 		"game_over": game.game_finished, "projection": _projection(game),
 		"hit_ids": _hit_ids()})
@@ -392,35 +463,36 @@ func _make_panels():
 	panels[0].init(game, 1)
 	panels[1].init(game, 2)
 
-# Waits for game.gd's turn-start block (two frames, as in ReplayCheck.gd).
-# Parameterized by `g` so the same, single, trusted mechanism drives every
-# live Game this file ever builds. Prints the game's own tick, game_paused
-# and the turn/interruptable flags every 30 seconds while a wait runs long
-# -- the brief's own diagnostic for a stall -- but this never fired during
-# this session's reproduction of README.md "Known defect": that stall is
-# a non-yielding native loop, not a condition this polling loop is slow
-# to satisfy, so no print from here ever sees it in flight.
+# Waits for the next genuine decision point: at least one player actually
+# interruptable (g.is_waiting_on_player()), the same test every other
+# check in this file and in tools/replay_check/ReplayCheck.gd uses to
+# recognise one. Kept for this file's remaining tree-search call sites
+# (_scan_replay, _start_match, _start_replay_prefix, _apply_pair_live --
+# all scheduled for removal when the coverage-guided fuzzer replaces the
+# tree search; see README.md). _verify_replay no longer calls this: see
+# its own header comment for why (README.md "Closed: the real cause of
+# the tick-~706 stall"). Polls is_waiting_on_player() directly, once,
+# over "physics_frame" only, instead of the two intermediate flags the
+# first version of this function derived it from (g.game_paused over
+# "idle_frame", then g.p1_turn/g.p2_turn over "physics_frame") -- a
+# needless indirection now that is_waiting_on_player() is the one test
+# every caller actually wants. The leading, unconditional yield
+# guarantees this function always returns a GDScriptFunctionState (a
+# yield that never runs at all, because the wait condition was already
+# satisfied, would instead return this function's plain, non-coroutine
+# result, and every caller here awaits it with
+# yield(_wait_decision(...), "completed"), which requires an object).
 func _wait_decision(g):
-	yield(get_tree(), "idle_frame")
+	yield(get_tree(), "physics_frame")
 	var waited_frames = 0
-	while !g.game_paused and !g.game_finished and !finished:
-		yield(get_tree(), "idle_frame")
-		waited_frames += 1
-		if waited_frames % 1800 == 0:
-			printerr("COVSEARCH_WAIT_STALL phase=wait_paused tick=%d game_paused=%s game_finished=%s p1_interruptable=%s p2_interruptable=%s" % [g.current_tick, str(g.game_paused), str(g.game_finished), str(g.p1.state_interruptable), str(g.p2.state_interruptable)])
-	if g.game_finished or finished:
-		return
-	waited_frames = 0
-	while !(g.p1_turn or !g.p1.state_interruptable) or !(g.p2_turn or !g.p2.state_interruptable):
+	while !finished and !g.game_finished and !g.is_waiting_on_player():
 		yield(get_tree(), "physics_frame")
 		waited_frames += 1
 		if waited_frames % 1800 == 0:
-			printerr("COVSEARCH_WAIT_STALL phase=wait_turns tick=%d game_paused=%s p1_turn=%s p2_turn=%s p1_interruptable=%s p2_interruptable=%s" % [g.current_tick, str(g.game_paused), str(g.p1_turn), str(g.p2_turn), str(g.p1.state_interruptable), str(g.p2.state_interruptable)])
-		if g.game_finished:
-			return
+			printerr("COVSEARCH_WAIT_STALL phase=wait_decision tick=%d game_paused=%s p1_interruptable=%s p2_interruptable=%s" % [g.current_tick, str(g.game_paused), str(g.p1.state_interruptable), str(g.p2.state_interruptable)])
 
 func _wait_resolved(g):
-	yield(get_tree(), "idle_frame")
+	yield(get_tree(), "physics_frame")
 	while !finished and !g.game_finished and g.is_waiting_on_player():
 		yield(get_tree(), "physics_frame")
 

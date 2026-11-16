@@ -121,6 +121,12 @@ func _generate():
 	var match_data = settings.get_data()
 	remove_child(settings)
 	settings.free()
+	# Optional per-job override (tools/covsearch's "measure free coverage"
+	# step: a few hundred random-tournament-settings matches). Absent or
+	# empty, this changes nothing: every other caller keeps the panel's
+	# own defaults.
+	for key in job.get("settings", {}):
+		match_data[key] = job.settings[key]
 	match_data["singleplayer"] = true
 	match_data["selected_characters"] = {1: {"name": job.p1}, 2: {"name": job.p2}}
 	match_data["seed"] = int(job.seed)

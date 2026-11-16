@@ -10,43 +10,99 @@ The corpus feeds the Rust port's acceptance check
 
 ## Status at the last commit (read this before resuming)
 
-**Steps A, B and C are committed and run to completion.** The branching
-rework replaced the in-process second-Game design with one live Game per
-build, never two at once (`CovWorker.gd` job actions `list_candidates`
-and `branch_batch`; see "Branching, live-only" below). This closed the
-two-Game concurrency defect, and a second, independent stall found while
-validating it (a `replay_prefix` root's construction could land on a
-non-genuine tick) is fixed too (`_start_replay_prefix` now always ends on
-a real `_wait_decision`).
+**Operator decision, this session: source-level instrumentation is
+retired.** `instrument.py` rewrote each in-scope `.gd` file's text to
+insert counters, so the instrumented game code was never byte-identical
+to the committed code; "fix instrument.py so instrumented code behaves
+exactly like the original" asked this tool to keep proving that by
+comparison instead of making it true by construction. The replacement
+(`tools/godot_cov/`, in progress) patches the Godot engine's own
+GDScript VM to count opcodes natively, so every game script this tool
+runs is the exact, unmodified committed file -- there is no instrumented
+copy of the source left to diverge. `tools/covsearch/instrument.py` and
+`tools/coverage/instrument.py` stop being used by this tool once
+`tools/godot_cov` is wired in (see "Next" below); they are not deleted
+yet because `tools/coverage`'s own README and callers still reference
+the line-only instrumenter, and retiring that is a separate decision for
+whoever owns `tools/coverage`, not implied by covsearch's own switch.
 
-**This session closed the `replay_scan` hang and removed every time- or
-iteration-based stop the search had.** See "Closed: the `replay_scan`
-hang past tick ~700" below for the root-cause evidence: a genuine,
-CPU-bound native loop that only the instrumented project reaches, not a
-condition this tool's own polling code is slow to satisfy. The fix is in
-`run.py`'s `scan_roots`, not a `--stop-tick` cutoff (removed): it now
-catches the `WorkerStalled` timeout this tool already raises for any
-stuck job and keeps every `root_tick` record the stalled job wrote
-before the kill. `coordinator.run`'s scheduling is now a parallel
-frontier (several frontier nodes' `list_candidates` and `branch_batch`
-jobs share the one `--jobs`-wide worker pool at once, instead of one
-node at a time; design point 11), measured at 3.45 branches/second
-aggregate in a bounded test against this run's own roots, against the
-first session's 1.825/s (see "Cost measurement"). `coordinator.run` also
-checkpoints its full state every 120 seconds (`<out>/checkpoint.json`)
-and resumes from it automatically, and `--time-budget` is removed: the
-only termination reasons left are `all_probes_hit` and
-`frontier_exhausted`. On a `frontier_exhausted` exit,
-`classify_unreachable` (`coordinator.py`) gives every unhit probe a
-reason it can prove from the probe's own source line and this tool's own
-driving code, or reports it as `"UNEXPLAINED"` and fails the run -- see
-design point 8.
+**The tree search (coordinator.py, roots.json, CovWorker.gd's
+`list_candidates`/`branch_batch`/`replay_scan`/`match_start`/
+`replay_prefix`) is retired too, superseded by coverage-guided fuzzing of
+whole matches (operator decision, separately communicated).** The
+background `coordinate` run this file's live-progress block used to
+track is no longer running (its process did not survive past the
+session that started it) and will not be resumed: resuming it would
+keep measuring coverage with the retired search algorithm. The design
+points, cost measurements and defect write-ups below this point are kept
+as a historical record of what was tried and why each attempt was
+replaced, not as the current design -- read "Closed: the real cause of
+the tick-~706 stall" next for the one finding from that work that
+carries forward unchanged: a real bug in this tool's own driving code,
+found and fixed independently of either instrumentation approach.
 
-**The full, uncapped search against the 6 roots below is running in the
-background as of this commit.** See "Current run" below for its exact
-launch command, how to check its live progress, how to resume it if it
-stops, and the commands to run once it reaches a true termination
-(`corpus` then `fidelity`).
+### Closed: the real cause of the tick-~706 stall
+
+**Root-caused this session by direct bisection, not by the explanation
+the previous session recorded.** The previous session's README said a
+`replay_scan`/`_verify_replay` job on `replays/A/Ninja_Ninja_1.replay`
+hit a "genuine, CPU-bound native loop that only the instrumented project
+reaches" and treated it as an unfixable property of instrumented code,
+working around it by catching the job's own timeout and salvaging
+partial output. That diagnosis does not hold up:
+
+1. `tools/replay_check`'s own "live" mode (`ReplayCheck.gd`, this
+   tool's own instrumented project copy, full line+branch+value_class
+   instrumentation) played all 5 Ninja mirrors to completion with no
+   stall, each in under 90 seconds.
+2. `CovWorker.gd`'s `_verify_replay`, run directly on that same
+   instrumented copy, reliably stalled on `Ninja_Ninja_1.replay` (900+
+   seconds, 85-100% CPU, zero output -- the exact symptom the previous
+   session recorded).
+3. The same `_verify_replay` call, run on a copy with every in-scope
+   file completely unmodified -- only the `__COV__` autoload registered,
+   `Probe.gd`'s own `SIZE` left at 0, zero probes anywhere -- stalled
+   the same way. Instrumentation was eliminated as the cause by this
+   control: the committed game files were untouched and it still hung.
+
+The defect was in `CovWorker.gd` itself: `_verify_replay`'s outer loop
+chained a fresh `yield(_wait_decision(...), "completed")` once per
+decision, hundreds of times over one 200+-turn match, instead of
+connecting once to `game.gd`'s own `"player_actionable"` signal the way
+`tools/replay_check/ReplayCheck.gd`'s "live" mode does. `_verify_replay`
+is rewritten to the same signal-based structure ReplayCheck.gd uses
+(`_on_live_actionable`, one `game.connect(...)` for the whole match) and
+now completes `Ninja_Ninja_1.replay` in 32 seconds, matching
+`ReplayCheck.gd`'s own final state (`p1_hp: 0, p2_hp: 820, final_tick:
+2575`) exactly. `_wait_decision`/`_wait_resolved` are simplified in
+place (one direct poll of `game.is_waiting_on_player()` over
+`"physics_frame"`, replacing two derived flags polled over two different
+frame types) for this file's remaining tree-search call sites, which are
+retired along with the tree search itself and not separately verified
+against a long match.
+
+**Proof instrument.py (before its retirement) did not change behaviour,
+for the record:** `tools/replay_check/run.py`'s own `compare_traces`,
+applied to all 5 Ninja mirrors' per-tick hash traces from `ReplayCheck.gd`
+"live" runs on the plain project against the fully instrumented one --
+**0 differing ticks on all 5 mirrors** (2576, 3135, 986, 1365 and 2993
+ticks respectively, tick counts and every hash equal). This is kept as
+evidence that the source-rewriting approach was sound while it was used,
+not as a reason to keep it: see the retirement note above for why the
+engine-patch approach replaces it anyway.
+
+`run.py`'s `scan_roots` no longer catches `WorkerStalled` and salvages
+partial output (the previous session's workaround for a diagnosis that
+was wrong): a stall is now a real, surfaced failure. `scan_roots` itself
+has no caller once the tree search is retired.
+
+### Next
+
+`tools/godot_cov/` (operator decision): a patched Godot/GodotSteam build
+that counts GDScript VM opcodes natively (`OPCODE_LINE` for line
+coverage, `OPCODE_JUMP_IF`/`OPCODE_JUMP_IF_NOT` taken/not-taken for
+branch coverage), so covsearch stops rewriting source files at all. In
+progress; see commits after this one.
 
 ### Ghost branching, historical note
 
@@ -239,45 +295,33 @@ SAME node's `branch_batch` fan-out (the fan-out needs the candidate list
 the list job produces), so the parallel frontier's gain comes only from
 overlapping DIFFERENT nodes' phases -- stated here, not hidden.
 
-### Live progress
+### Live progress (retired, historical)
 
-`coordinator.run` checkpoints its full state -- the frontier, `hit_ids`,
-`seen_buckets`, `kept_paths`, `legality_diffs`, `stalled_nodes` and every
-internal counter -- to `<out>/checkpoint.json` every 120 wall-clock
-seconds, written to a temp file and renamed so a kill mid-write never
-leaves a corrupt checkpoint. The next `coordinate` invocation against the
-same `--out` directory loads this file automatically (ignoring `--roots`,
-which only seeds a brand new search) and resumes the same frontier,
-instead of starting over. `write_progress` also rewrites both
-`<out>/progress.json` and the block below, in this file, every 90
-wall-clock seconds while it runs (`container.sh` mounts this one file
-read-write for that; see its own comment), so a stop loses no more than
-90 seconds of progress, not the whole run. See "Current run" below for
-this run's own launch command and how to check or resume it; the numbers
-below are its own last checkpoint as of whenever this file was last
-read -- read `<out>/progress.json` directly for the current number at
-any time.
+This section, and the design points, "Running it", "Final report" and
+"Current run" sections below it, describe the retired tree-search
+coordinator (`coordinator.py`); see "Status at the last commit" above.
+The block below is the last checkpoint the retired background run
+reached before its process did not survive past the session that
+started it. It is not live, and this file no longer rewrites it.
 
-<!-- LIVE-PROGRESS:BEGIN -->
 ```json
 {
-  "jobs_done": 373,
+  "jobs_done": 699,
   "hit_count": 2134,
   "total_probes": 8728,
-  "kept_paths": 103,
-  "frontier_size": 56,
-  "in_flight": 98,
+  "kept_paths": 135,
+  "frontier_size": 41,
+  "in_flight": 108,
   "legality_diffs": 0,
   "stalled_nodes": 0,
-  "branches_recorded": 1416,
-  "ticks_simulated": 56298,
-  "branches_per_second": 5.076923351715814,
-  "ticks_per_second": 201.8507280048707
+  "branches_recorded": 2631,
+  "ticks_simulated": 124726,
+  "branches_per_second": 3.8690547086669023,
+  "ticks_per_second": 183.41760455841433
 }
 ```
-<!-- LIVE-PROGRESS:END -->
 
-## The thirteen design points, and where each one lives
+## The thirteen design points, and where each one lives (retired, historical)
 
 1. **Scope and probes.** `instrument.py`'s `IN_SCOPE_DIRS` /
    `IN_SCOPE_FILES` / `IN_SCOPE_GLOBS` name exactly the files the brief
@@ -420,7 +464,7 @@ any time.
     corpus directly, and `port-step`'s `project` command (which reads a
     replay directory the same way, per its own README) does too.
 
-## Running it
+## Running it (retired, historical)
 
 ```sh
 tools/covsearch/container.sh prepare
@@ -444,7 +488,7 @@ path: `container.sh` only special-cases `--out`/`--roots` for its own
 read-write mount, and a relative path does not resolve against the
 repository root inside the container.
 
-## Final report (first session, time-budget stopped)
+## Final report (retired, historical; first session, time-budget stopped)
 
 `coordinate --roots roots.json --out report/ --jobs 8 --max-per-player 6
 --time-budget 1500` on the 6 roots above, before this session removed
@@ -480,7 +524,7 @@ played each of the 16 entries' replay twice through `CovWorker.gd`'s
 `verify_replay` mode (design step 10): **16/16 entries deterministic**
 (`corpus/fidelity_report.json`, `"pass": true`).
 
-## Current run (this session, no time budget)
+## Current run (retired, historical; this session, no time budget)
 
 Launched after the fixes above, against the same 6 roots, to run to a
 true termination (`all_probes_hit` or `frontier_exhausted`), checkpointed
@@ -532,7 +576,7 @@ exited 1 (design step 8): read `report.json["unreachable"]` for the
 `classify_unreachable` with a new, provable fact or treat the gap as a
 real, unresolved finding -- never invent a reason to clear it.
 
-## Next step
+## Next step (retired, historical)
 
 1. `classify_unreachable` proves only the ghost/network/spectating/
    replay-undo family of facts (design step 8); it does not attempt a

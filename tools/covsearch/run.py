@@ -119,40 +119,32 @@ def scan_roots(work: rc_run.Work, replays: list[str], out_path: Path, roots_per_
     only records a tick where some player is actually interruptable, not
     just wherever the scan happened to stop).
 
-    `replay_scan` plays a mirror all the way to its own last recorded
-    tick, live, decision by decision. One root this session,
-    `replays/A/Ninja_Ninja_1.replay`, reliably runs the single Godot
-    process at 85-100% CPU with no further output starting around tick
-    706 -- confirmed this session to be specific to driving this replay
-    through this tool's own instrumented project, not to the replay or
-    the game code: a fresh, uninstrumented `tools/replay_check` "live"
-    run of the same replay completes the whole match (2,576 ticks) in
-    about 90 seconds, and `CovWorker.gd _verify_replay` (the same live
-    input-application loop, with no legality-report side work)
-    reproduces the same stall independently of `_scan_replay`, which
-    rules out a bug in `_scan_replay`'s own extra work as the cause. No
-    committed game file may change to chase this further (see README.md
-    "Known defect" for the full evidence trail). `run_worker`'s own
-    per-job timeout (`JOB_TIMEOUT_S`) already kills a job that runs this
-    long and raises `WorkerStalled`, the same signal `coordinator.run()`
-    already treats as "drop this one node, keep the rest of the search"
-    rather than a crash. `scan_roots` applies the same rule here: on a
-    stall, it reads whatever `root_tick` records `_scan_replay` already
-    wrote to the job's own output file before the kill (a line the kill
-    cut off mid-write is simply skipped, not treated as a parse error),
-    instead of losing the whole mirror's scan or capping every mirror's
-    scan at one hand-picked tick up front, which this tool no longer
-    does.
+    A `replay_scan` job used to reliably stall on `replays/A/
+    Ninja_Ninja_1.replay` around tick 706, which the previous session
+    attributed to instrument.py and worked around here by catching
+    `WorkerStalled` and salvaging whatever `root_tick` records the job
+    had written before the kill. That diagnosis was wrong: README.md
+    "Closed: the real cause of the tick-~706 stall" shows the hang
+    reproduced on CovWorker.gd's `_verify_replay` with EVERY in-scope
+    file completely unmodified (only the `__COV__` autoload registered,
+    zero probes), so instrument.py was never the cause. The real defect
+    was CovWorker.gd's own `_wait_decision`/`_wait_resolved`: a
+    single, long-lived coroutine (`_verify_replay`'s own outer loop)
+    chaining a fresh `yield(_wait_decision(...), "completed")` once per
+    decision, hundreds of times over one match, instead of the one
+    signal connection `tools/replay_check/ReplayCheck.gd`'s "live" mode
+    uses. `_verify_replay` is fixed (now driven by game.gd's own
+    "player_actionable" signal, like ReplayCheck.gd). `_scan_replay`
+    still has the old shape and is not separately fixed here: it has no
+    caller once the coverage-guided fuzzer replaces the tree search
+    (open item, not hidden), so a stall here is now a real, surfaced
+    failure (`WorkerStalled` propagates) instead of a silently salvaged
+    partial scan.
     """
     roots = [{"mode": "match_start", "seed": 1}]
     for i, replay in enumerate(replays):
         name = f"scan{i}"
-        job_out = work.jobs / f"{name}.jsonl"
-        try:
-            out = run_worker(work, name, {"base": {"mode": "replay_scan", "replay": replay}})
-        except WorkerStalled as exc:
-            print(f"{replay}: {exc}; keeping the root_tick records it wrote before the stall", file=sys.stderr)
-            out = job_out
+        out = run_worker(work, name, {"base": {"mode": "replay_scan", "replay": replay}})
         found = 0
         for line in out.read_text().splitlines():
             try:

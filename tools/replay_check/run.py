@@ -363,6 +363,7 @@ def generate_job(
     trace: Path,
     dump_tick: int | None = None,
     dump: Path | None = None,
+    settings: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     job: dict[str, Any] = {
         "mode": "generate",
@@ -376,6 +377,8 @@ def generate_job(
         "feint_chance": 0.2,
         "extra_toggle_chance": 0.2,
     }
+    if settings:
+        job["settings"] = settings
     if dump_tick is not None and dump is not None:
         job["dump_ticks"] = [dump_tick]
         job["dump"] = str(dump)
