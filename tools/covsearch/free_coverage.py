@@ -63,13 +63,46 @@ TOURNAMENT_OVERRIDE = {
 MIRROR_DIR = Path(
     "/home/rix/code/git_puller/repos/hustle/.scratch/coverage_baseline/replays/AB"
 )
-MIRROR_REPLAYS = [
-    MIRROR_DIR / "Ninja_Ninja_1.replay",
-    MIRROR_DIR / "Ninja_Ninja_2.replay",
-    MIRROR_DIR / "1533592845041143808_2026-8-3-9-43-19.replay",
-    MIRROR_DIR / "1535523695794323456_2026-8-8-17-38-26.replay",
-    MIRROR_DIR / "1554714058161389618_DokuZyN_v_alex_2026-9-30-0-34-10.replay",
-]
+_HUMAN = Path("/home/rix/code/git_puller/repos/hustle/.scratch/coverage_baseline/replays/B")
+# Mirrors per character: this tool's own two earlier tournament-settings
+# generations (<Char>_<Char>_1/2, in replays/AB) plus every human
+# 1.10.0-steam mirror of that character in set B (found through
+# .scratch/settings/settings.jsonl, "chars" equal to [Char, Char]).
+MIRRORS_BY_CHARACTER = {
+    "Ninja": [
+        MIRROR_DIR / "Ninja_Ninja_1.replay",
+        MIRROR_DIR / "Ninja_Ninja_2.replay",
+        MIRROR_DIR / "1533592845041143808_2026-8-3-9-43-19.replay",
+        MIRROR_DIR / "1535523695794323456_2026-8-8-17-38-26.replay",
+        MIRROR_DIR / "1554714058161389618_DokuZyN_v_alex_2026-9-30-0-34-10.replay",
+    ],
+    "Cowboy": [
+        MIRROR_DIR / "Cowboy_Cowboy_1.replay",
+        MIRROR_DIR / "Cowboy_Cowboy_2.replay",
+        _HUMAN / "1521009085795799190_Redmushroom_v_inf1n1teun1ver3e_2026-6-28-22-52-27.replay",
+        _HUMAN / "1523738059403690277_Dude_I_was_STYLING_let_me_DO_IT.replay",
+        _HUMAN / "1525175551705223208_GVB20off20VLA20DC20by20hitting20with20bullet20only20120frame20before20the20hitbox20refreh20on202nd20frame20after20bounce.replay",
+        _HUMAN / "1526196370514509905_ELFHOOT20TIMEHIFTKIP.replay",
+    ],
+    "Wizard": [
+        MIRROR_DIR / "Wizard_Wizard_1.replay",
+        MIRROR_DIR / "Wizard_Wizard_2.replay",
+        _HUMAN / "1523900833585172560_insanewizardfight.replay",
+        _HUMAN / "1556322703336673381_Wizzard_Finger.replay",
+    ],
+    "Robot": [
+        MIRROR_DIR / "Robot_Robot_1.replay",
+        MIRROR_DIR / "Robot_Robot_2.replay",
+    ],
+    "Mutant": [
+        MIRROR_DIR / "Mutant_Mutant_1.replay",
+        MIRROR_DIR / "Mutant_Mutant_2.replay",
+        _HUMAN / "1532129511037210886_brain_mash.replay",
+        _HUMAN / "1536213834564378754_mutant_.replay",
+        _HUMAN / "1553938256322633758_DokuZyN_v_Harry__Co_2026-9-27-20-26-15.replay",
+    ],
+}
+MIRROR_REPLAYS = MIRRORS_BY_CHARACTER["Ninja"]
 
 
 def prepare_plain(work: rc_run.Work) -> None:
@@ -146,6 +179,7 @@ def run(
     seed_start: int,
     mirrors: list[Path],
     time_budget_s: float | None,
+    character: str = "Ninja",
 ) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     replays_dir = out_dir / "replays"
@@ -195,7 +229,7 @@ def run(
         def make_generate(seed=seed, name=name, replay_out=replay_out):
             def generate_fn() -> Path:
                 job = rc_run.generate_job(
-                    "Ninja", "Ninja", seed, replay_out,
+                    character, character, seed, replay_out,
                     work_plain.jobs / f"{name}.gentrace",
                     settings=TOURNAMENT_OVERRIDE,
                 )

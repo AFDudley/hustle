@@ -186,6 +186,7 @@ def main() -> int:
     fc_p.add_argument("--jobs", type=int, default=8)
     fc_p.add_argument("--seed-start", type=int, default=1)
     fc_p.add_argument("--time-budget", type=float, default=None, help="stop submitting new matches after this many seconds; matches already submitted still finish")
+    fc_p.add_argument("--character", default="Ninja", choices=sorted(cs_instrument.CHARACTER_DIRS), help="the character of the mirror match; its own directory is instrumented with the shared code")
     args = parser.parse_args()
 
     rc_run.start_display()
@@ -232,9 +233,11 @@ def main() -> int:
         work_root = args.work.resolve()
         work_plain = rc_run.Work(root=work_root / "plain")
         work_instr = rc_run.Work(root=work_root / "instr", coverage=work_root / "instr_coverage")
+        cs_instrument.set_character(args.character)
         summary = free_coverage.run(
             work_plain, work_instr, prepare, args.out.resolve(), args.n, args.jobs,
-            args.seed_start, free_coverage.MIRROR_REPLAYS, args.time_budget,
+            args.seed_start, free_coverage.MIRRORS_BY_CHARACTER[args.character], args.time_budget,
+            character=args.character,
         )
         print(json.dumps(summary, indent=2))
         return 0

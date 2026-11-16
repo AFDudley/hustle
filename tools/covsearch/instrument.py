@@ -87,10 +87,25 @@ IN_SCOPE_FILES = (
     "ObjectState.gd",
     "characters/states/CharState.gd",
 )
-IN_SCOPE_GLOBS = (
+# The shared code is always in scope. One character's own directory is also
+# in scope; set_character() chooses it before instrument() runs. The
+# default is Ninja (characters/stickman).
+CHARACTER_DIRS = {
+    "Ninja": "stickman",
+    "Cowboy": "swordandgun",
+    "Wizard": "wizard",
+    "Robot": "robo",
+    "Mutant": "mutant",
+}
+IN_SCOPE_GLOBS = [
     "characters/states/*.gd",
     "characters/stickman/**/*.gd",
-)
+]
+
+
+def set_character(name: str) -> None:
+    """Put the named character's own directory in scope, in place of Ninja's."""
+    IN_SCOPE_GLOBS[1] = f"characters/{CHARACTER_DIRS[name]}/**/*.gd"
 
 
 def in_scope(rel: Path) -> bool:
