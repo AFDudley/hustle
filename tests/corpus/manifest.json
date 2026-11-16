@@ -1,0 +1,230 @@
+{
+  "run": "covrun",
+  "probes": 10097,
+  "matches": [
+    {
+      "replay": "tests/replays/covrun/b3_6.replay",
+      "adds_probes": 6127
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Ninja_4.replay",
+      "adds_probes": 1348
+    },
+    {
+      "replay": "tests/replays/covrun/b14_1.replay",
+      "adds_probes": 841
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Cowboy_2.replay",
+      "adds_probes": 335
+    },
+    {
+      "replay": "tests/replays/covrun/b17_7.replay",
+      "adds_probes": 259
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Wizard_2.replay",
+      "adds_probes": 204
+    },
+    {
+      "replay": "tests/replays/covrun/b13_4.replay",
+      "adds_probes": 152
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Mutant_3.replay",
+      "adds_probes": 118
+    },
+    {
+      "replay": "tests/replays/covrun/b2_3.replay",
+      "adds_probes": 89
+    },
+    {
+      "replay": "tests/replays/covrun/b10_2.replay",
+      "adds_probes": 89
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Cowboy_1.replay",
+      "adds_probes": 66
+    },
+    {
+      "replay": "tests/replays/covrun/b2_0.replay",
+      "adds_probes": 61
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Cowboy_3.replay",
+      "adds_probes": 54
+    },
+    {
+      "replay": "tests/replays/covrun/b15_0.replay",
+      "adds_probes": 46
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Robot_0.replay",
+      "adds_probes": 30
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Mutant_2.replay",
+      "adds_probes": 28
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Mutant_1.replay",
+      "adds_probes": 20
+    },
+    {
+      "replay": "tests/replays/covrun/b13_7.replay",
+      "adds_probes": 20
+    },
+    {
+      "replay": "tests/replays/covrun/b4_4.replay",
+      "adds_probes": 16
+    },
+    {
+      "replay": "tests/replays/covrun/b10_6.replay",
+      "adds_probes": 16
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Wizard_1.replay",
+      "adds_probes": 15
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Ninja_1.replay",
+      "adds_probes": 13
+    },
+    {
+      "replay": "tests/replays/covrun/b4_5.replay",
+      "adds_probes": 12
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Ninja_3.replay",
+      "adds_probes": 9
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Cowboy_4.replay",
+      "adds_probes": 9
+    },
+    {
+      "replay": "tests/replays/covrun/b4_3.replay",
+      "adds_probes": 8
+    },
+    {
+      "replay": "tests/replays/covrun/b1_5.replay",
+      "adds_probes": 8
+    },
+    {
+      "replay": "tests/replays/covrun/b12_7.replay",
+      "adds_probes": 7
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Wizard_3.replay",
+      "adds_probes": 6
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Wizard_0.replay",
+      "adds_probes": 6
+    },
+    {
+      "replay": "tests/replays/covrun/b8_1.replay",
+      "adds_probes": 6
+    },
+    {
+      "replay": "tests/replays/covrun/b12_3.replay",
+      "adds_probes": 6
+    },
+    {
+      "replay": "tests/replays/covrun/b10_1.replay",
+      "adds_probes": 6
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Cowboy_5.replay",
+      "adds_probes": 5
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Robot_1.replay",
+      "adds_probes": 4
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Mutant_0.replay",
+      "adds_probes": 4
+    },
+    {
+      "replay": "tests/replays/covrun/b6_3.replay",
+      "adds_probes": 4
+    },
+    {
+      "replay": "tests/replays/covrun/b5_7.replay",
+      "adds_probes": 4
+    },
+    {
+      "replay": "tests/replays/covrun/b14_7.replay",
+      "adds_probes": 4
+    },
+    {
+      "replay": "tests/replays/covrun/b14_5.replay",
+      "adds_probes": 4
+    },
+    {
+      "replay": "tests/replays/covrun/b11_2.replay",
+      "adds_probes": 4
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Mutant_4.replay",
+      "adds_probes": 3
+    },
+    {
+      "replay": "tests/replays/covrun/b9_5.replay",
+      "adds_probes": 3
+    },
+    {
+      "replay": "tests/replays/covrun/b9_3.replay",
+      "adds_probes": 3
+    },
+    {
+      "replay": "tests/replays/covrun/b6_2.replay",
+      "adds_probes": 3
+    },
+    {
+      "replay": "tests/replays/covrun/b3_1.replay",
+      "adds_probes": 3
+    },
+    {
+      "replay": "tests/replays/covrun/b12_0.replay",
+      "adds_probes": 3
+    },
+    {
+      "replay": "tests/replays/covrun/b10_5.replay",
+      "adds_probes": 3
+    },
+    {
+      "replay": "tests/replays/covrun/rec_Ninja_0.replay",
+      "adds_probes": 2
+    },
+    {
+      "replay": "tests/replays/covrun/b6_7.replay",
+      "adds_probes": 2
+    },
+    {
+      "replay": "tests/replays/covrun/b16_6.replay",
+      "adds_probes": 2
+    },
+    {
+      "replay": "tests/replays/covrun/b15_2.replay",
+      "adds_probes": 2
+    },
+    {
+      "replay": "tests/replays/covrun/b12_2.replay",
+      "adds_probes": 2
+    },
+    {
+      "replay": "tests/replays/covrun/b8_5.replay",
+      "adds_probes": 1
+    },
+    {
+      "replay": "tests/replays/covrun/b7_6.replay",
+      "adds_probes": 1
+    },
+    {
+      "replay": "tests/replays/covrun/b13_5.replay",
+      "adds_probes": 1
+    }
+  ]
+}

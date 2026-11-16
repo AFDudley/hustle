@@ -8,10 +8,12 @@ tests/ directory):
   twin failures, and every unhit probe (file, function, kind, line).
 - coverage/report.md: the same, for a reader, with the unhit probes grouped
   by file and function.
-- corpus/: the greedy set cover of the twin-passing matches. For each chosen
-  match: <name>.replay (copied), <name>.json (pairing, seed, the probes it
-  adds to the cover). The cover is computed over the union of hits, so the
-  corpus reaches exactly the probes the whole run reached.
+- replays/<run>/: every twin-passing match of the run, as <name>.replay
+  (copied from the run) and <name>.json (pairing, seed, source, final tick,
+  probes hit). Replays are test data and stay in the repository.
+- corpus/manifest.json: the greedy set cover of those matches, as a list of
+  replay paths with the probes each adds. The cover is computed over the
+  union of hits, so the corpus reaches exactly the probes the run reached.
 
 Plain Python with no Godot; run it inside tools/replay_check's container
 like every other tools/covsearch command.
@@ -94,17 +96,29 @@ def run(run_dir: Path, tests: Path, repo: Path) -> dict[str, Any]:
             else:
                 unhit.append({"file": res, "function": function_at(table, p["line"]), "kind": p["kind"], "line": p["line"], "detail": p.get("detail")})
 
-    cover = greedy_cover(passing)
-    corpus_dir = tests / "corpus"
-    if corpus_dir.exists():
-        shutil.rmtree(corpus_dir)
-    corpus_dir.mkdir(parents=True)
-    for m, gain in cover:
-        shutil.copy2(m["replay"], corpus_dir / f"{m['name']}.replay")
+    run_name = run_dir.parent.name if run_dir.name == "out" else run_dir.name
+    replays_dir = tests / "replays" / run_name
+    replays_dir.mkdir(parents=True, exist_ok=True)
+    for m in passing:
+        shutil.copy2(m["replay"], replays_dir / f"{m['name']}.replay")
         meta = {k: m.get(k) for k in ("name", "p1", "p2", "seed", "final_tick")}
         meta["source"] = "recorded" if m["name"].startswith("rec_") else "generated"
-        meta["adds_probes"] = len(gain)
-        (corpus_dir / f"{m['name']}.json").write_text(json.dumps(meta, indent=2) + "\n")
+        meta["original"] = m["replay"] if meta["source"] == "recorded" else None
+        meta["probes_hit"] = len(m["probes_hit"])
+        (replays_dir / f"{m['name']}.json").write_text(json.dumps(meta, indent=2) + "\n")
+
+    cover = greedy_cover(passing)
+    corpus_dir = tests / "corpus"
+    corpus_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "run": run_name,
+        "probes": len(hit),
+        "matches": [
+            {"replay": f"tests/replays/{run_name}/{m['name']}.replay", "adds_probes": len(gain)}
+            for m, gain in cover
+        ],
+    }
+    (corpus_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
 
     report = {
         "total_probes": pmap["size"],
