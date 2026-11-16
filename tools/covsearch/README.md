@@ -96,6 +96,28 @@ partial output (the previous session's workaround for a diagnosis that
 was wrong): a stall is now a real, surfaced failure. `scan_roots` itself
 has no caller once the tree search is retired.
 
+### Status: free coverage measured (this session)
+
+`tools/covsearch/free_coverage.py` (new, `run.py`'s `free-coverage`
+command) measures how much of the instrumented probe set (line, branch,
+value-class; same `instrument.py`) random Ninja vs Ninja play covers,
+credited only under the TWIN RULE (a match's instrumented trace must
+match its own plain-project trace tick for tick). Full results, the twin
+check, the coverage curve, the unhit-probe breakdown by file and function,
+and the other-character/tool-limitation/genuinely-reachable classification
+are in `tools/covsearch/free_coverage.md`. Headline: 204 of 305 requested
+matches attempted (199 random + all 5 Ninja mirrors) in ~2h 31m across two
+container invocations (a mirror-scheduling defect, found and fixed mid-run,
+cost most of the first invocation's time budget); 6,500 of 9,439 probes
+hit (68.9%); zero twin mismatches on any match that reached the comparison
+step; 5 random seeds crashed at the generate step on a real Caltrops.gd
+bug, unrelated to the twin check. `instrument.py`'s `IN_SCOPE_FILES` had
+carried two nonexistent paths since its first commit
+(`characters/ObjectState.gd`, `characters/CharState.gd`); fixed to the
+real paths (`ObjectState.gd` at the repository root,
+`characters/states/CharState.gd`) -- `ObjectState.gd` was never
+instrumented by any prior covsearch run before this fix.
+
 ### Next
 
 `tools/godot_cov/` (operator decision): a patched Godot/GodotSteam build

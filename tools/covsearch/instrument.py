@@ -74,8 +74,18 @@ IN_SCOPE_DIRS = (
 IN_SCOPE_FILES = (
     "game.gd",
     "characters/BaseChar.gd",
-    "characters/ObjectState.gd",
-    "characters/CharState.gd",
+    # Both paths below were wrong from this constant's first commit: the
+    # repository has never had a characters/ObjectState.gd or a
+    # characters/CharState.gd. ObjectState.gd lives at the repository
+    # root; CharState.gd lives under characters/states/ (also matched by
+    # IN_SCOPE_GLOBS below, so this entry is redundant for CharState.gd
+    # but kept for an explicit, correct file list). The wrong
+    # "characters/ObjectState.gd" entry never matched anything, so
+    # ObjectState.gd -- central to every character's state machine --
+    # was never instrumented; found and fixed while building free
+    # coverage (tools/covsearch/free_coverage.md).
+    "ObjectState.gd",
+    "characters/states/CharState.gd",
 )
 IN_SCOPE_GLOBS = (
     "characters/states/*.gd",

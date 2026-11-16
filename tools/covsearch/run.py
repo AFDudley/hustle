@@ -180,6 +180,12 @@ def main() -> int:
     corpus_p.add_argument("--out", type=Path, required=True)
     fidelity_p = sub.add_parser("fidelity")
     fidelity_p.add_argument("--corpus", type=Path, required=True)
+    fc_p = sub.add_parser("free-coverage")
+    fc_p.add_argument("--out", type=Path, required=True)
+    fc_p.add_argument("--n", type=int, default=300, help="random Ninja vs Ninja matches to generate")
+    fc_p.add_argument("--jobs", type=int, default=8)
+    fc_p.add_argument("--seed-start", type=int, default=1)
+    fc_p.add_argument("--time-budget", type=float, default=None, help="stop submitting new matches after this many seconds; matches already submitted still finish")
     args = parser.parse_args()
 
     rc_run.start_display()
@@ -217,7 +223,21 @@ def main() -> int:
         result = corpus.check_fidelity(work, manifest, run_worker)
         (args.corpus / "fidelity_report.json").write_text(json.dumps(result, indent=2))
         print(json.dumps({"pass": result["pass"]}, indent=2))
-        return 0 if result["pass"] else 1
+        if not result["pass"]:
+            return 1
+        return 0
+    if args.cmd == "free-coverage":
+        import free_coverage
+
+        work_root = args.work.resolve()
+        work_plain = rc_run.Work(root=work_root / "plain")
+        work_instr = rc_run.Work(root=work_root / "instr", coverage=work_root / "instr_coverage")
+        summary = free_coverage.run(
+            work_plain, work_instr, prepare, args.out.resolve(), args.n, args.jobs,
+            args.seed_start, free_coverage.MIRROR_REPLAYS, args.time_budget,
+        )
+        print(json.dumps(summary, indent=2))
+        return 0
     raise AssertionError(args.cmd)
 
 
