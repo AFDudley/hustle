@@ -105,7 +105,15 @@ IN_SCOPE_GLOBS = [
 
 def set_character(name: str) -> None:
     """Put the named character's own directory in scope, in place of Ninja's."""
-    IN_SCOPE_GLOBS[1] = f"characters/{CHARACTER_DIRS[name]}/**/*.gd"
+    del IN_SCOPE_GLOBS[1:]
+    IN_SCOPE_GLOBS.append(f"characters/{CHARACTER_DIRS[name]}/**/*.gd")
+
+
+def set_all_characters() -> None:
+    """Put all five characters' own directories in scope, for mixed pairings."""
+    del IN_SCOPE_GLOBS[1:]
+    for directory in CHARACTER_DIRS.values():
+        IN_SCOPE_GLOBS.append(f"characters/{directory}/**/*.gd")
 
 
 def in_scope(rel: Path) -> bool:

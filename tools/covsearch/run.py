@@ -187,6 +187,9 @@ def main() -> int:
     fc_p.add_argument("--seed-start", type=int, default=1)
     fc_p.add_argument("--time-budget", type=float, default=None, help="stop submitting new matches after this many seconds; matches already submitted still finish")
     fc_p.add_argument("--character", default="Ninja", choices=sorted(cs_instrument.CHARACTER_DIRS), help="the character of the mirror match; its own directory is instrumented with the shared code")
+    bias_p = sub.add_parser("biased")
+    bias_p.add_argument("--out", type=Path, required=True)
+    bias_p.add_argument("--jobs", type=int, default=8)
     args = parser.parse_args()
 
     rc_run.start_display()
@@ -240,6 +243,12 @@ def main() -> int:
             character=args.character,
         )
         print(json.dumps(summary, indent=2))
+        return 0
+    if args.cmd == "biased":
+        import biased
+
+        summary = biased.run(args.work.resolve(), prepare, args.out.resolve(), args.jobs, REPO)
+        print(json.dumps({k: v for k, v in summary.items() if k != "hit_probes"}, indent=2))
         return 0
     raise AssertionError(args.cmd)
 

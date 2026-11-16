@@ -293,15 +293,30 @@ func _toggle_if_enabled(button: BaseButton, chance: float):
 		button.pressed = !button.pressed
 
 # ActionButtons.update_buttons shows exactly the legal buttons and hides
-# the rest, so `visible` is the legality flag.
+# the rest, so `visible` is the legality flag. job.action_weights (optional,
+# state name -> weight) biases the choice: tools/covsearch gives each state
+# a weight from the unhit coverage probes in its script, so play goes to
+# code no earlier match reached. A missing name weighs 1.
 func _click_random_action(panel):
 	var options = []
+	var weights = []
+	var total = 0.0
+	var table = job.get("action_weights", {})
 	for button in panel.buttons:
 		if is_instance_valid(button) and button.visible and _button_enabled(button):
+			var w = float(table.get(button.action_name, 1.0))
 			options.append(button)
+			weights.append(w)
+			total += w
 	if options.empty():
 		return
-	var button = options[rng.randi_range(0, options.size() - 1)]
+	var pick = rng.randf() * total
+	var button = options[options.size() - 1]
+	for i in range(options.size()):
+		pick -= weights[i]
+		if pick < 0.0:
+			button = options[i]
+			break
 	if button == panel.continue_button:
 		button.on_pressed()
 	else:

@@ -364,6 +364,7 @@ def generate_job(
     dump_tick: int | None = None,
     dump: Path | None = None,
     settings: dict[str, Any] | None = None,
+    action_weights: dict[str, float] | None = None,
 ) -> dict[str, Any]:
     job: dict[str, Any] = {
         "mode": "generate",
@@ -379,6 +380,8 @@ def generate_job(
     }
     if settings:
         job["settings"] = settings
+    if action_weights:
+        job["action_weights"] = action_weights
     if dump_tick is not None and dump is not None:
         job["dump_ticks"] = [dump_tick]
         job["dump"] = str(dump)
