@@ -252,8 +252,106 @@ def is_self_contained(code: str) -> bool:
     return depth == 0 and quote == "" and not code.rstrip().endswith("\\")
 
 
-def wrap_branch(line: str, indent: str, true_id: int, false_id: int) -> str | None:
-    """Wrap an if/elif/while condition in __COV__.b(true_id, false_id, (cond)):.
+BOOL_OPS = ("and", "or", "&&", "||")
+
+
+def split_bool_operands(cond: str) -> list[tuple[int, int]]:
+    """Spans (start, end) of the top-level operands of `and`/`or`/`&&`/`||`.
+
+    Top level means outside brackets and strings. Returns [] when the
+    condition has no top-level boolean operator. `not` stays inside its
+    operand.
+    """
+    spans: list[tuple[int, int]] = []
+    depth = 0
+    quote = ""
+    start = 0
+    i = 0
+    found = False
+    while i < len(cond):
+        c = cond[i]
+        if quote:
+            if c == "\\":
+                i += 2
+                continue
+            if cond.startswith(quote, i):
+                i += len(quote)
+                quote = ""
+                continue
+            i += 1
+            continue
+        if c in "\"'":
+            quote = c * 3 if cond.startswith(c * 3, i) else c
+            i += len(quote)
+            continue
+        if c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth -= 1
+        elif depth == 0:
+            for op in BOOL_OPS:
+                if not cond.startswith(op, i):
+                    continue
+                if op[0].isalpha():
+                    before = cond[i - 1] if i > 0 else " "
+                    after = cond[i + len(op)] if i + len(op) < len(cond) else " "
+                    if before.isalnum() or before == "_" or after.isalnum() or after == "_":
+                        continue
+                spans.append((start, i))
+                start = i + len(op)
+                i = start
+                found = True
+                break
+            else:
+                i += 1
+                continue
+            continue
+        i += 1
+    if not found:
+        return []
+    spans.append((start, len(cond)))
+    return spans
+
+
+def wrap_operands(cond: str, next_id: int) -> tuple[str, list[tuple[int, int, str]]]:
+    """Wrap each top-level and/or operand in __COV__.b(t, f, (operand)).
+
+    __COV__.b returns its value unchanged, and each operand keeps its place
+    between the same operators, so evaluation order, short-circuit and the
+    result do not change. Returns the new condition and (true_id, false_id,
+    operand text) per operand.
+    """
+    spans = split_bool_operands(cond)
+    if not spans:
+        return cond, []
+    out = []
+    probes = []
+    pos = 0
+    for s, e in spans:
+        text = cond[s:e]
+        lead = len(text) - len(text.lstrip())
+        trail = len(text) - len(text.rstrip())
+        core = text.strip()
+        # A fully parenthesized operand that itself has and/or: wrap its own
+        # operands too (ids allocated first, so they stay unique).
+        if core.startswith("(") and core.endswith(")") and is_self_contained(core[1:-1]) and split_bool_operands(core[1:-1]):
+            inner, sub = wrap_operands(core[1:-1], next_id)
+            probes.extend(sub)
+            next_id += 2 * len(sub)
+            core = f"({inner})"
+        out.append(cond[pos:s] + text[:lead])
+        out.append(f"__COV__.b({next_id}, {next_id + 1}, ({core}))")
+        out.append(text[len(text) - trail:] if trail else "")
+        probes.append((next_id, next_id + 1, core))
+        next_id += 2
+        pos = e
+    out.append(cond[pos:])
+    return "".join(out), probes
+
+
+def wrap_branch(line: str, indent: str, true_id: int, false_id: int, operand_base: int) -> tuple[str, list[tuple[int, int, str]]] | None:
+    """Wrap an if/elif/while condition in __COV__.b(true_id, false_id, (cond)):,
+    and each top-level and/or operand inside it (ids from operand_base).
 
     Returns None when the line is not a simple single-line condition header.
     """
@@ -266,7 +364,8 @@ def wrap_branch(line: str, indent: str, true_id: int, false_id: int) -> str | No
     keyword, cond = m.group(1), m.group(2).strip()
     if not cond:
         return None
-    return f"{indent}{keyword} __COV__.b({true_id}, {false_id}, ({cond})):"
+    cond, operands = wrap_operands(cond, operand_base)
+    return f"{indent}{keyword} __COV__.b({true_id}, {false_id}, ({cond})):", operands
 
 
 def instrument_source(text: str, next_id: int) -> tuple[str, list[dict]]:
@@ -313,12 +412,16 @@ def instrument_source(text: str, next_id: int) -> tuple[str, list[dict]]:
         word = first_word(body.strip())
         if word in ("if", "elif", "while"):
             true_id, false_id = next_id, next_id + 1
-            rewritten = wrap_branch(body, "", true_id, false_id)
-            if rewritten is not None:
-                body = rewritten
+            result = wrap_branch(body, "", true_id, false_id, next_id + 2)
+            if result is not None:
+                body, operands = result
                 probes.append({"id": true_id, "kind": "branch_true", "line": line_no + 1, "detail": word})
                 probes.append({"id": false_id, "kind": "branch_false", "line": line_no + 1, "detail": word})
                 next_id += 2
+                for t_id, f_id, text in operands:
+                    probes.append({"id": t_id, "kind": "operand_true", "line": line_no + 1, "detail": text})
+                    probes.append({"id": f_id, "kind": "operand_false", "line": line_no + 1, "detail": text})
+                    next_id += 2
         if CALL_RE.search(body):
             body, groups = wrap_value_classes(body, next_id)
             for base_id, detail in groups:

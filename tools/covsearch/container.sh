@@ -29,10 +29,19 @@ while (($#)); do
       work="$(realpath -m "$2")"
       shift 2
       ;;
-    --out | --roots | --corpus)
+    --roots | --corpus)
       target="$(realpath -m "$2")"
       mkdir -p "$(dirname "$target")"
       mounts+=(-v "$(dirname "$target"):$(dirname "$target")")
+      args+=("$1" "$target")
+      shift 2
+      ;;
+    --out | --run | --seed-run)
+      # A directory, mounted itself: its parent can be the repository, which
+      # is mounted read-only (for example `report --out tests/`).
+      target="$(realpath -m "$2")"
+      mkdir -p "$target"
+      mounts+=(-v "$target:$target")
       args+=("$1" "$target")
       shift 2
       ;;

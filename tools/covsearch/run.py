@@ -190,6 +190,10 @@ def main() -> int:
     bias_p = sub.add_parser("biased")
     bias_p.add_argument("--out", type=Path, required=True)
     bias_p.add_argument("--jobs", type=int, default=8)
+    bias_p.add_argument("--seed-run", type=Path, action="append", default=[], help="a previous biased run's --out directory; its passing matches are replayed in round 0")
+    rep_p = sub.add_parser("report")
+    rep_p.add_argument("--run", type=Path, required=True, help="a biased run's --out directory")
+    rep_p.add_argument("--out", type=Path, required=True, help="the repository's tests/ directory")
     args = parser.parse_args()
 
     rc_run.start_display()
@@ -247,8 +251,13 @@ def main() -> int:
     if args.cmd == "biased":
         import biased
 
-        summary = biased.run(args.work.resolve(), prepare, args.out.resolve(), args.jobs, REPO)
+        summary = biased.run(args.work.resolve(), prepare, args.out.resolve(), args.jobs, REPO, [p.resolve() for p in args.seed_run])
         print(json.dumps({k: v for k, v in summary.items() if k != "hit_probes"}, indent=2))
+        return 0
+    if args.cmd == "report":
+        import report
+
+        print(json.dumps(report.run(args.run.resolve(), args.out.resolve(), REPO), indent=2))
         return 0
     raise AssertionError(args.cmd)
 

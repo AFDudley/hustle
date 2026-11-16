@@ -148,7 +148,7 @@ def generated_match(work_plain, work_instr, out_dir: Path, name: str, p1: str, p
     return {"name": name, "p1": p1, "p2": p2, "seed": seed, "replay": str(replay), "wall_s": time.monotonic() - t0, **rec}
 
 
-def run(work_root: Path, prepare_instr_fn, out_dir: Path, jobs: int, repo: Path) -> dict[str, Any]:
+def run(work_root: Path, prepare_instr_fn, out_dir: Path, jobs: int, repo: Path, seed_runs: list[Path] = ()) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "replays").mkdir(exist_ok=True)
     results_path = out_dir / "matches.jsonl"
@@ -195,6 +195,17 @@ def run(work_root: Path, prepare_instr_fn, out_dir: Path, jobs: int, repo: Path)
                 name = f"rec_{c}_{i}"
                 if name not in done:
                     tasks.append(pool.submit(recorded_match, work_plain, work_instr, name, r))
+        # A previous run's passing generated matches, replayed under this
+        # run's instrumentation, so new probe kinds start from all the
+        # coverage that run found instead of from zero.
+        for prev in seed_runs:
+            for line in (prev / "matches.jsonl").read_text().splitlines():
+                if not line.strip():
+                    continue
+                rec = json.loads(line)
+                name = f"seed_{rec['name']}"
+                if rec.get("twin_pass") and not rec["name"].startswith("rec_") and name not in done:
+                    tasks.append(pool.submit(recorded_match, work_plain, work_instr, name, Path(rec["replay"])))
         r0_new = sum(record(f.result(), out_f) for f in concurrent.futures.as_completed(tasks))
         rounds_log = rounds_path.open("a")
         rounds_log.write(json.dumps({"round": 0, "new": r0_new, "total": len(hit), "elapsed_s": time.monotonic() - t_start}) + "\n")

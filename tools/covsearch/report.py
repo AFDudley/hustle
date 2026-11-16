@@ -1,0 +1,151 @@
+"""tools/covsearch report: turn a `biased` run into the committed test artifacts.
+
+Inputs: a `biased` output directory (probe_map.json, matches.jsonl,
+rounds.jsonl, summary.json). Outputs, under `--tests` (the repository's
+tests/ directory):
+
+- coverage/report.json: probe counts by kind and by area, the rounds, the
+  twin failures, and every unhit probe (file, function, kind, line).
+- coverage/report.md: the same, for a reader, with the unhit probes grouped
+  by file and function.
+- corpus/: the greedy set cover of the twin-passing matches. For each chosen
+  match: <name>.replay (copied), <name>.json (pairing, seed, the probes it
+  adds to the cover). The cover is computed over the union of hits, so the
+  corpus reaches exactly the probes the whole run reached.
+
+Plain Python with no Godot; run it inside tools/replay_check's container
+like every other tools/covsearch command.
+"""
+
+from __future__ import annotations
+
+import collections
+import json
+import re
+import shutil
+from pathlib import Path
+from typing import Any
+
+FUNC_RE = re.compile(r"^(?:static\s+)?func\s+(\w+)")
+
+
+def functions_by_line(repo: Path, res: str) -> list[tuple[int, str]]:
+    path = repo / res.removeprefix("res://")
+    out = []
+    for i, line in enumerate(path.read_text().splitlines(), 1):
+        m = FUNC_RE.match(line)
+        if m:
+            out.append((i, m.group(1)))
+    return out
+
+
+def function_at(table: list[tuple[int, str]], line: int) -> str:
+    name = "<file scope>"
+    for start, fname in table:
+        if start > line:
+            break
+        name = fname
+    return name
+
+
+def area(res: str) -> str:
+    parts = res.removeprefix("res://").split("/")
+    if parts[0] == "characters" and len(parts) > 2:
+        return "/".join(parts[:2])
+    return parts[0] if len(parts) > 1 else res.removeprefix("res://")
+
+
+def greedy_cover(matches: list[dict]) -> list[tuple[dict, list[int]]]:
+    remaining = set()
+    for m in matches:
+        remaining.update(m["probes_hit"])
+    pool = [(m, set(m["probes_hit"])) for m in matches]
+    chosen = []
+    while remaining:
+        best, gain = max(((m, s & remaining) for m, s in pool), key=lambda t: (len(t[1]), t[0]["name"]))
+        if not gain:
+            raise AssertionError("greedy cover found no match for remaining probes")
+        chosen.append((best, sorted(gain)))
+        remaining -= gain
+    return chosen
+
+
+def run(run_dir: Path, tests: Path, repo: Path) -> dict[str, Any]:
+    pmap = json.loads((run_dir / "probe_map.json").read_text())
+    summary = json.loads((run_dir / "summary.json").read_text())
+    rounds = [json.loads(l) for l in (run_dir / "rounds.jsonl").read_text().splitlines() if l.strip()]
+    matches = [json.loads(l) for l in (run_dir / "matches.jsonl").read_text().splitlines() if l.strip()]
+    passing = [m for m in matches if m.get("twin_pass")]
+    hit = set(summary["hit_probes"])
+
+    kinds_total = collections.Counter()
+    kinds_hit = collections.Counter()
+    areas_total = collections.Counter()
+    areas_hit = collections.Counter()
+    unhit = []
+    for res, probes in pmap["files"].items():
+        table = functions_by_line(repo, res)
+        for p in probes:
+            kinds_total[p["kind"]] += 1
+            areas_total[area(res)] += 1
+            if p["id"] in hit:
+                kinds_hit[p["kind"]] += 1
+                areas_hit[area(res)] += 1
+            else:
+                unhit.append({"file": res, "function": function_at(table, p["line"]), "kind": p["kind"], "line": p["line"], "detail": p.get("detail")})
+
+    cover = greedy_cover(passing)
+    corpus_dir = tests / "corpus"
+    if corpus_dir.exists():
+        shutil.rmtree(corpus_dir)
+    corpus_dir.mkdir(parents=True)
+    for m, gain in cover:
+        shutil.copy2(m["replay"], corpus_dir / f"{m['name']}.replay")
+        meta = {k: m.get(k) for k in ("name", "p1", "p2", "seed", "final_tick")}
+        meta["source"] = "recorded" if m["name"].startswith("rec_") else "generated"
+        meta["adds_probes"] = len(gain)
+        (corpus_dir / f"{m['name']}.json").write_text(json.dumps(meta, indent=2) + "\n")
+
+    report = {
+        "total_probes": pmap["size"],
+        "hit": len(hit),
+        "by_kind": {k: {"total": kinds_total[k], "hit": kinds_hit[k]} for k in sorted(kinds_total)},
+        "by_area": {a: {"total": areas_total[a], "hit": areas_hit[a]} for a in sorted(areas_total)},
+        "rounds": rounds,
+        "matches": len(matches),
+        "twin_pass": len(passing),
+        "twin_fail": summary["twin_fail"],
+        "corpus_size": len(cover),
+        "end": summary["end"],
+        "unhit": unhit,
+    }
+    cov_dir = tests / "coverage"
+    cov_dir.mkdir(parents=True, exist_ok=True)
+    (cov_dir / "report.json").write_text(json.dumps(report, indent=1) + "\n")
+
+    by_func = collections.Counter((u["file"], u["function"]) for u in unhit)
+    lines = [
+        "# Simulation code coverage",
+        "",
+        "Generated by `tools/covsearch/report.py` from a `tools/covsearch biased` run.",
+        "Every number counts only matches whose instrumented and plain traces are",
+        "identical for the whole match (the twin rule).",
+        "",
+        f"**{len(hit)} of {pmap['size']} probes hit ({100 * len(hit) / pmap['size']:.1f}%).**",
+        f"Matches: {len(matches)}, twin pass {len(passing)}. Corpus (greedy set cover): {len(cover)} matches in `tests/corpus/`.",
+        f"End: {summary['end']}.",
+        "",
+        "| Kind | Hit | Total |",
+        "|---|---:|---:|",
+    ]
+    lines += [f"| {k} | {kinds_hit[k]} | {kinds_total[k]} |" for k in sorted(kinds_total)]
+    lines += ["", "| Area | Hit | Total |", "|---|---:|---:|"]
+    lines += [f"| {a} | {areas_hit[a]} | {areas_total[a]} |" for a in sorted(areas_total, key=lambda a: -areas_total[a])]
+    lines += ["", "## Rounds", "", "| Round | New probes | Total | Elapsed (s) |", "|---:|---:|---:|---:|"]
+    lines += [f"| {r['round']} | {r['new']} | {r['total']} | {r['elapsed_s']:.0f} |" for r in rounds]
+    lines += ["", "## Twin failures", ""]
+    lines += [f"- `{f['name']}`: {f.get('error') or f.get('problem')} (first mismatch: {f.get('first_mismatch')})" for f in summary["twin_fail"]] or ["None."]
+    lines += ["", "## Unhit probes by function", "", "| File | Function | Unhit |", "|---|---|---:|"]
+    lines += [f"| {f.removeprefix('res://')} | {fn} | {n} |" for (f, fn), n in by_func.most_common()]
+    (cov_dir / "report.md").write_text("\n".join(lines) + "\n")
+    return {k: v for k, v in report.items() if k != "unhit"}
