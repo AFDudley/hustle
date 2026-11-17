@@ -11,5 +11,5 @@ func _on_toggled(item):
 func get_data():
 	return {
 		id = selected,
-		name = items[selected]
+		name = get_item_text(selected)
 	}
